@@ -1,0 +1,495 @@
+{
+  "name": "steam_store_scraper",
+  "version": "0.1.1",
+  "title": "Steam Store Scraper",
+  "description": "Search Steam Store games, fetch one app's public store metadata, or collect a bounded page of public user reviews through Steam's public JSON surfaces.",
+  "category": "ecommerce",
+  "logo": {
+    "label": "Steam brand gear and arm mark",
+    "svg": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"22\" cy=\"42\" r=\"8\"/><circle cx=\"45\" cy=\"19\" r=\"10\"/><circle cx=\"45\" cy=\"19\" r=\"4\"/><path d=\"M29 38l10-12\"/><path d=\"M15 38 5 34\"/><path d=\"M19 49 9 55\"/></g></svg>",
+    "sourceUrl": "https://store.steampowered.com/"
+  },
+  "seo": {
+    "title": "Steam Store Scraper Tool for Games, Prices, Metadata, and Reviews",
+    "description": "Search Steam Store games, fetch app details, prices, genres, developers, platforms, recommendations, screenshots, Metacritic data, and public user reviews with Better Fetch.",
+    "intro": "Steam Store Scraper gives agents a bounded, structured route into public Steam Store data. Search by keyword, fetch one Steam app's store metadata, or pull a page of public user reviews using Steam's JSON store and review surfaces. The tool normalizes app IDs, names, store URLs, prices, discounts, genres, categories, supported platforms, developers, publishers, release dates, recommendation counts, Metacritic fields, screenshots, review summaries, review text, vote direction, helpful votes, timestamps, and playtime fields. It is designed for game-market research, price and discount monitoring, review triage, competitive catalog analysis, launch watchlists, ecommerce intelligence, and LLM-ready gaming datasets.",
+    "useCases": [
+      {
+        "title": "Game catalog research",
+        "description": "Search Steam by keyword and return normalized game rows with app IDs, prices, platforms, images, metascores, and store URLs."
+      },
+      {
+        "title": "Store page monitoring",
+        "description": "Fetch one app's public metadata, including release date, developers, publishers, genres, categories, recommendations, price, and screenshots."
+      },
+      {
+        "title": "Review triage",
+        "description": "Collect a bounded page of public Steam reviews with sentiment direction, helpful votes, timestamps, playtime, and review summary totals."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Steam Store Scraper require a Steam login or API key?",
+        "answer": "No. Version 0.1 uses public Steam Store JSON and public Steam review endpoints. It only returns data visible through those public surfaces."
+      },
+      {
+        "question": "Can it download all reviews for a game?",
+        "answer": "No. This release fetches one bounded review page and returns the next cursor. Full pagination, scheduled monitoring, and large exports are future work."
+      },
+      {
+        "question": "Is this tool affiliated with Steam or Valve?",
+        "answer": "No. Better Fetch is not affiliated with Valve, Steam, or Steamworks. The Steam logo mark is used only to identify the public target service."
+      }
+    ],
+    "keywords": [
+      "Steam scraper",
+      "Steam Store API",
+      "Steam reviews scraper",
+      "Steam game prices",
+      "Steam metadata",
+      "game market research",
+      "Steam appdetails",
+      "Steam appreviews"
+    ]
+  },
+  "popularity": {
+    "rank": 37,
+    "score": 457
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "details",
+          "reviews"
+        ],
+        "default": "search",
+        "description": "search = keyword search; details = one Steam app's store page metadata; reviews = one page of public user reviews."
+      },
+      "query": {
+        "type": "string",
+        "maxLength": 120,
+        "description": "Keyword query for search mode, such as portal or farming simulator."
+      },
+      "app_id": {
+        "type": "string",
+        "description": "Steam app ID or Steam app URL for details and reviews modes, e.g. 620 or https://store.steampowered.com/app/620/Portal_2/."
+      },
+      "country": {
+        "type": "string",
+        "default": "US",
+        "description": "Two-letter country code for localized pricing, such as US, GB, or AU."
+      },
+      "language": {
+        "type": "string",
+        "default": "en",
+        "description": "Steam store language code for search/details."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 25,
+        "default": 10,
+        "description": "Maximum search results or reviews to return. Details mode returns one app and at most 10 reviews when include_reviews is true."
+      },
+      "include_reviews": {
+        "type": "boolean",
+        "default": false,
+        "description": "In details mode, also fetch a bounded page of reviews and review summary fields."
+      },
+      "review_filter": {
+        "type": "string",
+        "enum": [
+          "recent",
+          "updated",
+          "all"
+        ],
+        "default": "recent",
+        "description": "Steam review filter for reviews mode or include_reviews."
+      },
+      "review_language": {
+        "type": "string",
+        "default": "english",
+        "description": "Steam review language, such as english or all."
+      },
+      "review_type": {
+        "type": "string",
+        "enum": [
+          "all",
+          "positive",
+          "negative"
+        ],
+        "default": "all",
+        "description": "Review sentiment filter."
+      },
+      "purchase_type": {
+        "type": "string",
+        "enum": [
+          "all",
+          "steam",
+          "non_steam_purchase"
+        ],
+        "default": "all",
+        "description": "Purchase-source filter for reviews."
+      },
+      "cursor": {
+        "type": "string",
+        "description": "Steam review cursor. Use * for the first page or pass next_cursor from a previous run."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Steam URL fetched for the primary request"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of game rows, app records, or reviews returned"
+      },
+      "query": {
+        "type": "string",
+        "description": "Search query used"
+      },
+      "app_id": {
+        "type": "integer",
+        "description": "Steam app ID used"
+      },
+      "country": {
+        "type": "string",
+        "description": "Country code used for store requests"
+      },
+      "language": {
+        "type": "string",
+        "description": "Store language code used"
+      },
+      "games": {
+        "type": "array",
+        "description": "Search results",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "app_id": {
+              "type": "integer",
+              "description": "Steam app ID"
+            },
+            "name": {
+              "type": "string",
+              "description": "Game or app name"
+            },
+            "type": {
+              "type": "string",
+              "description": "Steam result type"
+            },
+            "store_url": {
+              "type": "string",
+              "description": "Steam Store URL"
+            },
+            "price": {
+              "type": "string",
+              "description": "Formatted price returned by Steam"
+            },
+            "metascore": {
+              "type": "integer",
+              "description": "Metacritic score when returned"
+            },
+            "platforms": {
+              "type": "string",
+              "description": "Comma-separated supported platform flags"
+            },
+            "image_url": {
+              "type": "string",
+              "description": "Result image URL"
+            }
+          },
+          "required": [
+            "rank",
+            "app_id",
+            "name",
+            "store_url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "app": {
+        "type": "object",
+        "description": "Steam app details",
+        "properties": {
+          "app_id": {
+            "type": "integer",
+            "description": "Steam app ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "App name"
+          },
+          "type": {
+            "type": "string",
+            "description": "App type"
+          },
+          "store_url": {
+            "type": "string",
+            "description": "Steam Store URL"
+          },
+          "short_description": {
+            "type": "string",
+            "description": "Short store description"
+          },
+          "is_free": {
+            "type": "boolean",
+            "description": "Free-to-play flag"
+          },
+          "required_age": {
+            "type": "integer",
+            "description": "Required age"
+          },
+          "release_date": {
+            "type": "string",
+            "description": "Localized release date"
+          },
+          "coming_soon": {
+            "type": "boolean",
+            "description": "Coming-soon flag"
+          },
+          "developers": {
+            "type": "string",
+            "description": "Comma-separated developers"
+          },
+          "publishers": {
+            "type": "string",
+            "description": "Comma-separated publishers"
+          },
+          "genres": {
+            "type": "string",
+            "description": "Comma-separated genres"
+          },
+          "categories": {
+            "type": "string",
+            "description": "Comma-separated store categories/features"
+          },
+          "platforms": {
+            "type": "string",
+            "description": "Comma-separated supported platforms"
+          },
+          "recommendations_total": {
+            "type": "integer",
+            "description": "Steam recommendation count"
+          },
+          "metacritic_score": {
+            "type": "integer",
+            "description": "Metacritic score"
+          },
+          "metacritic_url": {
+            "type": "string",
+            "description": "Metacritic URL"
+          },
+          "website": {
+            "type": "string",
+            "description": "Publisher/developer website"
+          },
+          "header_image": {
+            "type": "string",
+            "description": "Steam header image"
+          },
+          "capsule_image": {
+            "type": "string",
+            "description": "Steam capsule image"
+          },
+          "screenshots": {
+            "type": "string",
+            "description": "Comma-separated screenshot URLs"
+          },
+          "price": {
+            "type": "string",
+            "description": "Formatted price overview"
+          }
+        },
+        "additionalProperties": false
+      },
+      "review_summary": {
+        "type": "object",
+        "description": "Steam review summary totals",
+        "properties": {
+          "num_reviews": {
+            "type": "integer",
+            "description": "Reviews returned in this response"
+          },
+          "review_score": {
+            "type": "integer",
+            "description": "Steam review score bucket"
+          },
+          "review_score_desc": {
+            "type": "string",
+            "description": "Review score description"
+          },
+          "total_positive": {
+            "type": "integer",
+            "description": "Total positive reviews"
+          },
+          "total_negative": {
+            "type": "integer",
+            "description": "Total negative reviews"
+          },
+          "total_reviews": {
+            "type": "integer",
+            "description": "Total matching reviews"
+          }
+        },
+        "additionalProperties": false
+      },
+      "reviews": {
+        "type": "array",
+        "description": "Public Steam user reviews",
+        "items": {
+          "type": "object",
+          "properties": {
+            "recommendation_id": {
+              "type": "string",
+              "description": "Steam recommendation ID"
+            },
+            "steam_id": {
+              "type": "string",
+              "description": "Reviewer Steam ID"
+            },
+            "language": {
+              "type": "string",
+              "description": "Review language"
+            },
+            "review": {
+              "type": "string",
+              "description": "Review text"
+            },
+            "voted_up": {
+              "type": "boolean",
+              "description": "Positive recommendation flag"
+            },
+            "votes_up": {
+              "type": "integer",
+              "description": "Helpful votes"
+            },
+            "votes_funny": {
+              "type": "integer",
+              "description": "Funny votes"
+            },
+            "weighted_vote_score": {
+              "type": "string",
+              "description": "Steam weighted vote score"
+            },
+            "timestamp_created": {
+              "type": "integer",
+              "description": "Created timestamp"
+            },
+            "timestamp_updated": {
+              "type": "integer",
+              "description": "Updated timestamp"
+            },
+            "playtime_forever_minutes": {
+              "type": "integer",
+              "description": "Lifetime playtime in minutes"
+            },
+            "playtime_at_review_minutes": {
+              "type": "integer",
+              "description": "Playtime at review in minutes"
+            },
+            "steam_purchase": {
+              "type": "boolean",
+              "description": "Steam purchase flag"
+            },
+            "received_for_free": {
+              "type": "boolean",
+              "description": "Received for free flag"
+            },
+            "written_during_early_access": {
+              "type": "boolean",
+              "description": "Early access review flag"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "next_cursor": {
+        "type": "string",
+        "description": "Cursor for the next page of reviews"
+      },
+      "reviews_url": {
+        "type": "string",
+        "description": "Steam reviews URL fetched when include_reviews is true"
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count",
+      "country",
+      "language"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "portal-search",
+      "input": {
+        "mode": "search",
+        "query": "portal",
+        "country": "US",
+        "language": "en",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "games": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "portal-details",
+      "input": {
+        "mode": "details",
+        "app_id": "620",
+        "country": "US",
+        "language": "en"
+      },
+      "expect": {
+        "outputMatches": {
+          "app_id": 620,
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "portal-reviews",
+      "input": {
+        "mode": "reviews",
+        "app_id": "620",
+        "limit": 2,
+        "review_language": "english"
+      },
+      "expect": {
+        "outputMatches": {
+          "reviews": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

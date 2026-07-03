@@ -1,0 +1,322 @@
+{
+  "name": "npm_package_scraper",
+  "version": "0.1.1",
+  "title": "npm Package Scraper",
+  "description": "Search the public npm registry or inspect a package, returning package metadata, maintainers, links, dependencies, publish dates, scores, and optional download counts.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "npm logo",
+    "svg": "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\" width=\"540px\" height=\"210px\" viewBox=\"0 0 18 7\"><path fill=\"#CB3837\" d=\"M0,0h18v6H9v1H5V6H0V0z M1,5h2V2h1v3h1V1H1V5z M6,1v5h2V5h2V1H6z M8,2h1v2H8V2z M11,1v4h2V2h1v3h1V2h1v3h1V1H11z\"/><polygon fill=\"#FFFFFF\" points=\"1,5 3,5 3,2 4,2 4,5 5,5 5,1 1,1 \"/><path fill=\"#FFFFFF\" d=\"M6,1v5h2V5h2V1H6z M9,4H8V2h1V4z\"/><polygon fill=\"#FFFFFF\" points=\"11,1 11,5 13,5 13,2 14,2 14,5 15,5 15,2 16,2 16,5 17,5 17,1 \"/></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Npm-logo.svg"
+  },
+  "seo": {
+    "title": "npm Package Scraper Tool for Registry Metadata and Downloads",
+    "description": "Search npm packages or inspect exact package metadata with Better Fetch, including versions, maintainers, dependencies, links, publish dates, search scores, and download counts.",
+    "intro": "npm Package Scraper gives agents a compact way to research JavaScript packages without building registry glue code. Search the public npm registry by keyword or inspect an exact package such as react, typescript, or @types/node. The tool normalizes package names, descriptions, maintainers, repository and homepage links, licenses, publish dates, dependency summaries, search scores, and optional download counts for dependency audits, ecosystem research, package comparison, and developer-tool workflows.",
+    "useCases": [
+      {
+        "title": "Dependency evaluation",
+        "description": "Inspect a package before an agent recommends it, including its latest version, license, maintainers, repository, dependency summary, and recent download count."
+      },
+      {
+        "title": "Package discovery",
+        "description": "Search npm by keyword and return normalized package rows with publisher, maintainers, keywords, npm links, search scores, and built-in weekly or monthly download signals."
+      },
+      {
+        "title": "Ecosystem monitoring",
+        "description": "Track package freshness, popularity, maintainer changes, and dependency surface area for JavaScript libraries that matter to a product, docs, security, or DevRel team."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does npm Package Scraper require an npm token?",
+        "answer": "No. Version 0.1 uses public npm registry and npm download-count endpoints through Better Fetch. It does not access private packages or account-specific npm data."
+      },
+      {
+        "question": "Can it inspect scoped packages?",
+        "answer": "Yes. Provide a scoped package such as @types/node or an npm package URL. The tool percent-encodes the slash where npm download endpoints require it."
+      },
+      {
+        "question": "Does it fetch full README text or every historical version?",
+        "answer": "Not in this first slice. Version 0.1 summarizes current package metadata and counts versions, but avoids returning large README bodies or every version row."
+      }
+    ],
+    "keywords": [
+      "npm package scraper",
+      "npm registry API",
+      "npm downloads API",
+      "JavaScript package metadata",
+      "dependency research",
+      "package discovery",
+      "developer tools scraper",
+      "AI agent npm research"
+    ]
+  },
+  "popularity": {
+    "rank": 26,
+    "score": 17
+  },
+  "creditsEstimate": 2,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "package",
+          "search"
+        ],
+        "default": "package",
+        "description": "Extraction mode: inspect one package or search npm packages."
+      },
+      "package_name": {
+        "type": "string",
+        "description": "Package name or npm package URL. Required in package mode, e.g. react or @types/node."
+      },
+      "query": {
+        "type": "string",
+        "description": "Search query text for npm registry search mode."
+      },
+      "sort": {
+        "type": "string",
+        "enum": [
+          "best_match",
+          "popularity",
+          "quality",
+          "maintenance"
+        ],
+        "default": "best_match",
+        "description": "Search weighting for npm registry search mode."
+      },
+      "include_downloads": {
+        "type": "boolean",
+        "default": true,
+        "description": "When true in package mode, fetch one npm download-count point for the package."
+      },
+      "download_period": {
+        "type": "string",
+        "enum": [
+          "last-day",
+          "last-week",
+          "last-month",
+          "last-year"
+        ],
+        "default": "last-week",
+        "description": "Download-count period for package mode."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 25,
+        "default": 10,
+        "description": "Maximum search records to return in search mode."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Extraction mode used"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Fetched npm registry or downloads URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned package records"
+      },
+      "total_matches": {
+        "type": "integer",
+        "description": "Total npm search matches when reported"
+      },
+      "packages": {
+        "type": "array",
+        "description": "Normalized npm package records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Record type"
+            },
+            "name": {
+              "type": "string",
+              "description": "Package name"
+            },
+            "version": {
+              "type": "string",
+              "description": "Latest or search-result version"
+            },
+            "description": {
+              "type": "string",
+              "description": "Package description"
+            },
+            "license": {
+              "type": "string",
+              "description": "Package license"
+            },
+            "keywords": {
+              "type": "string",
+              "description": "Comma-separated package keywords"
+            },
+            "author_name": {
+              "type": "string",
+              "description": "Author name when present"
+            },
+            "publisher_name": {
+              "type": "string",
+              "description": "Publisher username from npm search results"
+            },
+            "maintainers": {
+              "type": "string",
+              "description": "Comma-separated maintainers"
+            },
+            "npm_url": {
+              "type": "string",
+              "description": "npm package page URL"
+            },
+            "repository_url": {
+              "type": "string",
+              "description": "Repository URL"
+            },
+            "homepage_url": {
+              "type": "string",
+              "description": "Homepage URL"
+            },
+            "bugs_url": {
+              "type": "string",
+              "description": "Issue tracker URL"
+            },
+            "created_at": {
+              "type": "string",
+              "description": "Package creation timestamp"
+            },
+            "modified_at": {
+              "type": "string",
+              "description": "Package modification timestamp"
+            },
+            "published_at": {
+              "type": "string",
+              "description": "Latest version publish timestamp or search-result date"
+            },
+            "version_count": {
+              "type": "integer",
+              "description": "Number of versions in package metadata"
+            },
+            "latest_dependencies": {
+              "type": "string",
+              "description": "Comma-separated dependency names from the latest version"
+            },
+            "latest_dev_dependencies": {
+              "type": "string",
+              "description": "Comma-separated dev dependency names from the latest version"
+            },
+            "deprecated": {
+              "type": "string",
+              "description": "Deprecation message for the latest version when present"
+            },
+            "weekly_downloads": {
+              "type": "integer",
+              "description": "Weekly downloads when present in npm search results"
+            },
+            "monthly_downloads": {
+              "type": "integer",
+              "description": "Monthly downloads when present in npm search results"
+            },
+            "downloads": {
+              "type": "integer",
+              "description": "Download count for the selected point period"
+            },
+            "download_period": {
+              "type": "string",
+              "description": "Download period used for the point count"
+            },
+            "downloads_start": {
+              "type": "string",
+              "description": "Download count start date"
+            },
+            "downloads_end": {
+              "type": "string",
+              "description": "Download count end date"
+            },
+            "dependents": {
+              "type": "integer",
+              "description": "Dependent count from npm search when present"
+            },
+            "search_score": {
+              "type": "number",
+              "description": "Search score from npm search"
+            },
+            "score_final": {
+              "type": "number",
+              "description": "Final npm search score"
+            },
+            "score_popularity": {
+              "type": "number",
+              "description": "Popularity detail score"
+            },
+            "score_quality": {
+              "type": "number",
+              "description": "Quality detail score"
+            },
+            "score_maintenance": {
+              "type": "number",
+              "description": "Maintenance detail score"
+            }
+          },
+          "required": [
+            "type",
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count",
+      "packages"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "react-package",
+      "input": {
+        "mode": "package",
+        "package_name": "react",
+        "include_downloads": true,
+        "download_period": "last-week"
+      },
+      "expect": {
+        "outputMatches": {
+          "packages": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "react-search",
+      "input": {
+        "mode": "search",
+        "query": "react hooks",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "packages": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

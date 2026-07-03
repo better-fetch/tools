@@ -1,0 +1,327 @@
+{
+  "name": "stack_overflow_scraper",
+  "version": "0.1.2",
+  "title": "Stack Overflow Scraper",
+  "description": "Search public Stack Overflow questions and optionally fetch accepted or top answers through the Stack Exchange API, returning titles, tags, scores, views, answer counts, owner fields, timestamps, body text, and answer bodies.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "Stack Overflow logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 120 120\"><path class=\"st0\" d=\"M84.4 93.8V70.6h7.7v30.9H22.6V70.6h7.7v23.2z\"/><path class=\"st1\" d=\"M38.8 68.4l37.8 7.9 1.6-7.6-37.8-7.9-1.6 7.6zm5-18l35 16.3 3.2-7-35-16.4-3.2 7.1zm9.7-17.2l29.7 24.7 4.9-5.9-29.7-24.7-4.9 5.9zm19.2-18.3l-6.2 4.6 23 31 6.2-4.6-23-31zM38 86h38.6v-7.7H38V86z\"/></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Stack_Overflow_icon.svg"
+  },
+  "seo": {
+    "title": "Stack Overflow Scraper Tool for Questions and Answers",
+    "description": "Search Stack Overflow questions and fetch public answers with Better Fetch, including tags, scores, view counts, accepted answers, owner fields, timestamps, and body text.",
+    "intro": "Stack Overflow Scraper gives agents a reliable path into developer Q&A signals without maintaining a custom crawler. Search by keyword, tag, or both, then optionally pull answer rows for the returned questions. The tool normalizes public Stack Exchange API records into compact question and answer payloads for technical research, developer support triage, content planning, and product opportunity discovery.",
+    "useCases": [
+      {
+        "title": "Developer pain-point research",
+        "description": "Search for recurring questions around an API, framework, error message, or product category and hand an agent structured titles, tags, scores, views, and body text."
+      },
+      {
+        "title": "Documentation gap analysis",
+        "description": "Fetch public questions and top answers for a technology so docs teams can see where developers struggle and which explanations already work."
+      },
+      {
+        "title": "Support and DevRel monitoring",
+        "description": "Monitor new or relevant Stack Overflow questions by keyword or tag and route high-signal issues into support, community, or DevRel workflows."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Stack Overflow Scraper need a Stack Apps API key?",
+        "answer": "No. Version 0.1 uses public Stack Exchange API endpoints through Better Fetch and does not require a Stack Apps key or authenticated Stack Overflow account."
+      },
+      {
+        "question": "Can it fetch every answer and comment?",
+        "answer": "Not yet. Version 0.1 searches questions and can fetch a bounded batch of top-voted answers. Comments, all-answer pagination, profile enrichment, and cross-site fan-out should be added as separate validated slices."
+      },
+      {
+        "question": "Can I search sites other than Stack Overflow?",
+        "answer": "The input includes a site parameter for Stack Exchange site slugs, but the page and benchmark are optimized for Stack Overflow. Broader Stack Exchange coverage should be verified per site before being promoted."
+      }
+    ],
+    "keywords": [
+      "Stack Overflow scraper",
+      "Stack Exchange API",
+      "developer Q&A scraper",
+      "programming questions",
+      "developer pain points",
+      "technical support research",
+      "AI agent developer research"
+    ]
+  },
+  "popularity": {
+    "rank": 24,
+    "score": 48
+  },
+  "creditsEstimate": 2,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "answers"
+        ],
+        "default": "search",
+        "description": "Run a question search or fetch answers for known question IDs."
+      },
+      "query": {
+        "type": "string",
+        "description": "Free-text Stack Overflow search query. Used in search mode."
+      },
+      "tagged": {
+        "type": "string",
+        "description": "Comma, space, or semicolon separated Stack Overflow tags. Used in search mode."
+      },
+      "site": {
+        "type": "string",
+        "default": "stackoverflow",
+        "description": "Stack Exchange API site slug. Defaults to stackoverflow."
+      },
+      "sort": {
+        "type": "string",
+        "enum": [
+          "relevance",
+          "activity",
+          "creation",
+          "votes"
+        ],
+        "default": "relevance",
+        "description": "Question search sort field."
+      },
+      "question_ids": {
+        "type": "string",
+        "description": "Numeric question IDs separated by commas, spaces, or semicolons. Required in answers mode."
+      },
+      "include_answers": {
+        "type": "boolean",
+        "default": false,
+        "description": "When true in search mode, fetch a bounded batch of top-voted answers for the returned questions."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 20,
+        "default": 5,
+        "description": "Maximum questions returned in search mode."
+      },
+      "max_answers_per_question": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 5,
+        "default": 1,
+        "description": "Maximum top-voted answers per question when fetching answers."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for the run"
+      },
+      "site": {
+        "type": "string",
+        "description": "Stack Exchange site slug"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Fetched Stack Exchange API URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned primary records"
+      },
+      "answer_count": {
+        "type": "integer",
+        "description": "Number of answer records returned when answers were requested"
+      },
+      "quota_remaining": {
+        "type": "integer",
+        "description": "Stack Exchange API quota remaining as reported by the response"
+      },
+      "questions": {
+        "type": "array",
+        "description": "Stack Overflow question records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Record type"
+            },
+            "question_id": {
+              "type": "integer",
+              "description": "Stack Overflow question ID"
+            },
+            "title": {
+              "type": "string",
+              "description": "Question title"
+            },
+            "url": {
+              "type": "string",
+              "description": "Question URL"
+            },
+            "tags": {
+              "type": "string",
+              "description": "Comma-separated tags"
+            },
+            "score": {
+              "type": "integer",
+              "description": "Question score"
+            },
+            "view_count": {
+              "type": "integer",
+              "description": "Question view count"
+            },
+            "answer_count": {
+              "type": "integer",
+              "description": "Question answer count"
+            },
+            "is_answered": {
+              "type": "boolean",
+              "description": "Whether the question has an accepted answer"
+            },
+            "accepted_answer_id": {
+              "type": "integer",
+              "description": "Accepted answer ID when present"
+            },
+            "created_at": {
+              "type": "string",
+              "description": "Question creation timestamp"
+            },
+            "last_activity_at": {
+              "type": "string",
+              "description": "Last activity timestamp"
+            },
+            "owner_name": {
+              "type": "string",
+              "description": "Owner display name"
+            },
+            "owner_url": {
+              "type": "string",
+              "description": "Owner profile URL"
+            },
+            "owner_reputation": {
+              "type": "integer",
+              "description": "Owner reputation"
+            },
+            "body_text": {
+              "type": "string",
+              "description": "Question body text with HTML tags removed"
+            },
+            "content_license": {
+              "type": "string",
+              "description": "Stack Overflow content license"
+            }
+          },
+          "required": [
+            "type",
+            "question_id",
+            "title"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "answers": {
+        "type": "array",
+        "description": "Stack Overflow answer records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Record type"
+            },
+            "answer_id": {
+              "type": "integer",
+              "description": "Stack Overflow answer ID"
+            },
+            "question_id": {
+              "type": "integer",
+              "description": "Parent question ID"
+            },
+            "url": {
+              "type": "string",
+              "description": "Answer URL"
+            },
+            "is_accepted": {
+              "type": "boolean",
+              "description": "Whether this is the accepted answer"
+            },
+            "score": {
+              "type": "integer",
+              "description": "Answer score"
+            },
+            "created_at": {
+              "type": "string",
+              "description": "Answer creation timestamp"
+            },
+            "last_activity_at": {
+              "type": "string",
+              "description": "Answer last activity timestamp"
+            },
+            "owner_name": {
+              "type": "string",
+              "description": "Owner display name"
+            },
+            "owner_url": {
+              "type": "string",
+              "description": "Owner profile URL"
+            },
+            "owner_reputation": {
+              "type": "integer",
+              "description": "Owner reputation"
+            },
+            "body_text": {
+              "type": "string",
+              "description": "Answer body text with HTML tags removed"
+            },
+            "content_license": {
+              "type": "string",
+              "description": "Stack Overflow content license"
+            }
+          },
+          "required": [
+            "type",
+            "answer_id",
+            "question_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "site",
+      "source_url",
+      "count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "typescript-questions",
+      "input": {
+        "mode": "search",
+        "query": "typescript error",
+        "tagged": "typescript",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "questions": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

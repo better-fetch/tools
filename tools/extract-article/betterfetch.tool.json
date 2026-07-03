@@ -1,0 +1,121 @@
+{
+  "name": "extract_article",
+  "version": "0.1.1",
+  "title": "Extract Article",
+  "description": "Turn any article URL into clean, structured text: title, byline, publish date, and full body text — ready for LLM context windows. Works on paywalled-lite and bot-protected pages via the stealth engine.",
+  "category": "content",
+  "logo": {
+    "label": "Article document icon",
+    "svg": "<svg viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 4h17l7 7v33H12V4zm16 2v7h7M18 20h12M18 26h12M18 32h8\" fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>"
+  },
+  "seo": {
+    "title": "Article Extraction Tool for Clean LLM-Ready Text",
+    "description": "Extract article titles, bylines, dates, publication names, final URLs, and clean body text from rendered pages through the Better Fetch browser engine.",
+    "intro": "Extract Article turns messy web pages into clean text that agents can summarize, cite, classify, or store. It fetches the article through Better Fetch, prefers article and main content regions, preserves useful metadata, and returns a compact payload designed for LLM context windows.",
+    "useCases": [
+      {
+        "title": "Research ingestion",
+        "description": "Convert article URLs into normalized text and metadata before saving them to a knowledge base, vector store, spreadsheet, or editorial workflow."
+      },
+      {
+        "title": "Agent context prep",
+        "description": "Let an AI agent fetch a source article and receive clean title, byline, publish date, final URL, word count, and body text in one structured response."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Extract Article return the rendered page HTML?",
+        "answer": "No. The tool uses rendered and response HTML internally, then returns clean article text and metadata so downstream agents do not need to parse markup."
+      },
+      {
+        "question": "Can I limit the amount of returned article text?",
+        "answer": "Yes. Pass max_chars to cap the extracted text length, which helps keep long articles inside the context window budget for downstream models."
+      }
+    ],
+    "keywords": [
+      "article extraction",
+      "clean web text",
+      "LLM context",
+      "readability scraper",
+      "content extraction API"
+    ]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "format": "uri",
+        "description": "The article URL to extract"
+      },
+      "max_chars": {
+        "type": "integer",
+        "minimum": 100,
+        "maximum": 500000,
+        "default": 100000,
+        "description": "Truncate the extracted text to this many characters"
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "description": "Article title (og:title preferred)"
+      },
+      "byline": {
+        "type": "string",
+        "description": "Author, when detectable"
+      },
+      "published": {
+        "type": "string",
+        "description": "Publish date (ISO where available)"
+      },
+      "site_name": {
+        "type": "string",
+        "description": "Publication name"
+      },
+      "text": {
+        "type": "string",
+        "description": "Clean article body text"
+      },
+      "word_count": {
+        "type": "integer",
+        "description": "Words in the extracted text"
+      },
+      "final_url": {
+        "type": "string",
+        "description": "URL after redirects"
+      }
+    },
+    "required": [
+      "title",
+      "text",
+      "final_url"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "wikipedia-web-scraping",
+      "input": {
+        "url": "https://en.wikipedia.org/wiki/Web_scraping",
+        "max_chars": 5000
+      },
+      "expect": {
+        "outputMatches": {
+          "title": "Web scraping - Wikipedia",
+          "final_url": "https://en.wikipedia.org/wiki/Web_scraping"
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

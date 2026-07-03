@@ -1,0 +1,356 @@
+{
+  "name": "sec_edgar_filings_scraper",
+  "version": "0.1.1",
+  "title": "SEC EDGAR Filings Scraper",
+  "description": "Fetch recent SEC EDGAR company filings or one XBRL company concept by ticker or CIK through the SEC's public JSON APIs, returning normalized company metadata, filing URLs, forms, dates, accession numbers, and fact rows.",
+  "category": "finance",
+  "logo": {
+    "label": "SEC filing columns mark",
+    "svg": "<svg viewBox=\"0 0 72 72\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 58h48\"/><path d=\"M16 26h40\"/><path d=\"M20 26v28M34 26v28M48 26v28\"/><path d=\"M12 26 36 12l24 14\"/><path d=\"M24 42h24\"/></g></svg>",
+    "sourceUrl": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces"
+  },
+  "seo": {
+    "title": "SEC EDGAR Filings Scraper Tool for Company Filings and XBRL Facts",
+    "description": "Fetch recent SEC EDGAR filings or XBRL company concept facts by ticker or CIK with Better Fetch, including accession numbers, form types, filing/report dates, primary documents, filing URLs, and normalized fact rows.",
+    "intro": "SEC EDGAR Filings Scraper gives agents a bounded, compliant route into the SEC's public EDGAR JSON APIs. Resolve a public company ticker to CIK, return recent submissions from the SEC submissions endpoint, filter by forms such as 10-K, 10-Q, and 8-K, and build direct filing and filing-detail URLs. In company-concept mode, fetch one XBRL taxonomy concept such as us-gaap/Assets and return recent fact rows by unit, fiscal year, fiscal period, form, filing date, frame, accession number, and value. It is designed for public-company monitoring, earnings workflows, financial research, disclosure alerts, RAG ingestion, diligence packets, and agent-readable SEC filing context.",
+    "useCases": [
+      {
+        "title": "Filing monitors",
+        "description": "Watch recent 10-K, 10-Q, 8-K, S-1, or proxy filings for a ticker and return direct SEC filing URLs plus accession metadata."
+      },
+      {
+        "title": "Financial research",
+        "description": "Pull one XBRL concept such as Assets or EntityCommonStockSharesOutstanding into a normalized fact table for models and notebooks."
+      },
+      {
+        "title": "Agent diligence packets",
+        "description": "Give an agent clean company metadata, filing dates, report periods, primary document URLs, and recent fact rows before deeper reading."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does SEC EDGAR Filings Scraper require an API key?",
+        "answer": "No. Version 0.1 uses the SEC's public JSON APIs with an identifying user agent. SEC fair-access rules still apply, including the SEC's documented request-rate expectations."
+      },
+      {
+        "question": "Does it parse full filing text or exhibits?",
+        "answer": "No. It returns normalized submission metadata, filing URLs, and selected XBRL concept facts. Full filing text extraction, exhibits, tables, and multi-page historical archives are future work."
+      },
+      {
+        "question": "Is this tool affiliated with the SEC?",
+        "answer": "No. Better Fetch is not affiliated with or endorsed by the U.S. Securities and Exchange Commission. It uses public SEC data surfaces."
+      }
+    ],
+    "keywords": [
+      "SEC EDGAR scraper",
+      "SEC filings API",
+      "10-K scraper",
+      "10-Q scraper",
+      "8-K scraper",
+      "XBRL company facts",
+      "public company filings",
+      "EDGAR submissions"
+    ]
+  },
+  "popularity": {
+    "rank": 38,
+    "score": 38
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "filings",
+          "company_concept"
+        ],
+        "default": "filings",
+        "description": "filings = recent EDGAR submissions; company_concept = one XBRL concept from the SEC companyconcept API."
+      },
+      "ticker": {
+        "type": "string",
+        "description": "Ticker symbol such as AAPL. Used when cik is not supplied."
+      },
+      "cik": {
+        "type": "string",
+        "description": "SEC CIK, with or without leading zeros."
+      },
+      "forms": {
+        "type": "string",
+        "description": "Comma-separated form filter for filings mode, such as 10-K,10-Q,8-K."
+      },
+      "include_amended": {
+        "type": "boolean",
+        "default": false,
+        "description": "Include amended forms ending in /A."
+      },
+      "taxonomy": {
+        "type": "string",
+        "default": "us-gaap",
+        "description": "XBRL taxonomy for company_concept mode, usually us-gaap or dei."
+      },
+      "concept": {
+        "type": "string",
+        "description": "XBRL concept tag for company_concept mode, such as Assets."
+      },
+      "unit": {
+        "type": "string",
+        "description": "Optional unit filter for company_concept mode, such as USD or shares."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 50,
+        "default": 10,
+        "description": "Maximum filing or fact rows to return."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "SEC JSON URL fetched for the primary request"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of filing or fact rows returned"
+      },
+      "company": {
+        "type": "object",
+        "description": "Resolved SEC company metadata",
+        "properties": {
+          "cik": {
+            "type": "string",
+            "description": "Ten-digit CIK"
+          },
+          "ticker": {
+            "type": "string",
+            "description": "Ticker used for lookup"
+          },
+          "name": {
+            "type": "string",
+            "description": "Company name"
+          },
+          "entity_type": {
+            "type": "string",
+            "description": "SEC entity type"
+          },
+          "sic": {
+            "type": "string",
+            "description": "SIC code"
+          },
+          "sic_description": {
+            "type": "string",
+            "description": "SIC description"
+          },
+          "fiscal_year_end": {
+            "type": "string",
+            "description": "Fiscal year end"
+          },
+          "state_of_incorporation": {
+            "type": "string",
+            "description": "State of incorporation"
+          }
+        },
+        "additionalProperties": false
+      },
+      "forms": {
+        "type": "string",
+        "description": "Comma-separated form filter applied"
+      },
+      "filings": {
+        "type": "array",
+        "description": "Recent EDGAR filing rows",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "accession_number": {
+              "type": "string",
+              "description": "SEC accession number"
+            },
+            "form": {
+              "type": "string",
+              "description": "SEC form type"
+            },
+            "filing_date": {
+              "type": "string",
+              "description": "Filing date"
+            },
+            "report_date": {
+              "type": "string",
+              "description": "Report period date"
+            },
+            "acceptance_datetime": {
+              "type": "string",
+              "description": "SEC acceptance timestamp"
+            },
+            "primary_document": {
+              "type": "string",
+              "description": "Primary filing document filename"
+            },
+            "primary_doc_description": {
+              "type": "string",
+              "description": "Primary document description"
+            },
+            "filing_url": {
+              "type": "string",
+              "description": "Direct primary filing URL"
+            },
+            "filing_detail_url": {
+              "type": "string",
+              "description": "SEC filing detail/index URL"
+            },
+            "file_number": {
+              "type": "string",
+              "description": "SEC file number"
+            },
+            "film_number": {
+              "type": "string",
+              "description": "SEC film number"
+            },
+            "items": {
+              "type": "string",
+              "description": "8-K item labels when present"
+            },
+            "size": {
+              "type": "integer",
+              "description": "Filing size in bytes"
+            },
+            "is_xbrl": {
+              "type": "boolean",
+              "description": "XBRL flag"
+            },
+            "is_inline_xbrl": {
+              "type": "boolean",
+              "description": "Inline XBRL flag"
+            }
+          },
+          "required": [
+            "rank",
+            "accession_number"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "taxonomy": {
+        "type": "string",
+        "description": "XBRL taxonomy used"
+      },
+      "concept": {
+        "type": "string",
+        "description": "XBRL concept used"
+      },
+      "unit": {
+        "type": "string",
+        "description": "XBRL unit returned"
+      },
+      "facts": {
+        "type": "array",
+        "description": "Recent XBRL concept fact rows",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "end_date": {
+              "type": "string",
+              "description": "Fact end date"
+            },
+            "value": {
+              "type": "number",
+              "description": "Fact value"
+            },
+            "accession_number": {
+              "type": "string",
+              "description": "Related accession number"
+            },
+            "fiscal_year": {
+              "type": "integer",
+              "description": "Fiscal year"
+            },
+            "fiscal_period": {
+              "type": "string",
+              "description": "Fiscal period"
+            },
+            "form": {
+              "type": "string",
+              "description": "Filing form"
+            },
+            "filed_date": {
+              "type": "string",
+              "description": "Filing date"
+            },
+            "frame": {
+              "type": "string",
+              "description": "XBRL frame"
+            }
+          },
+          "required": [
+            "rank"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count",
+      "company"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "apple-filings",
+      "input": {
+        "mode": "filings",
+        "ticker": "AAPL",
+        "forms": "10-K,10-Q",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "filings": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "apple-assets-concept",
+      "input": {
+        "mode": "company_concept",
+        "ticker": "AAPL",
+        "taxonomy": "us-gaap",
+        "concept": "Assets",
+        "unit": "USD",
+        "limit": 2
+      },
+      "expect": {
+        "outputMatches": {
+          "facts": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

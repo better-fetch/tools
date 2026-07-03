@@ -1,0 +1,176 @@
+{
+  "name": "tiktok_scraper",
+  "version": "0.1.1",
+  "title": "TikTok Scraper",
+  "description": "Extract public TikTok profile metadata from a username or profile URL, including display name, bio, avatar, verification, follower count, following count, likes, video count, and bio link.",
+  "category": "social",
+  "logo": {
+    "label": "TikTok logo",
+    "svg": "<svg width=\"96\" height=\"96\" viewBox=\"0 0 96 96\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"96\" height=\"96\" rx=\"21\" fill=\"black\" style=\"fill:black;fill-opacity:1;\"/><path d=\"M73.31 25.7456C72.785 25.4743 72.274 25.1769 71.7788 24.8545C70.3389 23.9025 69.0186 22.7808 67.8465 21.5135C64.9139 18.158 63.8186 14.7538 63.4151 12.3705H63.4313C63.0943 10.3921 63.2337 9.11214 63.2547 9.11214H49.8974V60.7624C49.8974 61.4558 49.8974 62.1412 49.8682 62.8185C49.8682 62.9027 49.8601 62.9805 49.8553 63.0712C49.8553 63.1085 49.8553 63.1474 49.8472 63.1863C49.8472 63.196 49.8472 63.2057 49.8472 63.2154C49.7064 65.0686 49.1123 66.8588 48.1173 68.4286C47.1222 69.9983 45.7566 71.2994 44.1407 72.2175C42.4565 73.1757 40.5517 73.6782 38.614 73.6757C32.3906 73.6757 27.3468 68.6011 27.3468 62.334C27.3468 56.0669 32.3906 50.9923 38.614 50.9923C39.7921 50.9912 40.9629 51.1766 42.083 51.5415L42.0992 37.9412C38.6989 37.502 35.2444 37.7722 31.9538 38.7348C28.6631 39.6975 25.6077 41.3317 22.9802 43.5343C20.678 45.5346 18.7425 47.9214 17.2608 50.5872C16.6969 51.5594 14.5695 55.4658 14.3119 61.8058C14.1499 65.4044 15.2306 69.1326 15.7458 70.6734V70.7058C16.0699 71.6132 17.3256 74.7094 19.372 77.3197C21.0221 79.4135 22.9716 81.2527 25.1579 82.7783V82.7459L25.1903 82.7783C31.6567 87.1724 38.8263 86.884 38.8263 86.884C40.0674 86.8338 44.2249 86.884 48.9463 84.6464C54.183 82.1658 57.1642 78.47 57.1642 78.47C59.0688 76.2618 60.5832 73.7452 61.6426 71.0282C62.8513 67.8509 63.2547 64.0401 63.2547 62.5171V35.1155C63.4168 35.2127 65.5749 36.6401 65.5749 36.6401C65.5749 36.6401 68.6842 38.633 73.5352 39.9309C77.0155 40.8544 81.7045 41.0488 81.7045 41.0488V27.7887C80.0615 27.9669 76.7255 27.4485 73.31 25.7456Z\" fill=\"white\" style=\"fill:white;fill-opacity:1;\"/></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tiktok_icon.svg"
+  },
+  "seo": {
+    "title": "TikTok Scraper Tool for Public Profile Metadata",
+    "description": "Scrape public TikTok profile metadata with Better Fetch, including username, display name, bio, avatar, verification, follower count, following count, likes, videos, and bio link.",
+    "intro": "TikTok Scraper gives agents a dependable first step for public TikTok research. Provide a username or public profile URL and the tool renders TikTok through Better Fetch, reads the public page hydration payload, and returns normalized profile metadata without using private cookies, account credentials, or the official TikTok API.",
+    "useCases": [
+      {
+        "title": "Creator research",
+        "description": "Collect visible TikTok profile metadata for creator discovery, influencer vetting, social listening, or campaign planning workflows."
+      },
+      {
+        "title": "Profile monitoring",
+        "description": "Track public follower, following, likes, and video counts over time for profiles that matter to a brand, product, or market."
+      },
+      {
+        "title": "Agent context",
+        "description": "Let an agent inspect a public TikTok account and reason over its bio, verification, avatar, public counts, and linked website."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does TikTok Scraper need a TikTok account?",
+        "answer": "No. It reads public profile pages visible to Better Fetch and does not use private TikTok cookies, passwords, API tokens, or logged-in sessions."
+      },
+      {
+        "question": "Does this version scrape every TikTok video or hashtag result?",
+        "answer": "No. Version 0.1 focuses on public profile metadata. Video, hashtag, and search result extraction should be added as separate validated capability slices."
+      },
+      {
+        "question": "Why are some fields omitted for certain profiles?",
+        "answer": "The tool only returns fields present in TikTok's public page payload. Private, blocked, removed, or region-limited profile data is not guessed."
+      }
+    ],
+    "keywords": [
+      "TikTok scraper",
+      "TikTok profile scraper",
+      "creator research",
+      "social media scraper",
+      "TikTok metadata",
+      "public profile data"
+    ]
+  },
+  "popularity": {
+    "rank": 3,
+    "score": 209000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "username": {
+        "type": "string",
+        "description": "TikTok username, with or without the @ prefix. Use username or profile_url."
+      },
+      "profile_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public TikTok profile URL. Use username or profile_url."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "profile_url": {
+        "type": "string",
+        "description": "Fetched public TikTok profile URL"
+      },
+      "username": {
+        "type": "string",
+        "description": "TikTok unique username"
+      },
+      "display_name": {
+        "type": "string",
+        "description": "Visible display name"
+      },
+      "user_id": {
+        "type": "string",
+        "description": "TikTok user id"
+      },
+      "sec_uid": {
+        "type": "string",
+        "description": "TikTok secUid identifier"
+      },
+      "bio": {
+        "type": "string",
+        "description": "Profile bio text"
+      },
+      "bio_link": {
+        "type": "string",
+        "description": "Visible website or bio link"
+      },
+      "avatar": {
+        "type": "string",
+        "description": "Largest visible avatar URL"
+      },
+      "verified": {
+        "type": "boolean",
+        "description": "Whether TikTok marks the profile verified"
+      },
+      "private_account": {
+        "type": "boolean",
+        "description": "Whether the profile is marked private"
+      },
+      "commerce_user": {
+        "type": "boolean",
+        "description": "Whether TikTok marks the account as commerce-enabled"
+      },
+      "category": {
+        "type": "string",
+        "description": "Visible commerce/account category when present"
+      },
+      "created_at": {
+        "type": "string",
+        "description": "ISO timestamp when TikTok exposes account creation time"
+      },
+      "follower_count": {
+        "type": "integer",
+        "description": "Visible follower count"
+      },
+      "following_count": {
+        "type": "integer",
+        "description": "Visible following count"
+      },
+      "like_count": {
+        "type": "integer",
+        "description": "Visible total likes/heart count"
+      },
+      "video_count": {
+        "type": "integer",
+        "description": "Visible video count"
+      },
+      "share_title": {
+        "type": "string",
+        "description": "TikTok share title"
+      },
+      "share_description": {
+        "type": "string",
+        "description": "TikTok share description"
+      }
+    },
+    "required": [
+      "profile_url",
+      "username",
+      "display_name"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "openai-profile",
+      "input": {
+        "username": "openai"
+      },
+      "expect": {
+        "outputMatches": {
+          "username": "openai",
+          "display_name": "OpenAI"
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

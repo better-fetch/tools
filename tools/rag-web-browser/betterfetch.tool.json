@@ -1,0 +1,284 @@
+{
+  "name": "rag_web_browser",
+  "version": "0.1.2",
+  "title": "RAG Web Browser",
+  "description": "Fetch one public web page through a browser and return clean RAG-ready text, Markdown, headings, links, images, JSON-LD type hints, and query snippets.",
+  "category": "ai",
+  "logo": {
+    "label": "Browser window with retrieval nodes",
+    "svg": "<svg viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"5\" y=\"8\" width=\"38\" height=\"30\" rx=\"4\" fill=\"none\" stroke=\"black\" stroke-width=\"3\"/><path d=\"M5 17h38\" stroke=\"black\" stroke-width=\"3\"/><circle cx=\"11\" cy=\"12.5\" r=\"1.7\" fill=\"black\"/><circle cx=\"17\" cy=\"12.5\" r=\"1.7\" fill=\"black\"/><path d=\"M15 28h8m6-5h6m-6 10h6\" stroke=\"black\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"13\" cy=\"28\" r=\"3\" fill=\"none\" stroke=\"black\" stroke-width=\"3\"/><circle cx=\"27\" cy=\"23\" r=\"2.5\" fill=\"none\" stroke=\"black\" stroke-width=\"3\"/><circle cx=\"27\" cy=\"33\" r=\"2.5\" fill=\"none\" stroke=\"black\" stroke-width=\"3\"/></svg>"
+  },
+  "seo": {
+    "title": "RAG Web Browser Tool for AI Agents",
+    "description": "Render a public URL with Better Fetch and return clean text, Markdown, headings, links, images, JSON-LD type hints, and query snippets for RAG and AI agent workflows.",
+    "intro": "RAG Web Browser gives agents a focused retrieval primitive: open one public web page in a real browser, remove noisy markup, and return clean content that is easy to cite, embed, summarize, or route into a retrieval pipeline. It preserves the source URL, canonical URL, title, headings, Markdown-style body text, link citations, and optional query snippets so downstream LLM steps can reason over the page without parsing HTML.",
+    "useCases": [
+      {
+        "title": "RAG ingestion",
+        "description": "Fetch a URL and convert it into normalized text and Markdown before saving it into a vector store or knowledge base."
+      },
+      {
+        "title": "Agent browsing",
+        "description": "Let an agent read a page, inspect headings, follow citation links, and decide what to fetch next."
+      },
+      {
+        "title": "Source-grounded summaries",
+        "description": "Return page text plus title, canonical URL, links, and query snippets so summaries can stay grounded in the source material."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does RAG Web Browser search the web?",
+        "answer": "This v0.1 fetches one URL at a time. Google search orchestration is intentionally left for a later version so the published tool stays predictable and easy to validate."
+      },
+      {
+        "question": "What is the difference between text and markdown?",
+        "answer": "text is the cleaned body content joined as plain text. markdown keeps simple heading, list, and quote structure so an LLM can preserve document shape."
+      },
+      {
+        "question": "Can it fetch dynamic pages?",
+        "answer": "Yes. It renders through the Better Fetch browser engine with a configurable wait time, then extracts the visible HTML returned by that browser session."
+      }
+    ],
+    "keywords": [
+      "RAG web browser",
+      "AI agent browser",
+      "web page to markdown",
+      "web retrieval tool",
+      "RAG ingestion",
+      "browser content extraction"
+    ]
+  },
+  "popularity": {
+    "rank": 45,
+    "score": 121399
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public page URL to render and extract"
+      },
+      "query": {
+        "type": "string",
+        "description": "Optional query terms used to return simple match counts and snippets from the extracted text"
+      },
+      "max_text_chars": {
+        "type": "integer",
+        "minimum": 500,
+        "maximum": 50000,
+        "default": 12000,
+        "description": "Maximum characters to return in text and markdown"
+      },
+      "max_links": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 20,
+        "description": "Maximum page links to return as citation candidates"
+      },
+      "max_images": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 50,
+        "default": 0,
+        "description": "Maximum images to return"
+      },
+      "wait_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 500,
+        "description": "Additional browser wait time after DOMContentLoaded"
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "Requested URL"
+      },
+      "final_url": {
+        "type": "string",
+        "description": "Final URL after redirects"
+      },
+      "title": {
+        "type": "string",
+        "description": "Resolved page title"
+      },
+      "description": {
+        "type": "string",
+        "description": "Meta description when present"
+      },
+      "canonical_url": {
+        "type": "string",
+        "description": "Canonical URL when present"
+      },
+      "language": {
+        "type": "string",
+        "description": "HTML language code when present"
+      },
+      "text": {
+        "type": "string",
+        "description": "Cleaned plain text"
+      },
+      "markdown": {
+        "type": "string",
+        "description": "Markdown-style content preserving headings, lists, and quotes"
+      },
+      "word_count": {
+        "type": "integer",
+        "description": "Extracted word count"
+      },
+      "reading_time_minutes": {
+        "type": "integer",
+        "description": "Approximate reading time at 225 words per minute"
+      },
+      "headings": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "integer",
+              "description": "Heading level, 1-4"
+            },
+            "text": {
+              "type": "string",
+              "description": "Heading text"
+            }
+          },
+          "required": [
+            "level",
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "links": {
+        "type": "array",
+        "description": "Page links, capped by max_links",
+        "items": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Absolute link URL"
+            },
+            "text": {
+              "type": "string",
+              "description": "Visible link text"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "images": {
+        "type": "array",
+        "description": "Page images, capped by max_images",
+        "items": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Absolute image URL"
+            },
+            "alt": {
+              "type": "string",
+              "description": "Image alt text"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "json_ld_types": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "JSON-LD @type values found on the page"
+      },
+      "query": {
+        "type": "string",
+        "description": "Query used for snippets"
+      },
+      "query_matches": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "term": {
+              "type": "string",
+              "description": "Matched query term"
+            },
+            "count": {
+              "type": "integer",
+              "description": "Simple substring count in extracted text"
+            }
+          },
+          "required": [
+            "term",
+            "count"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "snippets": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Short snippets around matched query terms"
+      }
+    },
+    "required": [
+      "url",
+      "final_url",
+      "title",
+      "text",
+      "markdown",
+      "word_count",
+      "reading_time_minutes"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "example-domain-fetch",
+      "input": {
+        "url": "https://example.com",
+        "query": "illustrative examples",
+        "max_text_chars": 2000,
+        "max_links": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "title": "Example Domain",
+          "query_matches": {
+            "minLength": 1
+          },
+          "links": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

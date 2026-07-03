@@ -1,0 +1,304 @@
+{
+  "name": "biorxiv_medrxiv_preprints_scraper",
+  "version": "0.1.1",
+  "title": "bioRxiv and medRxiv Preprints Scraper",
+  "description": "Fetch bioRxiv or medRxiv preprint metadata by date window, category, cursor, or DOI through the public bioRxiv API, returning normalized DOI, title, author, date, version, license, category, abstract, JATS XML, PDF, and published-article links.",
+  "category": "research",
+  "logo": {
+    "label": "bioRxiv and medRxiv preprint mark",
+    "svg": "<svg viewBox=\"0 0 96 64\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M18 48V16h18c8 0 13 4 13 10 0 4-2 7-6 9 6 1 10 5 10 11 0 7-6 12-15 12H18Z\"/><path fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" d=\"M29 29h8M29 45h11M62 18l16 28M78 18 62 46\"/></svg>",
+    "sourceUrl": "https://api.biorxiv.org/"
+  },
+  "seo": {
+    "title": "bioRxiv and medRxiv Preprints Scraper Tool for Public Preprint Metadata",
+    "description": "Fetch bioRxiv and medRxiv preprints with Better Fetch via the public bioRxiv API, including DOI, title, authors, posting date, version, manuscript type, license, category, abstract, JATS XML URL, PDF URL, server, and published DOI.",
+    "intro": "bioRxiv and medRxiv Preprints Scraper gives agents a structured route into the public bioRxiv API for biology and health-science preprint metadata. Pull a bounded date window from bioRxiv or medRxiv, apply a subject-category filter, continue from a cursor, or fetch one exact preprint DOI. The tool normalizes the API response into compact rows with preprint DOI, server, title, authors, posted date, version, manuscript type, license, subject category, abstract text, corresponding author details, funder labels, published DOI when linked, article URL, PDF URL, and JATS XML URL. It is designed for preprint surveillance, biomedical and life-sciences literature review, science-news monitoring, pharma and biotech competitive intelligence, RAG corpus triage, weekly reading lists, and reproducible research snapshots.",
+    "useCases": [
+      {
+        "title": "Preprint surveillance",
+        "description": "Track new bioRxiv or medRxiv records in a date window and return normalized DOI, title, author, category, abstract, and PDF/JATS links."
+      },
+      {
+        "title": "Biomedical and life-science monitoring",
+        "description": "Filter by server and category, then pipe fresh preprint metadata into review queues, alerts, dashboards, or research-agent workflows."
+      },
+      {
+        "title": "RAG corpus triage",
+        "description": "Collect abstracts, DOIs, source URLs, PDF URLs, licenses, and JATS XML links before deciding which preprints should be downloaded or embedded."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does bioRxiv and medRxiv Preprints Scraper require an API key?",
+        "answer": "No. Version 0.1 uses the public bioRxiv API and keeps each run to one bounded request. Upstream rate limits can still apply to aggressive use."
+      },
+      {
+        "question": "Does it download PDFs or parse full text?",
+        "answer": "No. It returns metadata plus preprint, PDF, and JATS XML URLs when the public API provides enough information. It does not download PDFs, parse JATS XML, or crawl article pages."
+      },
+      {
+        "question": "Is this tool affiliated with bioRxiv, medRxiv, or Cold Spring Harbor Laboratory?",
+        "answer": "No. This Better Fetch tool uses public API data and is not endorsed by or affiliated with bioRxiv, medRxiv, openRxiv, or Cold Spring Harbor Laboratory."
+      }
+    ],
+    "keywords": [
+      "bioRxiv scraper",
+      "medRxiv scraper",
+      "bioRxiv API",
+      "preprint metadata",
+      "biomedical preprints",
+      "life sciences research",
+      "open access preprints",
+      "JATS XML"
+    ]
+  },
+  "popularity": {
+    "rank": 36,
+    "score": 2
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "date_range",
+          "doi"
+        ],
+        "default": "date_range",
+        "description": "Fetch preprints by date window or fetch one exact preprint DOI."
+      },
+      "server": {
+        "type": "string",
+        "enum": [
+          "biorxiv",
+          "medrxiv"
+        ],
+        "default": "biorxiv",
+        "description": "Preprint server to query."
+      },
+      "doi": {
+        "type": "string",
+        "maxLength": 140,
+        "description": "Exact preprint DOI for DOI mode, e.g. 10.1101/2024.05.28.596311."
+      },
+      "date_from": {
+        "type": "string",
+        "maxLength": 10,
+        "description": "Start date in YYYY-MM-DD format for date_range mode."
+      },
+      "date_to": {
+        "type": "string",
+        "maxLength": 10,
+        "description": "End date in YYYY-MM-DD format for date_range mode."
+      },
+      "cursor": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100000,
+        "default": 0,
+        "description": "bioRxiv API cursor/start offset for a date window."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 30,
+        "default": 10,
+        "description": "Maximum records to return from this single API response."
+      },
+      "category": {
+        "type": "string",
+        "maxLength": 80,
+        "description": "Optional category filter such as neuroscience, cell_biology, or sports_medicine."
+      },
+      "include_abstract": {
+        "type": "boolean",
+        "default": true,
+        "description": "Include abstract text when returned by the public API."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "bioRxiv API URL fetched"
+      },
+      "server": {
+        "type": "string",
+        "description": "Server queried"
+      },
+      "doi": {
+        "type": "string",
+        "description": "Exact DOI used"
+      },
+      "date_from": {
+        "type": "string",
+        "description": "Start date used"
+      },
+      "date_to": {
+        "type": "string",
+        "description": "End date used"
+      },
+      "cursor": {
+        "type": "integer",
+        "description": "Cursor/start offset used"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned preprints"
+      },
+      "total_matches": {
+        "type": "integer",
+        "description": "Total API matches reported for the interval"
+      },
+      "new_papers_count": {
+        "type": "integer",
+        "description": "New paper count reported for the interval"
+      },
+      "status": {
+        "type": "string",
+        "description": "API status message"
+      },
+      "preprints": {
+        "type": "array",
+        "description": "Normalized bioRxiv or medRxiv preprint records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank in this response"
+            },
+            "doi": {
+              "type": "string",
+              "description": "Preprint DOI"
+            },
+            "server": {
+              "type": "string",
+              "description": "bioRxiv or medRxiv server label"
+            },
+            "title": {
+              "type": "string",
+              "description": "Preprint title"
+            },
+            "authors": {
+              "type": "string",
+              "description": "Author string returned by the API"
+            },
+            "date": {
+              "type": "string",
+              "description": "Posted date"
+            },
+            "version": {
+              "type": "string",
+              "description": "Preprint version"
+            },
+            "type": {
+              "type": "string",
+              "description": "Manuscript type"
+            },
+            "license": {
+              "type": "string",
+              "description": "License code"
+            },
+            "category": {
+              "type": "string",
+              "description": "Subject category"
+            },
+            "abstract": {
+              "type": "string",
+              "description": "Abstract text"
+            },
+            "author_corresponding": {
+              "type": "string",
+              "description": "Corresponding author"
+            },
+            "author_corresponding_institution": {
+              "type": "string",
+              "description": "Corresponding author institution"
+            },
+            "funder": {
+              "type": "string",
+              "description": "Funder label when returned"
+            },
+            "published_doi": {
+              "type": "string",
+              "description": "Published article DOI when linked"
+            },
+            "preprint_url": {
+              "type": "string",
+              "description": "Preprint landing URL"
+            },
+            "pdf_url": {
+              "type": "string",
+              "description": "Derived PDF URL"
+            },
+            "jatsxml_url": {
+              "type": "string",
+              "description": "JATS XML URL"
+            }
+          },
+          "required": [
+            "rank",
+            "doi"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "server",
+      "count",
+      "preprints"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "biorxiv-neuroscience-window",
+      "input": {
+        "mode": "date_range",
+        "server": "biorxiv",
+        "date_from": "2024-06-01",
+        "date_to": "2024-06-03",
+        "limit": 2,
+        "include_abstract": false
+      },
+      "expect": {
+        "outputMatches": {
+          "preprints": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "biorxiv-doi",
+      "input": {
+        "mode": "doi",
+        "server": "biorxiv",
+        "doi": "10.1101/2024.05.28.596311",
+        "include_abstract": false
+      },
+      "expect": {
+        "outputMatches": {
+          "preprints": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

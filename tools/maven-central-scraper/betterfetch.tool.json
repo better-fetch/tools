@@ -1,0 +1,316 @@
+{
+  "name": "maven_central_scraper",
+  "version": "0.1.1",
+  "entry": "src/index.ts",
+  "title": "Maven Central Scraper",
+  "description": "Search Maven Central packages or list version-history rows through the official Maven Central Solr JSON API, returning normalized JVM coordinates, package URLs, latest versions, packaging types, version counts, repository IDs, timestamps, file extensions, and tags.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "Maven Central M mark",
+    "svg": "<svg viewBox=\"0 0 72 64\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"black\" d=\"M8 54 19 10h12l5 21 5-21h12l11 44H51l-5-24-6 24h-8l-6-24-5 24H8Z\"/><path fill=\"black\" d=\"M11 58h50v4H11z\"/></svg>",
+    "sourceUrl": "https://central.sonatype.com/"
+  },
+  "seo": {
+    "title": "Maven Central Scraper Tool for JVM Package Metadata and Version History",
+    "description": "Search Maven Central with Better Fetch via the official Solr JSON API. Return group IDs, artifact IDs, latest versions, packaging types, version counts, repository IDs, timestamps, tags, file extensions, package URLs, and recent version rows.",
+    "intro": "Maven Central Scraper gives agents and developer tooling a structured route into the public JVM package index. Search by keyword, Maven group ID, artifact ID, packaging type, classifier, or SHA-1 checksum, or list recent version rows for one exact package. The tool normalizes group IDs, artifact IDs, coordinates, package URLs, latest versions, packaging labels, version counts, repository IDs, last-updated timestamps, file extensions, tags, version-specific URLs, POM URLs, and JAR URLs when available. It is designed for dependency discovery, Java and Kotlin ecosystem research, software supply-chain inventory, SBOM enrichment, stale dependency checks, package recommendation systems, and agent-readable JVM package context.",
+    "useCases": [
+      {
+        "title": "Dependency discovery",
+        "description": "Search Maven Central by keyword, group ID, artifact ID, or packaging type and return compact package records with coordinates, latest versions, timestamps, and package URLs."
+      },
+      {
+        "title": "Version monitoring",
+        "description": "List recent version rows for a known group ID and artifact ID to track release cadence, packaging, file extensions, and direct POM or JAR URLs."
+      },
+      {
+        "title": "Supply-chain inventory",
+        "description": "Attach Maven Central version counts, repository IDs, update timestamps, tags, and canonical coordinates to SBOM, dependency audit, or developer portal datasets."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Maven Central Scraper require an API key?",
+        "answer": "No. Version 0.1 uses Maven Central's public Solr search API through Better Fetch and only returns package metadata that is publicly visible."
+      },
+      {
+        "question": "Can it list versions for one artifact?",
+        "answer": "Yes. Use versions mode with group_id and artifact_id to fetch bounded version-history rows from the Maven Central gav core."
+      },
+      {
+        "question": "Does it download package files or inspect dependencies?",
+        "answer": "No. It returns metadata, package URLs, and direct POM or JAR URLs when those can be derived. It does not download artifacts, parse POM dependency graphs, or scan binaries."
+      }
+    ],
+    "keywords": [
+      "Maven Central scraper",
+      "Maven Central API",
+      "Java package metadata",
+      "JVM dependency search",
+      "Maven versions",
+      "Kotlin packages",
+      "software supply chain",
+      "SBOM enrichment"
+    ]
+  },
+  "popularity": {
+    "rank": 42,
+    "score": 2
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "versions"
+        ],
+        "default": "search",
+        "description": "search = package search; versions = recent version rows for one exact group_id and artifact_id."
+      },
+      "query": {
+        "type": "string",
+        "description": "Keyword query for package search, such as spring, jackson, logging, kafka, or junit."
+      },
+      "group_id": {
+        "type": "string",
+        "description": "Optional Maven group ID filter, such as org.springframework.boot or com.fasterxml.jackson.core."
+      },
+      "artifact_id": {
+        "type": "string",
+        "description": "Optional Maven artifact ID filter, such as spring-boot-starter-web or jackson-databind."
+      },
+      "packaging": {
+        "type": "string",
+        "description": "Optional packaging filter such as jar, pom, aar, war, or bundle."
+      },
+      "classifier": {
+        "type": "string",
+        "description": "Optional classifier filter such as sources or javadoc."
+      },
+      "sha1": {
+        "type": "string",
+        "description": "Optional SHA-1 checksum lookup. When supplied, other search filters are ignored."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 10,
+        "description": "Maximum package or version rows to return."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Maven Central Solr JSON URL fetched"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of package or version rows returned"
+      },
+      "total_matches": {
+        "type": "integer",
+        "description": "Total matching rows reported by Maven Central"
+      },
+      "query": {
+        "type": "string",
+        "description": "Solr query used"
+      },
+      "group_id": {
+        "type": "string",
+        "description": "Group ID filter used"
+      },
+      "artifact_id": {
+        "type": "string",
+        "description": "Artifact ID filter used"
+      },
+      "artifacts": {
+        "type": "array",
+        "description": "Package search rows",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "group_id": {
+              "type": "string",
+              "description": "Maven group ID"
+            },
+            "artifact_id": {
+              "type": "string",
+              "description": "Maven artifact ID"
+            },
+            "coordinate": {
+              "type": "string",
+              "description": "group_id:artifact_id coordinate"
+            },
+            "artifact_url": {
+              "type": "string",
+              "description": "Canonical Maven Central artifact URL"
+            },
+            "latest_version": {
+              "type": "string",
+              "description": "Latest version reported by Maven Central"
+            },
+            "packaging": {
+              "type": "string",
+              "description": "Packaging type"
+            },
+            "version_count": {
+              "type": "integer",
+              "description": "Number of published versions"
+            },
+            "repository_id": {
+              "type": "string",
+              "description": "Repository origin"
+            },
+            "last_updated": {
+              "type": "string",
+              "description": "Last update timestamp in ISO format"
+            },
+            "file_extensions": {
+              "type": "string",
+              "description": "Available file extensions or classifiers"
+            },
+            "tags": {
+              "type": "string",
+              "description": "Search tags returned by Maven Central"
+            }
+          },
+          "required": [
+            "rank",
+            "group_id",
+            "artifact_id",
+            "coordinate",
+            "artifact_url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "versions": {
+        "type": "array",
+        "description": "Version-history rows for one artifact",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "group_id": {
+              "type": "string",
+              "description": "Maven group ID"
+            },
+            "artifact_id": {
+              "type": "string",
+              "description": "Maven artifact ID"
+            },
+            "version": {
+              "type": "string",
+              "description": "Artifact version"
+            },
+            "coordinate": {
+              "type": "string",
+              "description": "group_id:artifact_id:version coordinate"
+            },
+            "artifact_url": {
+              "type": "string",
+              "description": "Version-specific Maven Central artifact URL"
+            },
+            "pom_url": {
+              "type": "string",
+              "description": "Derived public POM URL"
+            },
+            "jar_url": {
+              "type": "string",
+              "description": "Derived public JAR URL when packaging is jar"
+            },
+            "packaging": {
+              "type": "string",
+              "description": "Packaging type"
+            },
+            "repository_id": {
+              "type": "string",
+              "description": "Repository origin"
+            },
+            "last_updated": {
+              "type": "string",
+              "description": "Last update timestamp in ISO format"
+            },
+            "file_extensions": {
+              "type": "string",
+              "description": "Available file extensions or classifiers"
+            },
+            "tags": {
+              "type": "string",
+              "description": "Search tags returned by Maven Central"
+            }
+          },
+          "required": [
+            "rank",
+            "group_id",
+            "artifact_id",
+            "version",
+            "coordinate",
+            "artifact_url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "spring-search",
+      "input": {
+        "mode": "search",
+        "query": "spring",
+        "group_id": "org.springframework",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "artifacts": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "jackson-versions",
+      "input": {
+        "mode": "versions",
+        "group_id": "com.fasterxml.jackson.core",
+        "artifact_id": "jackson-databind",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "versions": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}

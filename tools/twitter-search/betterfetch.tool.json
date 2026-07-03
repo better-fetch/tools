@@ -1,0 +1,152 @@
+{
+  "name": "twitter_search",
+  "version": "0.1.1",
+  "title": "X/Twitter Search",
+  "description": "Extract public X/Twitter profile metadata from a handle or profile URL, including display name, bio, user id, joined date, avatar, banner image, follower count, following count, and post count.",
+  "category": "social",
+  "logo": {
+    "label": "X logo",
+    "svg": "<svg width=\"300\" height=\"271\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"m236 0h46l-101 115 118 156h-92.6l-72.5-94.8-83 94.8h-46l107-123-113-148h94.9l65.5 86.6zm-16.1 244h25.5l-165-218h-27.4z\"/></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:X_logo_2023.svg"
+  },
+  "seo": {
+    "title": "X/Twitter Profile Metadata Tool for Public Accounts",
+    "description": "Scrape public X/Twitter profile metadata with Better Fetch, including handle, display name, bio, user id, joined date, avatar, banner image, follower count, following count, and post count.",
+    "intro": "X/Twitter Search is the marketplace entry point for public X data in Better Fetch. Version 0.1 focuses on the reliable public profile surface: provide a handle or profile URL and the tool returns normalized account metadata from X's public JSON-LD and meta tags without requiring account cookies, passwords, or private API keys.",
+    "useCases": [
+      {
+        "title": "Social account research",
+        "description": "Collect public profile context for brands, founders, creators, journalists, competitors, or communities before deeper monitoring workflows run."
+      },
+      {
+        "title": "Lead qualification",
+        "description": "Give an agent a structured profile snapshot with bio, public counts, avatar, banner image, and canonical URL for enrichment or routing."
+      },
+      {
+        "title": "Profile monitoring",
+        "description": "Track public follower, following, and post counts over time for accounts that matter to a market, product, or campaign."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does X/Twitter Search require an X account?",
+        "answer": "No. Version 0.1 reads public profile metadata visible in the logged-out X profile page and does not use private cookies, passwords, bearer tokens, or exported sessions."
+      },
+      {
+        "question": "Does this version search tweets?",
+        "answer": "No. The tool name is reserved for the broader marketplace benchmark, but version 0.1 only returns public profile metadata. Tweet search, latest posts, replies, and timeline pagination remain future validated slices."
+      },
+      {
+        "question": "Why can fields be missing?",
+        "answer": "The tool only returns fields present in X's public profile response. Protected, suspended, removed, or region-limited profile data is not bypassed or guessed."
+      }
+    ],
+    "keywords": [
+      "Twitter scraper",
+      "X scraper",
+      "Twitter profile scraper",
+      "X profile metadata",
+      "social media scraper",
+      "public X data"
+    ]
+  },
+  "popularity": {
+    "rank": 11,
+    "score": 65000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "handle": {
+        "type": "string",
+        "description": "X/Twitter handle, with or without @. Use handle or profile_url."
+      },
+      "profile_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public X/Twitter profile URL. Use handle or profile_url."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "profile_url": {
+        "type": "string",
+        "description": "Fetched public X/Twitter profile URL"
+      },
+      "handle": {
+        "type": "string",
+        "description": "X/Twitter handle without @"
+      },
+      "display_name": {
+        "type": "string",
+        "description": "Visible display name"
+      },
+      "bio": {
+        "type": "string",
+        "description": "Profile bio text"
+      },
+      "user_id": {
+        "type": "string",
+        "description": "X/Twitter numeric user id"
+      },
+      "joined_at": {
+        "type": "string",
+        "description": "ISO timestamp when X exposes profile creation time"
+      },
+      "joined_label": {
+        "type": "string",
+        "description": "Human joined date label from public meta tags"
+      },
+      "avatar": {
+        "type": "string",
+        "description": "Visible profile image URL"
+      },
+      "banner_image": {
+        "type": "string",
+        "description": "Visible profile banner image URL"
+      },
+      "follower_count": {
+        "type": "integer",
+        "description": "Visible follower count"
+      },
+      "following_count": {
+        "type": "integer",
+        "description": "Visible following count"
+      },
+      "post_count": {
+        "type": "integer",
+        "description": "Visible post/tweet count"
+      },
+      "protected_account": {
+        "type": "boolean",
+        "description": "Whether X marks the account as protected when visible"
+      }
+    },
+    "required": [
+      "profile_url",
+      "handle",
+      "display_name"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "openai-profile",
+      "input": {
+        "handle": "openai"
+      },
+      "expect": {
+        "outputMatches": {
+          "handle": "OpenAI",
+          "display_name": "OpenAI"
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

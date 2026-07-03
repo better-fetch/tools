@@ -1,0 +1,194 @@
+{
+  "name": "facebook_posts_scraper",
+  "version": "0.1.1",
+  "title": "Facebook Posts Scraper",
+  "description": "Extract public Facebook Page Plugin timeline posts from a page URL or slug, including visible post text, post URLs, timestamps, reactions, comments, shares, media, and outbound links.",
+  "category": "social",
+  "logo": {
+    "label": "Facebook logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14.2222in\" height=\"14.2222in\" version=\"1.1\" style=\"shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd\" viewBox=\"0 0 14222 14222\" ><defs></defs><g id=\"Layer_x0020_1\"><path class=\"fil0\" d=\"M14222 7111c0,-3927 -3184,-7111 -7111,-7111 -3927,0 -7111,3184 -7111,7111 0,3549 2600,6491 6000,7025l0 -4969 -1806 0 0 -2056 1806 0 0 -1567c0,-1782 1062,-2767 2686,-2767 778,0 1592,139 1592,139l0 1750 -897 0c-883,0 -1159,548 -1159,1111l0 1334 1972 0 -315 2056 -1657 0 0 4969c3400,-533 6000,-3475 6000,-7025z\"/><path class=\"fil1\" d=\"M9879 9167l315 -2056 -1972 0 0 -1334c0,-562 275,-1111 1159,-1111l897 0 0 -1750c0,0 -814,-139 -1592,-139 -1624,0 -2686,984 -2686,2767l0 1567 -1806 0 0 2056 1806 0 0 4969c362,57 733,86 1111,86 378,0 749,-30 1111,-86l0 -4969 1657 0z\"/></g></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Facebook_f_logo_(2019).svg"
+  },
+  "seo": {
+    "title": "Facebook Posts Scraper Tool for Public Page Timelines",
+    "description": "Scrape public Facebook Page Plugin timeline posts with Better Fetch, including post text, URLs, timestamps, reaction counts, comment counts, share counts, media, and links.",
+    "intro": "Facebook Posts Scraper gives agents a validated no-login slice of public Facebook Page monitoring. Provide a Facebook Page URL or slug and the tool renders Facebook's public Page Plugin timeline, then normalizes the visible post cards into compact records with author, post URL, timestamp label, text, engagement counts, media thumbnails, and outbound links. It is designed for social listening, brand monitoring, campaign research, newsroom checks, and lightweight competitor tracking where a bounded public page feed is enough.",
+    "useCases": [
+      {
+        "title": "Brand activity monitoring",
+        "description": "Watch public Page posts for recent announcements, campaigns, product launches, and engagement signals without maintaining a Facebook login session."
+      },
+      {
+        "title": "Social listening research",
+        "description": "Collect visible post text, post URLs, reactions, comments, shares, media, and outbound links for an agent that compares public Facebook activity across brands."
+      },
+      {
+        "title": "Newsroom and campaign checks",
+        "description": "Pull the latest visible public posts from official Pages so editorial, comms, and marketing workflows can cite the source post and summarize engagement quickly."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Facebook Posts Scraper need a Facebook login?",
+        "answer": "No. Version 0.1 uses Facebook's public Page Plugin timeline through Better Fetch. It only returns posts visible through that public embed surface."
+      },
+      {
+        "question": "Can it scrape private profiles, groups, comments, or deep pagination?",
+        "answer": "Not in this first slice. Version 0.1 is limited to public Page Plugin-visible timeline cards and does not use cookies, account data, private groups, or authenticated endpoints."
+      },
+      {
+        "question": "Why do some public Pages return fewer posts?",
+        "answer": "Facebook controls what the Page Plugin exposes. Age-restricted, country-restricted, unsupported, or temporarily unavailable Pages may show only headers or fewer post cards."
+      }
+    ],
+    "keywords": [
+      "Facebook posts scraper",
+      "Facebook Page scraper",
+      "Facebook timeline scraper",
+      "public Facebook posts",
+      "social listening",
+      "brand monitoring",
+      "Facebook engagement data",
+      "AI agent social research"
+    ]
+  },
+  "popularity": {
+    "rank": 10,
+    "score": 84000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "page_url": {
+        "type": "string",
+        "description": "Public Facebook Page URL, e.g. https://www.facebook.com/NASA. Use page_url or page_slug."
+      },
+      "page_slug": {
+        "type": "string",
+        "description": "Facebook Page slug, numeric page ID, or page path, e.g. NASA. Use page_slug or page_url."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10,
+        "default": 5,
+        "description": "Maximum visible timeline posts to return from the public Page Plugin."
+      },
+      "wait_ms": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 12000,
+        "default": 4000,
+        "description": "Extra milliseconds to wait after the plugin page loads."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source_url": {
+        "type": "string",
+        "description": "Fetched Facebook Page Plugin URL"
+      },
+      "page_url": {
+        "type": "string",
+        "description": "Canonical public Facebook Page URL requested"
+      },
+      "page_name": {
+        "type": "string",
+        "description": "Visible page name when available"
+      },
+      "followers": {
+        "type": "integer",
+        "description": "Visible follower count when available"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned visible post records"
+      },
+      "posts": {
+        "type": "array",
+        "description": "Public Facebook Page timeline post records visible in the plugin",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Record type"
+            },
+            "author_name": {
+              "type": "string",
+              "description": "Visible post author"
+            },
+            "post_url": {
+              "type": "string",
+              "description": "Canonical Facebook post, reel, or photo URL"
+            },
+            "posted_at_label": {
+              "type": "string",
+              "description": "Visible relative or absolute timestamp label"
+            },
+            "posted_at": {
+              "type": "string",
+              "description": "ISO timestamp when Facebook exposes a unix timestamp"
+            },
+            "text": {
+              "type": "string",
+              "description": "Visible post text with HTML tags removed"
+            },
+            "like_count": {
+              "type": "integer",
+              "description": "Visible like/reaction count"
+            },
+            "comment_count": {
+              "type": "integer",
+              "description": "Visible comment count"
+            },
+            "share_count": {
+              "type": "integer",
+              "description": "Visible share count"
+            },
+            "media_url": {
+              "type": "string",
+              "description": "First visible media thumbnail URL"
+            },
+            "external_links": {
+              "type": "string",
+              "description": "Comma-separated outbound links visible in the post text"
+            }
+          },
+          "required": [
+            "type",
+            "post_url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "source_url",
+      "page_url",
+      "count",
+      "posts"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "nasa-page",
+      "input": {
+        "page_slug": "NASA",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "page_url": "https://www.facebook.com/NASA"
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

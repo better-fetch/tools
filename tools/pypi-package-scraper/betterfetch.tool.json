@@ -1,0 +1,453 @@
+{
+  "name": "pypi_package_scraper",
+  "version": "0.1.1",
+  "entry": "src/index.ts",
+  "title": "PyPI Package Scraper",
+  "description": "Fetch PyPI project metadata, exact release metadata, or PEP 691 simple-project distribution files through public PyPI JSON APIs, returning normalized package names, versions, dependencies, classifiers, file hashes, upload timestamps, yanked flags, provenance URLs, and vulnerability summaries.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "PyPI package cube mark",
+    "svg": "<svg viewBox=\"0 0 72 64\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"black\" d=\"M36 4 8 18v30l28 14 28-14V18L36 4Zm0 8 17 8-17 8-17-8 17-8ZM16 27l16 8v17l-16-8V27Zm40 17-16 8V35l16-8v17Z\"/><path fill=\"black\" d=\"M26 17h20v6H26z\"/></svg>",
+    "sourceUrl": "https://pypi.org/"
+  },
+  "seo": {
+    "title": "PyPI Package Scraper Tool for Python Package Metadata, Releases, Files, and Hashes",
+    "description": "Fetch PyPI package metadata with Better Fetch via public PyPI JSON APIs. Return package names, versions, summaries, authors, maintainers, licenses, Python requirements, classifiers, dependencies, release counts, file hashes, upload times, yanked flags, provenance URLs, and vulnerability summaries.",
+    "intro": "PyPI Package Scraper gives agents and developer workflows a structured way to inspect the Python Package Index without scraping HTML pages. Fetch latest project metadata from the PyPI JSON API, inspect one exact release, or read a bounded PEP 691 simple-project JSON file list. The tool normalizes package names, versions, summaries, authors, maintainers, license labels, Python version requirements, classifiers, dependency specifiers, project URLs, release counts, recent release timestamps, distribution filenames, package types, file sizes, SHA-256 hashes, BLAKE2b hashes, yanked flags, provenance links, core-metadata availability, and known vulnerability summaries. It is designed for Python ecosystem research, dependency auditing, SBOM enrichment, package discovery, release monitoring, maintainer research, and agent-readable package intelligence.",
+    "useCases": [
+      {
+        "title": "Package intelligence",
+        "description": "Fetch a PyPI project's latest metadata, release count, dependency specifiers, classifiers, project links, license labels, and latest upload timestamp."
+      },
+      {
+        "title": "Release verification",
+        "description": "Inspect one exact release and return its wheel or source distribution files with hashes, sizes, upload timestamps, Python requirements, and yanked status."
+      },
+      {
+        "title": "Supply-chain inventory",
+        "description": "Collect package files, provenance URLs, hashes, core-metadata flags, and vulnerability summaries for dependency audit, SBOM, or package-monitoring workflows."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does PyPI Package Scraper require a PyPI API token?",
+        "answer": "No. Version 0.1 uses public PyPI JSON and PEP 691 simple-project endpoints through Better Fetch and only returns metadata visible without account-specific authentication."
+      },
+      {
+        "question": "Does it provide PyPI download counts?",
+        "answer": "No. PyPI's JSON API marks the legacy downloads fields as deprecated and always -1. This tool avoids presenting those values as real download statistics."
+      },
+      {
+        "question": "Does it download packages or scan package contents?",
+        "answer": "No. It returns metadata, file URLs, hashes, yanked flags, and provenance links. It does not download artifacts, unpack archives, execute code, or perform vulnerability scanning beyond PyPI's public vulnerability metadata."
+      }
+    ],
+    "keywords": [
+      "PyPI scraper",
+      "PyPI API",
+      "Python package metadata",
+      "Python dependency audit",
+      "PEP 691",
+      "package hashes",
+      "Python release history",
+      "software supply chain"
+    ]
+  },
+  "popularity": {
+    "rank": 43,
+    "score": 2
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "package",
+          "release",
+          "files"
+        ],
+        "default": "package",
+        "description": "package = latest project metadata and recent releases; release = one exact version; files = PEP 691 simple-project file list."
+      },
+      "package": {
+        "type": "string",
+        "description": "PyPI package name or project URL, such as requests, fastapi, pandas, or https://pypi.org/project/requests/."
+      },
+      "package_name": {
+        "type": "string",
+        "description": "Alternative package-name field when package would be awkward in the calling environment."
+      },
+      "version": {
+        "type": "string",
+        "description": "Exact PyPI release version for release mode, such as 2.32.5."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 10,
+        "description": "Maximum release or file rows to return."
+      },
+      "max_description_chars": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 1200,
+        "description": "Maximum project description characters to include. Use 0 to omit descriptions."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "PyPI JSON URL fetched"
+      },
+      "package_name": {
+        "type": "string",
+        "description": "Resolved PyPI package name"
+      },
+      "version": {
+        "type": "string",
+        "description": "Resolved package or release version"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of release or file rows returned"
+      },
+      "total_releases": {
+        "type": "integer",
+        "description": "Total release versions in the project JSON response"
+      },
+      "total_files": {
+        "type": "integer",
+        "description": "Total distribution files in the selected response"
+      },
+      "project": {
+        "type": "object",
+        "description": "Normalized PyPI project metadata",
+        "properties": {
+          "package_name": {
+            "type": "string",
+            "description": "PyPI project name"
+          },
+          "version": {
+            "type": "string",
+            "description": "Latest or selected version"
+          },
+          "package_url": {
+            "type": "string",
+            "description": "PyPI package URL"
+          },
+          "project_url": {
+            "type": "string",
+            "description": "PyPI project URL"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Project summary"
+          },
+          "author": {
+            "type": "string",
+            "description": "Author label"
+          },
+          "author_email": {
+            "type": "string",
+            "description": "Author email label"
+          },
+          "maintainer": {
+            "type": "string",
+            "description": "Maintainer label"
+          },
+          "maintainer_email": {
+            "type": "string",
+            "description": "Maintainer email label"
+          },
+          "license": {
+            "type": "string",
+            "description": "License text or label"
+          },
+          "license_expression": {
+            "type": "string",
+            "description": "SPDX license expression when returned"
+          },
+          "requires_python": {
+            "type": "string",
+            "description": "Python version requirement"
+          },
+          "keywords": {
+            "type": "string",
+            "description": "Project keywords"
+          },
+          "classifiers": {
+            "type": "string",
+            "description": "Classifier list"
+          },
+          "requires_dist": {
+            "type": "string",
+            "description": "Dependency specifier list"
+          },
+          "project_urls": {
+            "type": "string",
+            "description": "Project links"
+          },
+          "release_count": {
+            "type": "integer",
+            "description": "Number of releases"
+          },
+          "latest_upload_time": {
+            "type": "string",
+            "description": "Latest upload timestamp for current files"
+          },
+          "current_file_count": {
+            "type": "integer",
+            "description": "Number of files for the current release"
+          },
+          "vulnerability_count": {
+            "type": "integer",
+            "description": "Known vulnerability count in the selected response"
+          },
+          "description": {
+            "type": "string",
+            "description": "Truncated project description"
+          }
+        },
+        "required": [
+          "package_name"
+        ],
+        "additionalProperties": false
+      },
+      "releases": {
+        "type": "array",
+        "description": "Recent release summaries",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "version": {
+              "type": "string",
+              "description": "Release version"
+            },
+            "file_count": {
+              "type": "integer",
+              "description": "Number of files in this release"
+            },
+            "upload_time": {
+              "type": "string",
+              "description": "Latest upload timestamp for this release"
+            },
+            "packagetypes": {
+              "type": "string",
+              "description": "Package types seen in this release"
+            },
+            "python_versions": {
+              "type": "string",
+              "description": "Python version labels"
+            },
+            "requires_python": {
+              "type": "string",
+              "description": "Python requirement labels"
+            },
+            "yanked_count": {
+              "type": "integer",
+              "description": "Yanked file count"
+            }
+          },
+          "required": [
+            "rank",
+            "version",
+            "file_count"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "files": {
+        "type": "array",
+        "description": "Distribution file rows",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "filename": {
+              "type": "string",
+              "description": "Distribution filename"
+            },
+            "url": {
+              "type": "string",
+              "description": "File download URL"
+            },
+            "packagetype": {
+              "type": "string",
+              "description": "Package type"
+            },
+            "python_version": {
+              "type": "string",
+              "description": "Python version label"
+            },
+            "requires_python": {
+              "type": "string",
+              "description": "Python version requirement"
+            },
+            "size": {
+              "type": "integer",
+              "description": "File size in bytes"
+            },
+            "upload_time": {
+              "type": "string",
+              "description": "Upload timestamp"
+            },
+            "sha256": {
+              "type": "string",
+              "description": "SHA-256 hash"
+            },
+            "blake2b_256": {
+              "type": "string",
+              "description": "BLAKE2b-256 hash"
+            },
+            "yanked": {
+              "type": "boolean",
+              "description": "Yanked flag"
+            },
+            "yanked_reason": {
+              "type": "string",
+              "description": "Yanked reason"
+            },
+            "provenance_url": {
+              "type": "string",
+              "description": "PyPI integrity provenance URL"
+            },
+            "has_core_metadata": {
+              "type": "boolean",
+              "description": "Whether core metadata is available through the simple API"
+            }
+          },
+          "required": [
+            "rank",
+            "filename"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "vulnerabilities": {
+        "type": "array",
+        "description": "Known vulnerability summaries returned by PyPI",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "id": {
+              "type": "string",
+              "description": "Vulnerability ID"
+            },
+            "source": {
+              "type": "string",
+              "description": "Vulnerability source"
+            },
+            "summary": {
+              "type": "string",
+              "description": "Short summary"
+            },
+            "details": {
+              "type": "string",
+              "description": "Details"
+            },
+            "aliases": {
+              "type": "string",
+              "description": "Alias IDs"
+            },
+            "fixed_in": {
+              "type": "string",
+              "description": "Fixed versions"
+            },
+            "link": {
+              "type": "string",
+              "description": "Reference link"
+            }
+          },
+          "required": [
+            "rank"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "package_name",
+      "count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "requests-package",
+      "input": {
+        "mode": "package",
+        "package": "requests",
+        "limit": 5,
+        "max_description_chars": 500
+      },
+      "expect": {
+        "outputMatches": {
+          "package_name": "requests",
+          "releases": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "requests-release",
+      "input": {
+        "mode": "release",
+        "package": "requests",
+        "version": "2.32.5",
+        "limit": 5,
+        "max_description_chars": 0
+      },
+      "expect": {
+        "outputMatches": {
+          "package_name": "requests",
+          "files": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "requests-files",
+      "input": {
+        "mode": "files",
+        "package": "requests",
+        "limit": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "package_name": "requests",
+          "files": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}

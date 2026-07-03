@@ -1,0 +1,312 @@
+{
+  "name": "openrouter_models_pricing_scraper",
+  "version": "0.1.1",
+  "title": "OpenRouter Models Pricing Scraper",
+  "description": "Fetch and filter the public OpenRouter model catalog, returning normalized model pricing, context windows, modalities, tokenizer families, provider limits, supported parameters, Hugging Face IDs, and OpenRouter model URLs.",
+  "category": "ai",
+  "logo": {
+    "label": "OpenRouter routed model mark",
+    "svg": "<svg viewBox=\"0 0 72 72\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 36h18\"/><path d=\"M30 36c10 0 10-16 22-16h8\"/><path d=\"M30 36c10 0 10 16 22 16h8\"/><path d=\"M52 12l8 8-8 8\"/><path d=\"M52 44l8 8-8 8\"/><circle cx=\"12\" cy=\"36\" r=\"4\"/></g></svg>",
+    "sourceUrl": "https://openrouter.ai/"
+  },
+  "seo": {
+    "title": "OpenRouter Models Pricing Scraper Tool for LLM Catalog and Cost Data",
+    "description": "Fetch the public OpenRouter model catalog with Better Fetch, including model IDs, providers, modalities, context length, token pricing, cache pricing, web search pricing, supported parameters, and model URLs.",
+    "intro": "OpenRouter Models Pricing Scraper gives agents and product teams a structured snapshot of OpenRouter's public LLM catalog. Pull the catalog in one bounded request, filter by provider, modality, context length, free-only status, prompt price, completion price, or keyword, then return normalized rows with model IDs, canonical slugs, names, descriptions, providers, OpenRouter URLs, context windows, max completion tokens, modalities, tokenizer families, USD-per-million prompt and completion prices, cache and image pricing when published, moderation flags, Hugging Face IDs, supported parameters, reasoning labels, and details URLs. It is designed for AI gateway catalogs, cost-aware model routing, FinOps dashboards, procurement snapshots, model comparison pages, and agent-readable LLM capability inventories.",
+    "useCases": [
+      {
+        "title": "Cost-aware routing",
+        "description": "Filter OpenRouter models by context length, modality, and price ceiling before choosing candidates for an AI routing layer."
+      },
+      {
+        "title": "LLM FinOps dashboards",
+        "description": "Normalize prompt and completion prices to USD per million tokens so finance and engineering teams can compare models quickly."
+      },
+      {
+        "title": "Model catalog enrichment",
+        "description": "Add provider, tokenizer, supported-parameter, modality, context-window, Hugging Face, and OpenRouter URL fields to internal AI catalogs."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does OpenRouter Models Pricing Scraper require an OpenRouter API key?",
+        "answer": "No. Version 0.1 reads OpenRouter's public model catalog endpoint. You only need an OpenRouter key when you want to call the models themselves."
+      },
+      {
+        "question": "Does it call or benchmark the models?",
+        "answer": "No. It only reads catalog metadata and pricing. It does not send prompts, measure latency, or consume OpenRouter model credits."
+      },
+      {
+        "question": "How is pricing normalized?",
+        "answer": "OpenRouter publishes token-level prices. The tool multiplies token prices by 1,000,000 and returns USD-per-million-token fields for easier comparison."
+      }
+    ],
+    "keywords": [
+      "OpenRouter scraper",
+      "OpenRouter model catalog",
+      "LLM pricing",
+      "AI model pricing",
+      "OpenRouter API",
+      "model routing",
+      "LLM FinOps",
+      "AI model comparison"
+    ]
+  },
+  "popularity": {
+    "rank": 40,
+    "score": 4
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Optional free-text search across model id, name, description, and Hugging Face ID."
+      },
+      "provider": {
+        "type": "string",
+        "description": "Optional OpenRouter model id prefix such as anthropic, openai, google, meta-llama, mistralai, or qwen."
+      },
+      "modality": {
+        "type": "string",
+        "description": "Optional exact modality such as text->text or text+image->text."
+      },
+      "min_context_length": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Minimum context length in tokens."
+      },
+      "max_prompt_price_per_million": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Maximum prompt price in USD per 1M tokens."
+      },
+      "max_completion_price_per_million": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Maximum completion price in USD per 1M tokens."
+      },
+      "free_only": {
+        "type": "boolean",
+        "default": false,
+        "description": "Only return models with zero prompt and completion prices."
+      },
+      "sort_by": {
+        "type": "string",
+        "enum": [
+          "created",
+          "name",
+          "context_length",
+          "prompt_price",
+          "completion_price"
+        ],
+        "default": "created",
+        "description": "Sort mode after filtering."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 25,
+        "description": "Maximum model rows to return."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source_url": {
+        "type": "string",
+        "description": "OpenRouter catalog URL fetched"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned model rows"
+      },
+      "total_available": {
+        "type": "integer",
+        "description": "Total model rows in the source catalog before filters"
+      },
+      "query": {
+        "type": "string",
+        "description": "Query filter applied"
+      },
+      "provider": {
+        "type": "string",
+        "description": "Provider prefix filter applied"
+      },
+      "modality": {
+        "type": "string",
+        "description": "Modality filter applied"
+      },
+      "models": {
+        "type": "array",
+        "description": "Filtered OpenRouter model catalog rows",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "id": {
+              "type": "string",
+              "description": "OpenRouter model ID"
+            },
+            "canonical_slug": {
+              "type": "string",
+              "description": "Canonical OpenRouter slug"
+            },
+            "name": {
+              "type": "string",
+              "description": "Display name"
+            },
+            "model_url": {
+              "type": "string",
+              "description": "OpenRouter model page URL"
+            },
+            "description": {
+              "type": "string",
+              "description": "Model description"
+            },
+            "provider": {
+              "type": "string",
+              "description": "Provider prefix"
+            },
+            "created_at": {
+              "type": "string",
+              "description": "Created timestamp"
+            },
+            "knowledge_cutoff": {
+              "type": "string",
+              "description": "Knowledge cutoff date"
+            },
+            "context_length": {
+              "type": "integer",
+              "description": "Context length in tokens"
+            },
+            "max_completion_tokens": {
+              "type": "integer",
+              "description": "Max completion tokens"
+            },
+            "modality": {
+              "type": "string",
+              "description": "Input/output modality"
+            },
+            "input_modalities": {
+              "type": "string",
+              "description": "Comma-separated input modalities"
+            },
+            "output_modalities": {
+              "type": "string",
+              "description": "Comma-separated output modalities"
+            },
+            "tokenizer": {
+              "type": "string",
+              "description": "Tokenizer family"
+            },
+            "prompt_price_per_million": {
+              "type": "number",
+              "description": "Prompt price in USD per 1M tokens"
+            },
+            "completion_price_per_million": {
+              "type": "number",
+              "description": "Completion price in USD per 1M tokens"
+            },
+            "input_cache_read_price_per_million": {
+              "type": "number",
+              "description": "Input cache read price in USD per 1M tokens"
+            },
+            "input_cache_write_price_per_million": {
+              "type": "number",
+              "description": "Input cache write price in USD per 1M tokens"
+            },
+            "image_price_per_million": {
+              "type": "number",
+              "description": "Image price in USD per 1M units when published"
+            },
+            "web_search_price": {
+              "type": "number",
+              "description": "Web search unit price when published"
+            },
+            "internal_reasoning_price_per_million": {
+              "type": "number",
+              "description": "Internal reasoning price in USD per 1M tokens"
+            },
+            "is_moderated": {
+              "type": "boolean",
+              "description": "Provider moderation flag"
+            },
+            "hugging_face_id": {
+              "type": "string",
+              "description": "Hugging Face model ID when published"
+            },
+            "supported_parameters": {
+              "type": "string",
+              "description": "Comma-separated supported request parameters"
+            },
+            "details_url": {
+              "type": "string",
+              "description": "OpenRouter model endpoints details URL"
+            },
+            "reasoning": {
+              "type": "string",
+              "description": "Reasoning support labels"
+            }
+          },
+          "required": [
+            "rank",
+            "id",
+            "model_url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "source_url",
+      "count",
+      "total_available",
+      "models"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "free-text-models",
+      "input": {
+        "free_only": true,
+        "modality": "text->text",
+        "sort_by": "context_length",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "models": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "anthropic-claude-search",
+      "input": {
+        "provider": "anthropic",
+        "query": "claude",
+        "sort_by": "created",
+        "limit": 2
+      },
+      "expect": {
+        "outputMatches": {
+          "models": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

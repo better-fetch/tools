@@ -1,0 +1,157 @@
+{
+  "name": "google_maps_search",
+  "version": "0.1.1",
+  "title": "Google Maps Search",
+  "description": "Search Google Maps for places and get structured leads: name, address, rating, review count, category, phone, and website. The classic lead-list workflow, one call, no Maps API key.",
+  "category": "leads",
+  "logo": {
+    "label": "Google Maps logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 92.3 132.3\"><path fill=\"#1a73e8\" d=\"M60.2 2.2C55.8.8 51 0 46.1 0 32 0 19.3 6.4 10.8 16.5l21.8 18.3L60.2 2.2z\"/><path fill=\"#ea4335\" d=\"M10.8 16.5C4.1 24.5 0 34.9 0 46.1c0 8.7 1.7 15.7 4.6 22l28-33.3-21.8-18.3z\"/><path fill=\"#4285f4\" d=\"M46.2 28.5c9.8 0 17.7 7.9 17.7 17.7 0 4.3-1.6 8.3-4.2 11.4 0 0 13.9-16.6 27.5-32.7-5.6-10.8-15.3-19-27-22.7L32.6 34.8c3.3-3.8 8.1-6.3 13.6-6.3\"/><path fill=\"#fbbc04\" d=\"M46.2 63.8c-9.8 0-17.7-7.9-17.7-17.7 0-4.3 1.5-8.3 4.1-11.3l-28 33.3c4.8 10.6 12.8 19.2 21 29.9l34.1-40.5c-3.3 3.9-8.1 6.3-13.5 6.3\"/><path fill=\"#34a853\" d=\"M59.1 109.2c15.4-24.1 33.3-35 33.3-63 0-7.7-1.9-14.9-5.2-21.3L25.6 98c2.6 3.4 5.3 7.3 7.9 11.3 9.4 14.5 6.8 23.1 12.8 23.1s3.4-8.7 12.8-23.2\"/></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Google_Maps_icon_(2020).svg"
+  },
+  "seo": {
+    "title": "Google Maps Search Scraper Tool for Local Leads",
+    "description": "Search Google Maps and return structured local business leads with names, addresses, ratings, review counts, categories, phones, websites, and coordinates.",
+    "intro": "Google Maps Search gives agents and sales workflows a practical local-lead primitive. Provide a natural-language place query, such as coffee roasters in Sydney, and the tool renders Google Maps through Better Fetch before returning structured places that are ready for enrichment, CRM import, or follow-up research.",
+    "useCases": [
+      {
+        "title": "Local lead lists",
+        "description": "Build targeted prospect lists from Google Maps searches with business names, addresses, categories, phone numbers, websites, ratings, and review counts."
+      },
+      {
+        "title": "Market mapping",
+        "description": "Compare local business density, review quality, and category coverage across suburbs, cities, or regions without hand-copying Maps results."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What fields does Google Maps Search return?",
+        "answer": "The tool returns place names and, when visible in the rendered results, address, rating, review count, category, phone, website, latitude, and longitude."
+      },
+      {
+        "question": "Do I need a Google Maps API key?",
+        "answer": "No. This tool uses Better Fetch's browser engine to render the public Google Maps search page and parse the result cards into structured output."
+      }
+    ],
+    "keywords": [
+      "google maps scraper",
+      "local lead scraper",
+      "business leads",
+      "maps search API",
+      "local SEO data"
+    ]
+  },
+  "popularity": {
+    "rank": 1,
+    "score": 489000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 256,
+        "description": "What and where, e.g. \"coffee roasters in Sydney\""
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 40,
+        "default": 10,
+        "description": "Max places to return"
+      }
+    },
+    "required": [
+      "query"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "The query as searched"
+      },
+      "places": {
+        "type": "array",
+        "description": "Places in result order",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Place name"
+            },
+            "address": {
+              "type": "string",
+              "description": "Street address"
+            },
+            "rating": {
+              "type": "number",
+              "description": "Average rating (1–5)"
+            },
+            "reviews": {
+              "type": "integer",
+              "description": "Review count"
+            },
+            "category": {
+              "type": "string",
+              "description": "Primary category"
+            },
+            "phone": {
+              "type": "string",
+              "description": "Phone number, when listed"
+            },
+            "website": {
+              "type": "string",
+              "description": "Website URL, when listed"
+            },
+            "lat": {
+              "type": "number",
+              "description": "Latitude"
+            },
+            "lng": {
+              "type": "number",
+              "description": "Longitude"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of places returned"
+      }
+    },
+    "required": [
+      "query",
+      "places",
+      "count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "sydney-coffee",
+      "input": {
+        "query": "coffee roasters in Sydney",
+        "max_results": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "places": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

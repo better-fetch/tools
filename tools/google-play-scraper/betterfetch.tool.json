@@ -1,0 +1,190 @@
+{
+  "name": "google_play_scraper",
+  "version": "0.1.1",
+  "title": "Google Play Scraper",
+  "description": "Search public Google Play app results and return normalized app IDs, titles, developers, summaries, icons, ratings, review labels, store URLs, and monetization badges.",
+  "category": "app-stores",
+  "logo": {
+    "label": "Google Play logo",
+    "svg": "<svg version=\"1.1\" id=\"Layer_2\" xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\" viewBox=\"0 0 1708.2 1903.7\" style=\"enable-background:new 0 0 1708.2 1903.7;\"><g><linearGradient id=\"SVGID_1_\" gradientUnits=\"userSpaceOnUse\" x1=\"-10.6291\" y1=\"1493.9358\" x2=\"-117.3221\" y2=\"1438.8618\" gradientTransform=\"matrix(11.64 0 0 -22.55 998.4999 33804.2695)\"><stop offset=\"0\" style=\"stop-color:#00A0FF\"/><stop offset=\"6.569999e-03\" style=\"stop-color:#00A1FF\"/><stop offset=\"0.2601\" style=\"stop-color:#00BEFF\"/><stop offset=\"0.5122\" style=\"stop-color:#00D2FF\"/><stop offset=\"0.7604\" style=\"stop-color:#00DFFF\"/><stop offset=\"1\" style=\"stop-color:#00E3FF\"/></linearGradient><path class=\"st0\" d=\"M33.7,29.2C12.3,52.2,0,87.6,0,133.6v1636.2c0,46,12.3,81.4,34.5,103.6l5.8,4.9l916.8-916.8v-20.6L39.5,24.3 C39.5,24.3,33.7,29.2,33.7,29.2z\"/><linearGradient id=\"SVGID_2_\" gradientUnits=\"userSpaceOnUse\" x1=\"107.9625\" y1=\"1411.3126\" x2=\"-87.8376\" y2=\"1411.3126\" gradientTransform=\"matrix(9.145 0 0 -7.7 778.095 11818.8516)\"><stop offset=\"0\" style=\"stop-color:#FFE000\"/><stop offset=\"0.4087\" style=\"stop-color:#FFBD00\"/><stop offset=\"0.7754\" style=\"stop-color:#FFA500\"/><stop offset=\"1\" style=\"stop-color:#FF9C00\"/></linearGradient><path class=\"st1\" d=\"M1262.1,1268.3L956.3,962.4v-21.4l305.9-305.9l6.6,4.1l361.8,205.6c103.6,58.4,103.6,154.6,0,213.8 l-361.8,205.6C1268.7,1264.2,1262.1,1268.3,1262.1,1268.3z\"/><linearGradient id=\"SVGID_3_\" gradientUnits=\"userSpaceOnUse\" x1=\"-14.2765\" y1=\"1420.3109\" x2=\"-126.4028\" y2=\"1274.8463\" gradientTransform=\"matrix(15.02 0 0 -11.5775 1313.25 17565.3496)\"><stop offset=\"0\" style=\"stop-color:#FF3A44\"/><stop offset=\"1\" style=\"stop-color:#C31162\"/></linearGradient><path class=\"st2\" d=\"M1268.7,1264.2L956.3,951.7L33.7,1874.3c33.7,36.2,90.4,40.3,153.8,4.9L1268.7,1264.2\"/><linearGradient id=\"SVGID_4_\" gradientUnits=\"userSpaceOnUse\" x1=\"-100.6522\" y1=\"1560.7258\" x2=\"-50.5839\" y2=\"1495.7349\" gradientTransform=\"matrix(15.02 0 0 -11.5715 1313.25 17544.8633)\"><stop offset=\"0\" style=\"stop-color:#32A071\"/><stop offset=\"6.850000e-02\" style=\"stop-color:#2DA771\"/><stop offset=\"0.4762\" style=\"stop-color:#15CF74\"/><stop offset=\"0.8009\" style=\"stop-color:#06E775\"/><stop offset=\"1\" style=\"stop-color:#00F076\"/></linearGradient><path class=\"st3\" d=\"M1268.7,639.3L187.5,25.1C124.2-11.1,67.4-6.2,33.7,30l922.5,921.7L1268.7,639.3z\"/><path class=\"st4\" d=\"M1262.1,1257.6L188.3,1867.7c-60,34.5-113.5,32.1-148,0.8l-5.8,5.8l5.8,4.9c34.5,31.2,88,33.7,148-0.8 l1081.2-614.2C1269.5,1264.2,1262.1,1257.6,1262.1,1257.6z\"/><path class=\"st5\" d=\"M1630.5,1047.9l-369.2,209.7l6.6,6.6l361.8-205.6c51.8-29.6,77.3-68.2,77.3-106.9 C1703.7,987.1,1677.4,1020.8,1630.5,1047.9z\"/><path class=\"st6\" d=\"M187.5,35.8l1443,819.8c46.9,26.3,73.2,60.8,77.3,96.2c0-38.6-25.5-77.3-77.3-106.9L187.5,25.1 C83.9-34.1,0,15.2,0,133.6v10.7C0,25.9,83.9-22.6,187.5,35.8z\"/></g></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Google_Play_2016_icon.svg"
+  },
+  "seo": {
+    "title": "Google Play Scraper Tool for App Search Metadata",
+    "description": "Search Google Play app results with Better Fetch and return app IDs, titles, developers, summaries, icons, ratings, review labels, store URLs, and monetization badges.",
+    "intro": "Google Play Scraper gives agents a focused way to inspect public Google Play app search results. Provide a keyword query and the tool fetches Google Play's app search page, extracts the visible result cards, and returns normalized app IDs, titles, developers, summaries, icons, ratings, review labels, store URLs, and monetization badges.",
+    "useCases": [
+      {
+        "title": "App market research",
+        "description": "Search a keyword and capture competing Android apps with visible ratings, developers, summaries, and Google Play URLs."
+      },
+      {
+        "title": "ASO discovery",
+        "description": "Collect app IDs and result-card copy before deciding which app detail pages or reviews deserve deeper extraction."
+      },
+      {
+        "title": "Agent briefs",
+        "description": "Give an agent structured Google Play search context for a product category, brand, or feature area."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Google Play Scraper extract reviews?",
+        "answer": "No. Version 0.1 returns app search result cards only. Reviews and full app detail pages should be added as separate validated tools or future slices."
+      },
+      {
+        "question": "Can I localize results?",
+        "answer": "Yes. The tool supports Google Play language and country parameters, such as en-US with US or en-AU with AU."
+      },
+      {
+        "question": "Does it require a Google API key?",
+        "answer": "No. The tool reads public Google Play result pages through Better Fetch and does not use account-specific Google credentials."
+      }
+    ],
+    "keywords": [
+      "Google Play scraper",
+      "Google Play app search",
+      "Android app metadata",
+      "ASO research",
+      "app store scraper",
+      "AI agent app research"
+    ]
+  },
+  "popularity": {
+    "rank": 19,
+    "score": 2400
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Google Play keyword search query."
+      },
+      "language": {
+        "type": "string",
+        "default": "en-US",
+        "description": "Google Play hl parameter, such as en-US or de-DE."
+      },
+      "country": {
+        "type": "string",
+        "default": "US",
+        "description": "Google Play gl parameter, such as US, AU, GB, or DE."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 50,
+        "default": 10,
+        "description": "Maximum app cards to return."
+      }
+    },
+    "required": [
+      "query"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Requested Google Play query"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Fetched Google Play search URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of app cards returned"
+      },
+      "apps": {
+        "type": "array",
+        "description": "Public Google Play app result cards",
+        "items": {
+          "type": "object",
+          "properties": {
+            "app_id": {
+              "type": "string",
+              "description": "Google Play app package ID"
+            },
+            "title": {
+              "type": "string",
+              "description": "App title"
+            },
+            "developer": {
+              "type": "string",
+              "description": "Visible developer name"
+            },
+            "summary": {
+              "type": "string",
+              "description": "Visible result-card summary"
+            },
+            "url": {
+              "type": "string",
+              "description": "Canonical Google Play app URL"
+            },
+            "icon": {
+              "type": "string",
+              "description": "App icon URL"
+            },
+            "rating": {
+              "type": "number",
+              "description": "Visible rating value"
+            },
+            "rating_text": {
+              "type": "string",
+              "description": "Visible rating text"
+            },
+            "reviews_text": {
+              "type": "string",
+              "description": "Visible review-count label"
+            },
+            "contains_ads": {
+              "type": "boolean",
+              "description": "Whether the card says contains ads"
+            },
+            "in_app_purchases": {
+              "type": "boolean",
+              "description": "Whether the card says in-app purchases"
+            }
+          },
+          "required": [
+            "app_id",
+            "title",
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "query",
+      "source_url",
+      "count",
+      "apps"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "openai-apps",
+      "input": {
+        "query": "openai",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "apps": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

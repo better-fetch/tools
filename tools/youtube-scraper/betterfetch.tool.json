@@ -1,0 +1,181 @@
+{
+  "name": "youtube_scraper",
+  "version": "0.1.1",
+  "title": "YouTube Scraper",
+  "description": "Search public YouTube results or inspect a public channel videos tab and return normalized video metadata: title, URL, channel, duration, views, published time, thumbnail, and description snippets.",
+  "category": "social",
+  "logo": {
+    "label": "YouTube logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"external-icon\" viewBox=\"0 0 28.57 20\" focusable=\"false\" style=\"pointer-events: none; display: block; width: 100%; height: 100%;\"><svg viewBox=\"0 0 28.57 20\" preserveAspectRatio=\"xMidYMid meet\" xmlns=\"http://www.w3.org/2000/svg\"><g><path d=\"M27.9727 3.12324C27.6435 1.89323 26.6768 0.926623 25.4468 0.597366C23.2197 2.24288e-07 14.285 0 14.285 0C14.285 0 5.35042 2.24288e-07 3.12323 0.597366C1.89323 0.926623 0.926623 1.89323 0.597366 3.12324C2.24288e-07 5.35042 0 10 0 10C0 10 2.24288e-07 14.6496 0.597366 16.8768C0.926623 18.1068 1.89323 19.0734 3.12323 19.4026C5.35042 20 14.285 20 14.285 20C14.285 20 23.2197 20 25.4468 19.4026C26.6768 19.0734 27.6435 18.1068 27.9727 16.8768C28.5701 14.6496 28.5701 10 28.5701 10C28.5701 10 28.5677 5.35042 27.9727 3.12324Z\" fill=\"#FF0000\"></path><path d=\"M11.4253 14.2854L18.8477 10.0004L11.4253 5.71533V14.2854Z\" fill=\"white\"></path></g></svg></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:YouTube_full-color_icon_(2017).svg"
+  },
+  "seo": {
+    "title": "YouTube Scraper Tool for Public Video Metadata",
+    "description": "Scrape public YouTube search results or channel videos with Better Fetch and return normalized titles, URLs, channel names, durations, views, published times, thumbnails, and snippets.",
+    "intro": "YouTube Scraper gives agents a focused way to collect public YouTube video metadata without using a private account. It renders search results or a channel videos tab through Better Fetch, parses YouTube's public page data, deduplicates video cards, and returns normalized fields that are easy to save, compare, or pass into an LLM workflow.",
+    "useCases": [
+      {
+        "title": "Video research",
+        "description": "Search YouTube for a topic and return structured video cards for market research, content planning, or source discovery."
+      },
+      {
+        "title": "Channel monitoring",
+        "description": "Inspect a public channel videos tab and capture recent titles, URLs, view counts, durations, thumbnails, and publish-time labels."
+      },
+      {
+        "title": "Agent briefs",
+        "description": "Let an agent gather public YouTube results and summarize visible metadata before deciding which videos need deeper review."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does YouTube Scraper download video files?",
+        "answer": "No. It returns public metadata from YouTube pages and does not download video media, captions, private analytics, or account-only data."
+      },
+      {
+        "question": "Can it scrape private or age-gated videos?",
+        "answer": "No. The tool is designed for public YouTube pages visible to the Better Fetch browser session without user-specific authentication."
+      },
+      {
+        "question": "Why are view counts returned as text and numbers?",
+        "answer": "YouTube often renders compact labels such as 1.2M views. The tool preserves the visible text and also returns a best-effort integer when it can parse one."
+      }
+    ],
+    "keywords": [
+      "YouTube scraper",
+      "YouTube search scraper",
+      "video metadata",
+      "channel monitoring",
+      "YouTube agent tool",
+      "public video data"
+    ]
+  },
+  "popularity": {
+    "rank": 9,
+    "score": 92000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "YouTube search query. Use either query or channel_url."
+      },
+      "channel_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public YouTube channel URL. The tool reads its videos tab."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 25,
+        "default": 10,
+        "description": "Maximum video cards to return"
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source": {
+        "type": "string",
+        "description": "Search query or channel URL used"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Fetched YouTube URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of videos returned"
+      },
+      "videos": {
+        "type": "array",
+        "description": "Public YouTube video cards",
+        "items": {
+          "type": "object",
+          "properties": {
+            "video_id": {
+              "type": "string",
+              "description": "YouTube video id"
+            },
+            "title": {
+              "type": "string",
+              "description": "Video title"
+            },
+            "url": {
+              "type": "string",
+              "description": "Canonical YouTube watch URL"
+            },
+            "channel": {
+              "type": "string",
+              "description": "Visible channel name"
+            },
+            "channel_url": {
+              "type": "string",
+              "description": "Visible channel URL"
+            },
+            "duration": {
+              "type": "string",
+              "description": "Visible duration label"
+            },
+            "views_text": {
+              "type": "string",
+              "description": "Visible view-count label"
+            },
+            "view_count": {
+              "type": "integer",
+              "description": "Best-effort parsed view count"
+            },
+            "published": {
+              "type": "string",
+              "description": "Visible publish-time label"
+            },
+            "thumbnail": {
+              "type": "string",
+              "description": "Thumbnail URL"
+            },
+            "description": {
+              "type": "string",
+              "description": "Visible description snippet"
+            }
+          },
+          "required": [
+            "video_id",
+            "title",
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "source",
+      "source_url",
+      "count",
+      "videos"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "search-openai",
+      "input": {
+        "query": "openai",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "videos": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

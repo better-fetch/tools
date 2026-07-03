@@ -1,0 +1,280 @@
+{
+  "name": "wikipedia_article_scraper",
+  "version": "0.1.1",
+  "title": "Wikipedia Article Scraper",
+  "description": "Search Wikipedia or fetch a specific article through the official MediaWiki API, returning titles, page IDs, canonical URLs, summaries or full extracts, categories, links, images, revision metadata, and Wikidata IDs.",
+  "category": "content",
+  "logo": {
+    "label": "Wikipedia logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.0\" id=\"svg2\" x=\"0px\" y=\"0px\" width=\"54\" height=\"37.148102\" viewBox=\"0 0 54 37.148102\" enable-background=\"new 0 0 1700 1700\" ><defs id=\"defs4139\" /><path id=\"path1873\" d=\"m 6.6816025,8.2252998 c -1.1203893,-1.8843 -3.0578013,-3.7469 -4.4561646,-4.2842 L 2,3.8540998 l 0,-0.9073 0,-0.9468 12.84684,0 0,1.7413 c -1.679227,0.2087 -3.703411,1.0295 -3.142472,2.9118 C 14.905739,13.7263 17.818774,20.9267 20.979371,28.0178 L 26.404212,17.8739 C 24.305048,13.574 22.775811,9.2242998 20.477856,5.0058998 c -0.749222,-1.2148 -2.775303,-1.2487 -4.210238,-1.2956 l 0,-1.7103 12.041843,0 0,1.694 c -1.08198,0.1495 -2.357438,0.4066 -2.212789,1.7179 L 29.503254,12.9461 c 1.12109,-2.3916 2.367157,-4.7325002 3.355856,-7.1837002 0.448833,-1.9407 -1.734594,-2.0372 -3.127061,-2.0913 l 0,-1.6711 10.700947,0 0,1.6666 c -1.567792,0.1108 -3.050884,0.563 -3.915539,1.7221 -2.101879,3.2493 -3.661003,6.9363002 -5.298113,10.4656002 1.617555,3.8251 3.303436,7.6449 4.956716,11.1522 L 45.317271,5.9211998 c -0.616656,-1.3899 -2.013181,-1.8808 -3.383933,-2.1988 l 0,-1.7224 10.066662,0 0,1.7569 c -0.451664,0.07 -0.884094,0.2095 -1.302281,0.392 -0.792622,0.3678 -1.541378,1.098 -2.043564,1.9928 L 36.047084,35.1481 l -2.104418,0 -5.994157,-14.1175 -7.276153,14.1164 -2.184536,3e-4 C 14.236721,26.2922 11.161087,16.9738 6.6816025,8.2252998 Z\" /></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wikipedia-W-bold-in-square-Clean_(alt_crop).svg"
+  },
+  "seo": {
+    "title": "Wikipedia Article Scraper Tool for Summaries and Page Metadata",
+    "description": "Search Wikipedia or fetch exact articles with Better Fetch via the official MediaWiki API, including summaries, full extracts, categories, links, images, page IDs, URLs, revisions, and Wikidata IDs.",
+    "intro": "Wikipedia Article Scraper gives agents a polite, official-API route into Wikipedia content. Search by keyword or fetch an exact article title or URL, then receive compact rows with page title, page ID, canonical URL, language, summary or full plain-text extract, categories, internal links, thumbnail and original image URLs, revision metadata, page length, and Wikidata ID when available. It is designed for knowledge-base enrichment, RAG ingestion, entity research, article monitoring, SEO research, educational tools, and AI workflows that need citation-friendly Wikipedia context without scraping raw HTML.",
+    "useCases": [
+      {
+        "title": "Knowledge-base enrichment",
+        "description": "Fetch canonical Wikipedia titles, summaries, page URLs, images, categories, and Wikidata IDs to enrich company, person, place, product, or concept records."
+      },
+      {
+        "title": "RAG context collection",
+        "description": "Collect bounded plain-text article extracts and source URLs for retrieval pipelines, research assistants, documentation bots, and educational AI agents."
+      },
+      {
+        "title": "Topic discovery",
+        "description": "Search Wikipedia by keyword and return top matching pages with concise extracts, categories, thumbnails, and links before deciding which pages to crawl more deeply."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Wikipedia Article Scraper scrape Wikipedia HTML pages?",
+        "answer": "No. Version 0.1 uses the official MediaWiki Action API through Better Fetch and sends an explicit tool user agent. It returns normalized JSON data instead of parsing rendered HTML."
+      },
+      {
+        "question": "Can it fetch full article text?",
+        "answer": "Yes, set extract to full. To keep tool responses useful for agents and MCP clients, max_extract_chars bounds the returned plain-text extract."
+      },
+      {
+        "question": "Does it support non-English Wikipedia editions?",
+        "answer": "Yes. Set language to a Wikipedia language subdomain such as en, de, fr, es, pt, or simple. Version 0.1 validates the language subdomain and calls that edition's MediaWiki API."
+      }
+    ],
+    "keywords": [
+      "Wikipedia scraper",
+      "MediaWiki API",
+      "Wikipedia article extract",
+      "Wikipedia search",
+      "Wikipedia summaries",
+      "Wikidata ID",
+      "RAG ingestion",
+      "AI knowledge base"
+    ]
+  },
+  "popularity": {
+    "rank": 28,
+    "score": 282
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "page",
+          "search"
+        ],
+        "default": "page",
+        "description": "Fetch one exact article page or search Wikipedia for matching pages."
+      },
+      "page_title": {
+        "type": "string",
+        "maxLength": 180,
+        "description": "Exact Wikipedia page title for page mode, e.g. Web scraping."
+      },
+      "page_url": {
+        "type": "string",
+        "description": "Wikipedia article URL for page mode, e.g. https://en.wikipedia.org/wiki/Web_scraping."
+      },
+      "query": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 180,
+        "description": "Search query for search mode."
+      },
+      "language": {
+        "type": "string",
+        "default": "en",
+        "description": "Wikipedia language subdomain, e.g. en, de, fr, es, pt, or simple."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10,
+        "default": 5,
+        "description": "Maximum search results to return in search mode."
+      },
+      "extract": {
+        "type": "string",
+        "enum": [
+          "intro",
+          "full"
+        ],
+        "default": "intro",
+        "description": "Return the introductory extract or a bounded full article extract."
+      },
+      "max_extract_chars": {
+        "type": "integer",
+        "minimum": 500,
+        "maximum": 12000,
+        "default": 4000,
+        "description": "Maximum characters of plain-text extract to return per page."
+      },
+      "include_categories": {
+        "type": "boolean",
+        "default": true,
+        "description": "Include visible Wikipedia category names when available."
+      },
+      "include_links": {
+        "type": "boolean",
+        "default": false,
+        "description": "Include a bounded comma-separated list of internal page links."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "language": {
+        "type": "string",
+        "description": "Wikipedia language edition used"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "MediaWiki API URL fetched"
+      },
+      "query": {
+        "type": "string",
+        "description": "Search query or page title used"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned article records"
+      },
+      "articles": {
+        "type": "array",
+        "description": "Structured Wikipedia article records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank in this response"
+            },
+            "title": {
+              "type": "string",
+              "description": "Wikipedia article title"
+            },
+            "pageid": {
+              "type": "integer",
+              "description": "MediaWiki page ID"
+            },
+            "language": {
+              "type": "string",
+              "description": "Wikipedia language edition"
+            },
+            "page_url": {
+              "type": "string",
+              "description": "Canonical article URL"
+            },
+            "extract": {
+              "type": "string",
+              "description": "Plain-text article extract"
+            },
+            "extract_truncated": {
+              "type": "boolean",
+              "description": "Whether extract was truncated by max_extract_chars"
+            },
+            "wikidata_id": {
+              "type": "string",
+              "description": "Linked Wikidata entity ID when available"
+            },
+            "short_description": {
+              "type": "string",
+              "description": "Short description page property when available"
+            },
+            "thumbnail_url": {
+              "type": "string",
+              "description": "Thumbnail image URL when available"
+            },
+            "original_image_url": {
+              "type": "string",
+              "description": "Original page image URL when available"
+            },
+            "categories": {
+              "type": "string",
+              "description": "Comma-separated category names"
+            },
+            "links": {
+              "type": "string",
+              "description": "Comma-separated internal article links"
+            },
+            "last_revision_id": {
+              "type": "integer",
+              "description": "Latest revision ID reported by MediaWiki"
+            },
+            "page_length": {
+              "type": "integer",
+              "description": "Page length in bytes reported by MediaWiki"
+            },
+            "touched_at": {
+              "type": "string",
+              "description": "MediaWiki touched timestamp"
+            }
+          },
+          "required": [
+            "rank",
+            "title",
+            "pageid",
+            "language",
+            "page_url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "language",
+      "source_url",
+      "count",
+      "articles"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "web-scraping-page",
+      "input": {
+        "mode": "page",
+        "page_title": "Web scraping",
+        "language": "en",
+        "extract": "intro",
+        "include_categories": true,
+        "include_links": true
+      },
+      "expect": {
+        "outputMatches": {
+          "articles": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "ai-search",
+      "input": {
+        "mode": "search",
+        "query": "artificial intelligence",
+        "language": "en",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "articles": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

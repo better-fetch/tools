@@ -1,0 +1,251 @@
+{
+  "name": "cheerio_scraper",
+  "version": "0.1.1",
+  "title": "Cheerio Scraper",
+  "description": "Scrape one raw HTML page over HTTP into structured metadata, readable text, links, images, JSON-LD types, response metadata, and optional simple selector matches.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "Cheerio scraper HTML bracket icon",
+    "svg": "<svg viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18 12 7 24l11 12\" fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M30 12 41 24 30 36\" fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M26 9 20 39\" fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linecap=\"round\"/></svg>",
+    "sourceUrl": "https://cheerio.js.org/"
+  },
+  "seo": {
+    "title": "Cheerio Scraper Tool for Fast Raw HTML Extraction",
+    "description": "Scrape one public HTML page with Better Fetch over raw HTTP and return structured metadata, readable text, links, images, JSON-LD types, response metadata, and simple selector matches.",
+    "intro": "Cheerio Scraper is the fast HTTP-first extractor in the Better Fetch marketplace. Provide a public URL and the tool retrieves the raw response without launching a browser, then normalizes page metadata, readable text, link and image inventories, JSON-LD types, content type, status, byte size, and lightweight selector matches.",
+    "useCases": [
+      {
+        "title": "Fast HTML extraction",
+        "description": "Collect titles, descriptions, canonical URLs, readable text, links, and images from static pages without paying the browser-rendering cost."
+      },
+      {
+        "title": "Crawler building blocks",
+        "description": "Use the raw HTTP response fields, link inventory, and content-type metadata as a first pass before building a deeper domain-specific crawler."
+      },
+      {
+        "title": "Agent page inspection",
+        "description": "Give an agent clean static-page data for documentation pages, blogs, product pages, and directories that do not require JavaScript rendering."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "How is Cheerio Scraper different from Web Scraper?",
+        "answer": "Cheerio Scraper uses raw HTTP and is faster for static HTML pages. Web Scraper uses the browser path and is better for pages that need client-side JavaScript rendering."
+      },
+      {
+        "question": "Does this version crawl recursively?",
+        "answer": "No. Version 0.1 focuses on one page per run. Recursive queues, glob filters, pseudo-URLs, and enqueue behavior should be added as separately validated slices."
+      },
+      {
+        "question": "Can it run arbitrary page functions?",
+        "answer": "No. It returns a fixed, safe structured extraction. Custom Node page functions are intentionally out of scope for this first marketplace version."
+      }
+    ],
+    "keywords": [
+      "Cheerio scraper",
+      "HTML scraper",
+      "raw HTML extraction",
+      "static page scraper",
+      "HTTP scraper",
+      "AI agent web scraping"
+    ]
+  },
+  "popularity": {
+    "rank": 13,
+    "score": 18000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "format": "uri",
+        "description": "The public http(s) page URL to scrape over raw HTTP."
+      },
+      "selectors": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 10,
+        "description": "Optional simple selectors to extract text from, e.g. h1, main, article, .price, #content."
+      },
+      "max_text_chars": {
+        "type": "integer",
+        "minimum": 500,
+        "maximum": 100000,
+        "default": 12000,
+        "description": "Maximum readable text characters to return."
+      },
+      "max_links": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 25,
+        "description": "Maximum links to return."
+      },
+      "max_images": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 50,
+        "default": 10,
+        "description": "Maximum images to return."
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "Requested URL"
+      },
+      "final_url": {
+        "type": "string",
+        "description": "Final URL after redirects"
+      },
+      "status": {
+        "type": "integer",
+        "description": "HTTP status code returned by Better Fetch"
+      },
+      "content_type": {
+        "type": "string",
+        "description": "Response Content-Type header when available"
+      },
+      "title": {
+        "type": "string",
+        "description": "Page title"
+      },
+      "description": {
+        "type": "string",
+        "description": "Meta description"
+      },
+      "canonical_url": {
+        "type": "string",
+        "description": "Canonical page URL"
+      },
+      "text": {
+        "type": "string",
+        "description": "Readable page text"
+      },
+      "word_count": {
+        "type": "integer",
+        "description": "Words in extracted text"
+      },
+      "html_bytes": {
+        "type": "integer",
+        "description": "Raw HTML byte length"
+      },
+      "json_ld_types": {
+        "type": "array",
+        "description": "Structured data @type values",
+        "items": {
+          "type": "string"
+        }
+      },
+      "links": {
+        "type": "array",
+        "description": "Links discovered in page order",
+        "items": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Absolute link URL"
+            },
+            "text": {
+              "type": "string",
+              "description": "Visible link text"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "images": {
+        "type": "array",
+        "description": "Images discovered in page order",
+        "items": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Absolute image URL"
+            },
+            "alt": {
+              "type": "string",
+              "description": "Image alt text"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "selector_results": {
+        "type": "array",
+        "description": "Optional selector text matches",
+        "items": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "description": "Requested selector"
+            },
+            "text": {
+              "type": "string",
+              "description": "Matched text"
+            },
+            "count": {
+              "type": "integer",
+              "description": "Number of matches"
+            }
+          },
+          "required": [
+            "selector",
+            "count"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "url",
+      "final_url",
+      "title",
+      "text",
+      "word_count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "example-page",
+      "input": {
+        "url": "https://example.com",
+        "selectors": [
+          "h1",
+          "p"
+        ],
+        "max_text_chars": 2000,
+        "max_links": 10,
+        "max_images": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "title": "Example Domain"
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

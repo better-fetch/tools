@@ -1,0 +1,377 @@
+{
+  "name": "crossref_metadata_scraper",
+  "version": "0.1.1",
+  "title": "Crossref Metadata Scraper",
+  "description": "Search Crossref Works or fetch one DOI through the public Crossref REST API, returning normalized scholarly metadata with DOIs, titles, authors, ORCIDs, journals, dates, citation counts, references, licenses, funders, and URLs.",
+  "category": "research",
+  "logo": {
+    "label": "Crossref logo",
+    "svg": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"black\" d=\"M21 18a14 14 0 1 0 0 28h11v-7H21a7 7 0 1 1 0-14h11v-7H21Zm11 7h11a7 7 0 1 1 0 14H32v7h11a14 14 0 1 0 0-28H32v7Zm-9 4h18v6H23v-6Z\"/></svg>",
+    "sourceUrl": "https://www.crossref.org/brand/"
+  },
+  "seo": {
+    "title": "Crossref Metadata Scraper Tool for DOI and Citation Data",
+    "description": "Search Crossref Works or fetch exact DOI metadata with Better Fetch via the public Crossref REST API, including titles, authors, ORCIDs, journals, dates, citation counts, references, funders, licenses, subjects, and DOI URLs.",
+    "intro": "Crossref Metadata Scraper gives agents a compact public-API route into Crossref's scholarly DOI graph. Search the Works API by free-text citation, title, author, work type, date range, or Crossref filter string, or fetch an exact DOI such as 10.1038/nature14539. The tool returns normalized citation rows with DOI links, titles, authors, ORCIDs, container titles, publisher, publication dates, ISSN and ISBN identifiers, volume, issue, pages, subjects, citation and reference counts, funder labels, license URLs, optional abstracts, optional referenced DOIs, and Crossref indexing timestamps. It is built for literature discovery, DOI verification, citation enrichment, bibliometric analysis, academic lead research, library catalog cleanup, and research-agent workflows.",
+    "useCases": [
+      {
+        "title": "DOI verification",
+        "description": "Fetch exact Crossref metadata for a DOI and confirm the title, authors, publication venue, publisher, publication date, DOI URL, citation count, and reference count."
+      },
+      {
+        "title": "Literature discovery",
+        "description": "Search by citation text, title, author, work type, or date range and return compact records that can seed a literature review, bibliography, or research queue."
+      },
+      {
+        "title": "Bibliometric enrichment",
+        "description": "Attach Crossref citation counts, reference counts, subjects, funders, license URLs, ISSN values, ISBN values, and ORCIDs to existing research datasets."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Crossref Metadata Scraper require an API key?",
+        "answer": "No. Version 0.1 uses the public Crossref REST API through Better Fetch. It adds a mailto contact parameter by default because Crossref recommends it for polite API usage."
+      },
+      {
+        "question": "Can it fetch one DOI as well as search multiple works?",
+        "answer": "Yes. Provide doi or set mode to doi for an exact lookup, or use search mode with query, query_title, query_author, type, date filters, or a Crossref filter string."
+      },
+      {
+        "question": "Does it download full paper text?",
+        "answer": "No. It returns metadata registered with Crossref. Some records include abstracts or license links, but the tool does not bypass publisher sites or fetch full-text article bodies."
+      }
+    ],
+    "keywords": [
+      "Crossref scraper",
+      "Crossref API",
+      "DOI metadata",
+      "citation metadata",
+      "bibliometrics",
+      "ORCID",
+      "research metadata",
+      "academic literature"
+    ]
+  },
+  "popularity": {
+    "rank": 29,
+    "score": 5
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "doi"
+        ],
+        "default": "search",
+        "description": "Search Crossref Works or fetch one exact DOI."
+      },
+      "doi": {
+        "type": "string",
+        "maxLength": 220,
+        "description": "DOI or DOI URL for exact lookup, e.g. 10.1038/nature14539."
+      },
+      "query": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 240,
+        "description": "Free-text bibliographic query across titles, authors, journals, dates, and citation metadata."
+      },
+      "query_title": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 240,
+        "description": "Search specifically within work titles."
+      },
+      "query_author": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 180,
+        "description": "Search specifically by author name."
+      },
+      "filter": {
+        "type": "string",
+        "maxLength": 320,
+        "description": "Optional Crossref filter syntax, e.g. type:journal-article,from-pub-date:2024."
+      },
+      "type": {
+        "type": "string",
+        "maxLength": 80,
+        "description": "Optional Crossref work type such as journal-article, book-chapter, posted-content, or dataset."
+      },
+      "from_pub_date": {
+        "type": "string",
+        "description": "Optional lower publication-date bound in YYYY, YYYY-MM, or YYYY-MM-DD format."
+      },
+      "until_pub_date": {
+        "type": "string",
+        "description": "Optional upper publication-date bound in YYYY, YYYY-MM, or YYYY-MM-DD format."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 20,
+        "default": 10,
+        "description": "Maximum Crossref works to return in search mode."
+      },
+      "sort": {
+        "type": "string",
+        "enum": [
+          "relevance",
+          "published",
+          "updated",
+          "deposited",
+          "is-referenced-by-count"
+        ],
+        "default": "relevance",
+        "description": "Search ordering. Relevance uses Crossref's default ranking."
+      },
+      "order": {
+        "type": "string",
+        "enum": [
+          "desc",
+          "asc"
+        ],
+        "default": "desc",
+        "description": "Sort order for non-relevance sorts."
+      },
+      "mailto": {
+        "type": "string",
+        "format": "email",
+        "description": "Optional contact email for Crossref polite pool routing."
+      },
+      "include_abstract": {
+        "type": "boolean",
+        "default": false,
+        "description": "Include Crossref abstract text when a record exposes one."
+      },
+      "include_references": {
+        "type": "boolean",
+        "default": false,
+        "description": "Include a bounded comma-separated list of referenced DOIs when a record exposes them."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Crossref REST API URL fetched"
+      },
+      "query": {
+        "type": "string",
+        "description": "Normalized query label for search mode"
+      },
+      "doi": {
+        "type": "string",
+        "description": "Normalized DOI for exact DOI mode"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned work records"
+      },
+      "total_matches": {
+        "type": "integer",
+        "description": "Total Crossref matches reported for search mode"
+      },
+      "works": {
+        "type": "array",
+        "description": "Structured Crossref work records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank in this response"
+            },
+            "doi": {
+              "type": "string",
+              "description": "Digital Object Identifier"
+            },
+            "doi_url": {
+              "type": "string",
+              "description": "Canonical doi.org URL"
+            },
+            "title": {
+              "type": "string",
+              "description": "Work title"
+            },
+            "subtitle": {
+              "type": "string",
+              "description": "Work subtitle"
+            },
+            "work_url": {
+              "type": "string",
+              "description": "Publisher or DOI landing URL reported by Crossref"
+            },
+            "type": {
+              "type": "string",
+              "description": "Crossref work type"
+            },
+            "publisher": {
+              "type": "string",
+              "description": "Publisher name"
+            },
+            "container_title": {
+              "type": "string",
+              "description": "Journal, proceedings, book, or other container title"
+            },
+            "short_container_title": {
+              "type": "string",
+              "description": "Short container title when available"
+            },
+            "publication_date": {
+              "type": "string",
+              "description": "Best available publication date"
+            },
+            "publication_year": {
+              "type": "integer",
+              "description": "Publication year"
+            },
+            "authors": {
+              "type": "string",
+              "description": "Comma-separated author names"
+            },
+            "first_author": {
+              "type": "string",
+              "description": "First listed author"
+            },
+            "last_author": {
+              "type": "string",
+              "description": "Last listed author"
+            },
+            "orcids": {
+              "type": "string",
+              "description": "Comma-separated ORCID IDs"
+            },
+            "volume": {
+              "type": "string",
+              "description": "Journal volume"
+            },
+            "issue": {
+              "type": "string",
+              "description": "Journal issue"
+            },
+            "pages": {
+              "type": "string",
+              "description": "Pagination"
+            },
+            "issn": {
+              "type": "string",
+              "description": "Comma-separated ISSN values"
+            },
+            "isbn": {
+              "type": "string",
+              "description": "Comma-separated ISBN values"
+            },
+            "subject": {
+              "type": "string",
+              "description": "Comma-separated Crossref subjects"
+            },
+            "citation_count": {
+              "type": "integer",
+              "description": "Crossref is-referenced-by count"
+            },
+            "reference_count": {
+              "type": "integer",
+              "description": "Crossref reference count"
+            },
+            "funders": {
+              "type": "string",
+              "description": "Comma-separated funder labels and awards"
+            },
+            "licenses": {
+              "type": "string",
+              "description": "Comma-separated license URLs"
+            },
+            "abstract": {
+              "type": "string",
+              "description": "Abstract text when requested and available"
+            },
+            "reference_dois": {
+              "type": "string",
+              "description": "Referenced DOIs when requested and available"
+            },
+            "deposited_at": {
+              "type": "string",
+              "description": "Crossref deposit timestamp"
+            },
+            "indexed_at": {
+              "type": "string",
+              "description": "Crossref index timestamp"
+            },
+            "score": {
+              "type": "number",
+              "description": "Crossref search relevance score"
+            },
+            "member": {
+              "type": "string",
+              "description": "Crossref member ID"
+            },
+            "prefix": {
+              "type": "string",
+              "description": "Crossref DOI prefix"
+            }
+          },
+          "required": [
+            "rank",
+            "doi",
+            "doi_url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count",
+      "works"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "deep-learning-doi",
+      "input": {
+        "mode": "doi",
+        "doi": "10.1038/nature14539"
+      },
+      "expect": {
+        "outputMatches": {
+          "works": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "machine-learning-search",
+      "input": {
+        "mode": "search",
+        "query_title": "machine learning",
+        "type": "journal-article",
+        "max_results": 3,
+        "sort": "is-referenced-by-count"
+      },
+      "expect": {
+        "outputMatches": {
+          "works": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

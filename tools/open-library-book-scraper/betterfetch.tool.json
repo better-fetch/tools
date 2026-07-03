@@ -1,0 +1,356 @@
+{
+  "name": "open_library_book_scraper",
+  "version": "0.1.1",
+  "title": "Open Library Book Scraper",
+  "description": "Search Open Library books, ISBN records, subjects, ebooks, and public author records through the public Open Library APIs, returning normalized catalog metadata, author names, editions, covers, ratings, ebook access, Internet Archive IDs, and author summaries.",
+  "category": "content",
+  "logo": {
+    "label": "Open Library logo",
+    "svg": "<svg viewBox=\"0 0 96 64\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M48 52c-9-8-21-10-34-6V13c13-4 25-2 34 6v33Zm0 0c9-8 21-10 34-6V13c-13-4-25-2-34 6v33Z\"/><path fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linecap=\"round\" d=\"M24 24c5-1 10 0 15 3M24 35c5-1 10 0 15 3M57 27c5-3 10-4 15-3M57 38c5-3 10-4 15-3\"/></svg>",
+    "sourceUrl": "https://openlibrary.org/developers/api"
+  },
+  "seo": {
+    "title": "Open Library Book Scraper Tool for Book and Author Metadata",
+    "description": "Search Open Library books, authors, subjects, ISBNs, and ebook availability with Better Fetch via public Open Library APIs, including titles, author names, editions, cover IDs, ratings, publisher data, languages, subjects, and Internet Archive IDs.",
+    "intro": "Open Library Book Scraper gives agents a structured route into Open Library's public book and author APIs. Search by keyword, title, author, subject, ISBN, or ebook availability, or switch to author mode for public author records. The tool normalizes Open Library JSON into compact catalog rows with work keys, Open Library URLs, titles, author names and keys, first publication years, edition counts, ISBNs, publishers, languages, subjects, cover URLs, ratings, ebook access flags, full-text availability, Internet Archive identifiers, page counts, and author search summaries. It is designed for book discovery, bibliography building, catalog enrichment, reading-list automation, library research, publishing workflows, and agent pipelines that need public book metadata without scraping Open Library HTML.",
+    "useCases": [
+      {
+        "title": "Book discovery and bibliography building",
+        "description": "Search by topic, title, author, or ISBN and return normalized Open Library work rows for reading lists, citations, or catalog review."
+      },
+      {
+        "title": "Catalog and CMS enrichment",
+        "description": "Attach Open Library URLs, edition counts, cover image URLs, publisher names, languages, subjects, ratings, and ISBNs to book records."
+      },
+      {
+        "title": "Author and ebook research",
+        "description": "Find public author records, top works, work counts, subjects, and ebook/full-text availability before deeper library or Internet Archive workflows."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Open Library Book Scraper require an API key?",
+        "answer": "No. Version 0.1 uses Open Library's public APIs and keeps each run to one bounded request. High-volume workflows should follow Open Library's published usage guidance and cache results."
+      },
+      {
+        "question": "Does it scrape Open Library HTML pages?",
+        "answer": "No. It calls public JSON endpoints such as search.json and search/authors.json, then normalizes the returned metadata. It does not crawl HTML pages, log in, or bulk-download records."
+      },
+      {
+        "question": "Is this tool affiliated with Open Library or Internet Archive?",
+        "answer": "No. Open Library is an Internet Archive initiative. This Better Fetch tool uses public Open Library API data and is not endorsed by or affiliated with Open Library or Internet Archive."
+      }
+    ],
+    "keywords": [
+      "Open Library scraper",
+      "Open Library API",
+      "book metadata",
+      "ISBN lookup",
+      "author search",
+      "ebook availability",
+      "library catalog",
+      "Internet Archive books"
+    ]
+  },
+  "popularity": {
+    "rank": 35,
+    "score": 13
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "books",
+          "authors"
+        ],
+        "default": "books",
+        "description": "Search Open Library book/catalog records or public author records."
+      },
+      "query": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 240,
+        "description": "Keyword query for books or authors."
+      },
+      "title": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 180,
+        "description": "Book title query for books mode."
+      },
+      "author": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 180,
+        "description": "Author name query for books mode, or author query fallback in authors mode."
+      },
+      "subject": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 180,
+        "description": "Open Library subject query such as science fiction, entrepreneurship, or children's literature."
+      },
+      "isbn": {
+        "type": "string",
+        "maxLength": 32,
+        "description": "ISBN-10 or ISBN-13 value, with or without hyphens."
+      },
+      "ebooks_only": {
+        "type": "boolean",
+        "default": false,
+        "description": "Filter books mode to records where Open Library reports full-text availability."
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 1,
+        "description": "One-based result page."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 20,
+        "default": 10,
+        "description": "Maximum records to return."
+      },
+      "sort": {
+        "type": "string",
+        "enum": [
+          "relevance",
+          "new",
+          "old"
+        ],
+        "default": "relevance",
+        "description": "Book search sort order."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Open Library API URL fetched"
+      },
+      "query": {
+        "type": "string",
+        "description": "Query summary"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned records"
+      },
+      "total_matches": {
+        "type": "integer",
+        "description": "Total matches reported by Open Library"
+      },
+      "page": {
+        "type": "integer",
+        "description": "Result page used"
+      },
+      "books": {
+        "type": "array",
+        "description": "Normalized Open Library book records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank in this response"
+            },
+            "openlibrary_key": {
+              "type": "string",
+              "description": "Open Library work key"
+            },
+            "openlibrary_url": {
+              "type": "string",
+              "description": "Open Library work URL"
+            },
+            "title": {
+              "type": "string",
+              "description": "Book or work title"
+            },
+            "authors": {
+              "type": "string",
+              "description": "Comma-separated author names"
+            },
+            "author_keys": {
+              "type": "string",
+              "description": "Comma-separated Open Library author keys"
+            },
+            "first_publish_year": {
+              "type": "integer",
+              "description": "First publication year"
+            },
+            "edition_count": {
+              "type": "integer",
+              "description": "Number of editions reported by Open Library"
+            },
+            "first_isbn": {
+              "type": "string",
+              "description": "First ISBN returned"
+            },
+            "isbns": {
+              "type": "string",
+              "description": "Comma-separated ISBN values"
+            },
+            "publishers": {
+              "type": "string",
+              "description": "Comma-separated publisher names"
+            },
+            "languages": {
+              "type": "string",
+              "description": "Comma-separated language codes"
+            },
+            "subjects": {
+              "type": "string",
+              "description": "Comma-separated subject labels"
+            },
+            "cover_id": {
+              "type": "integer",
+              "description": "Open Library cover ID"
+            },
+            "cover_url": {
+              "type": "string",
+              "description": "Open Library Covers API image URL"
+            },
+            "ratings_average": {
+              "type": "number",
+              "description": "Average Open Library rating"
+            },
+            "ratings_count": {
+              "type": "integer",
+              "description": "Open Library rating count"
+            },
+            "ebook_access": {
+              "type": "string",
+              "description": "Open Library ebook access label"
+            },
+            "has_fulltext": {
+              "type": "boolean",
+              "description": "Whether full text is available"
+            },
+            "internet_archive_ids": {
+              "type": "string",
+              "description": "Comma-separated Internet Archive item IDs"
+            },
+            "number_of_pages_median": {
+              "type": "integer",
+              "description": "Median page count across editions"
+            }
+          },
+          "required": [
+            "rank",
+            "openlibrary_key",
+            "openlibrary_url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "authors": {
+        "type": "array",
+        "description": "Normalized Open Library author records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank in this response"
+            },
+            "openlibrary_author_key": {
+              "type": "string",
+              "description": "Open Library author key"
+            },
+            "openlibrary_url": {
+              "type": "string",
+              "description": "Open Library author URL"
+            },
+            "name": {
+              "type": "string",
+              "description": "Author name"
+            },
+            "alternate_names": {
+              "type": "string",
+              "description": "Comma-separated alternate names"
+            },
+            "top_work": {
+              "type": "string",
+              "description": "Top work reported by Open Library"
+            },
+            "work_count": {
+              "type": "integer",
+              "description": "Number of works reported by Open Library"
+            },
+            "top_subjects": {
+              "type": "string",
+              "description": "Comma-separated top subjects"
+            },
+            "birth_date": {
+              "type": "string",
+              "description": "Birth date when available"
+            },
+            "death_date": {
+              "type": "string",
+              "description": "Death date when available"
+            }
+          },
+          "required": [
+            "rank",
+            "openlibrary_author_key",
+            "openlibrary_url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "tolkien-books",
+      "input": {
+        "mode": "books",
+        "query": "lord of the rings",
+        "limit": 2
+      },
+      "expect": {
+        "outputMatches": {
+          "books": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "tolkien-authors",
+      "input": {
+        "mode": "authors",
+        "query": "tolkien",
+        "limit": 2
+      },
+      "expect": {
+        "outputMatches": {
+          "authors": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

@@ -1,0 +1,312 @@
+{
+  "name": "github_scraper",
+  "version": "0.1.1",
+  "title": "GitHub Scraper",
+  "description": "Extract public GitHub repository, profile, repository search, and trending repository metadata, including stars, forks, topics, languages, licenses, dates, follower counts, and trend velocity when visible.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "GitHub logo",
+    "svg": "<svg version=\"1.0\" xmlns=\"http://www.w3.org/2000/svg\" width=\"240.000000pt\" height=\"240.000000pt\" viewBox=\"0 0 240.000000 240.000000\" preserveAspectRatio=\"xMidYMid meet\"><g transform=\"translate(0.000000,240.000000) scale(0.100000,-0.100000)\" fill=\"#000000\" stroke=\"none\"><path d=\"M970 2301 c-305 -68 -555 -237 -727 -493 -301 -451 -241 -1056 143 -1442 115 -116 290 -228 422 -271 49 -16 55 -16 77 -1 24 16 25 20 25 135 l0 118 -88 -5 c-103 -5 -183 13 -231 54 -17 14 -50 62 -73 106 -38 74 -66 108 -144 177 -26 23 -27 24 -9 37 43 32 130 1 185 -65 96 -117 133 -148 188 -160 49 -10 94 -6 162 14 9 3 21 24 27 48 6 23 22 58 35 77 l24 35 -81 16 c-170 35 -275 96 -344 200 -64 96 -85 179 -86 334 0 146 16 206 79 288 28 36 31 47 23 68 -15 36 -11 188 5 234 13 34 20 40 47 43 45 5 129 -24 214 -72 l73 -42 64 15 c91 21 364 20 446 0 l62 -16 58 35 c77 46 175 82 224 82 39 0 39 -1 55 -52 17 -59 20 -166 5 -217 -8 -30 -6 -39 16 -68 109 -144 121 -383 29 -579 -62 -129 -193 -219 -369 -252 l-84 -16 31 -55 32 -56 3 -223 4 -223 25 -16 c23 -15 28 -15 76 2 80 27 217 101 292 158 446 334 590 933 343 1431 -145 293 -419 518 -733 602 -137 36 -395 44 -525 15z\"/></g></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:GitHub_Invertocat_Logo.svg"
+  },
+  "seo": {
+    "title": "GitHub Scraper Tool for Repos, Profiles, Search, and Trending",
+    "description": "Scrape public GitHub metadata with Better Fetch, including repository stats, profile fields, repository search results, and GitHub Trending records.",
+    "intro": "GitHub Scraper gives agents a structured way to inspect public open-source activity without managing a GitHub integration. Choose repository, profile, search, or trending mode and the tool normalizes public GitHub metadata into compact records for research, competitive intelligence, sourcing, technical due diligence, DevRel monitoring, and newsletter curation.",
+    "useCases": [
+      {
+        "title": "Open-source momentum checks",
+        "description": "Fetch stars, forks, languages, topics, licenses, and update dates for a repository before an agent compares project health or adoption."
+      },
+      {
+        "title": "Developer and organization research",
+        "description": "Read public profile fields such as bio, company, location, follower count, website, and public repo count for sourcing or partner research."
+      },
+      {
+        "title": "Trend discovery",
+        "description": "Pull GitHub Trending repositories by language and period or search repositories by keyword, sorted by stars, forks, or update date."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does GitHub Scraper need a GitHub token?",
+        "answer": "No. Version 0.1 uses public GitHub endpoints and public pages through Better Fetch. It does not access private repositories or authenticated account data."
+      },
+      {
+        "question": "Can it fetch issues, pull requests, releases, or contributors?",
+        "answer": "Not yet. Version 0.1 focuses on repository, profile, search, and trending metadata. Issues, pull requests, releases, contributors, README text, and deep pagination should be added as separate validated slices."
+      },
+      {
+        "question": "Why are results limited?",
+        "answer": "The unauthenticated GitHub API is rate-limited, and GitHub Trending has a bounded page size. The tool keeps each run small and predictable so it remains reliable for agent workflows."
+      }
+    ],
+    "keywords": [
+      "GitHub scraper",
+      "GitHub repository metadata",
+      "GitHub profile scraper",
+      "GitHub Trending scraper",
+      "open source intelligence",
+      "developer tools scraper",
+      "AI agent GitHub research"
+    ]
+  },
+  "popularity": {
+    "rank": 23,
+    "score": 45
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "repo",
+          "profile",
+          "search",
+          "trending"
+        ],
+        "default": "repo",
+        "description": "Extraction mode: repo, profile, search, or trending."
+      },
+      "repo_or_url": {
+        "type": "string",
+        "description": "Owner/repo slug or GitHub repository URL. Required for repo mode."
+      },
+      "username_or_url": {
+        "type": "string",
+        "description": "GitHub username or profile URL. Required for profile mode."
+      },
+      "query": {
+        "type": "string",
+        "description": "GitHub repository search query. Required for search mode."
+      },
+      "language": {
+        "type": "string",
+        "description": "Optional GitHub Trending language filter, such as typescript, python, go, or rust."
+      },
+      "since": {
+        "type": "string",
+        "enum": [
+          "daily",
+          "weekly",
+          "monthly"
+        ],
+        "default": "daily",
+        "description": "GitHub Trending period for trending mode."
+      },
+      "sort": {
+        "type": "string",
+        "enum": [
+          "stars",
+          "forks",
+          "updated"
+        ],
+        "default": "stars",
+        "description": "Repository search sort field."
+      },
+      "order": {
+        "type": "string",
+        "enum": [
+          "desc",
+          "asc"
+        ],
+        "default": "desc",
+        "description": "Repository search sort direction."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 25,
+        "default": 10,
+        "description": "Maximum repository records to return for search or trending modes."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Extraction mode used"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Fetched GitHub API or page URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned records"
+      },
+      "items": {
+        "type": "array",
+        "description": "Public GitHub repository, profile, search, or trending records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Record type"
+            },
+            "name": {
+              "type": "string",
+              "description": "Repository name or display name"
+            },
+            "full_name": {
+              "type": "string",
+              "description": "Repository owner/name"
+            },
+            "owner": {
+              "type": "string",
+              "description": "Repository owner login"
+            },
+            "username": {
+              "type": "string",
+              "description": "GitHub username for profile records"
+            },
+            "url": {
+              "type": "string",
+              "description": "Public GitHub URL"
+            },
+            "description": {
+              "type": "string",
+              "description": "Repository description"
+            },
+            "homepage_url": {
+              "type": "string",
+              "description": "Repository homepage URL"
+            },
+            "language": {
+              "type": "string",
+              "description": "Primary repository language"
+            },
+            "stars": {
+              "type": "integer",
+              "description": "Repository star count"
+            },
+            "stars_today": {
+              "type": "integer",
+              "description": "Stars gained in the selected Trending period when visible"
+            },
+            "forks": {
+              "type": "integer",
+              "description": "Repository fork count"
+            },
+            "watchers": {
+              "type": "integer",
+              "description": "Repository watcher count"
+            },
+            "open_issues": {
+              "type": "integer",
+              "description": "Open issue count"
+            },
+            "topics": {
+              "type": "string",
+              "description": "Comma-separated repository topics"
+            },
+            "license": {
+              "type": "string",
+              "description": "Repository license label"
+            },
+            "is_archived": {
+              "type": "boolean",
+              "description": "Whether the repository is archived"
+            },
+            "is_fork": {
+              "type": "boolean",
+              "description": "Whether the repository is a fork"
+            },
+            "default_branch": {
+              "type": "string",
+              "description": "Default branch name"
+            },
+            "created_at": {
+              "type": "string",
+              "description": "Creation timestamp"
+            },
+            "updated_at": {
+              "type": "string",
+              "description": "Last update timestamp"
+            },
+            "pushed_at": {
+              "type": "string",
+              "description": "Last push timestamp"
+            },
+            "size_kb": {
+              "type": "integer",
+              "description": "Repository size in KB"
+            },
+            "bio": {
+              "type": "string",
+              "description": "Public profile bio"
+            },
+            "company": {
+              "type": "string",
+              "description": "Public profile company"
+            },
+            "location": {
+              "type": "string",
+              "description": "Public profile location"
+            },
+            "blog": {
+              "type": "string",
+              "description": "Public profile website"
+            },
+            "twitter_username": {
+              "type": "string",
+              "description": "Public X/Twitter username"
+            },
+            "followers": {
+              "type": "integer",
+              "description": "Follower count"
+            },
+            "following": {
+              "type": "integer",
+              "description": "Following count"
+            },
+            "public_repos": {
+              "type": "integer",
+              "description": "Public repository count"
+            },
+            "avatar_url": {
+              "type": "string",
+              "description": "Profile avatar URL"
+            }
+          },
+          "required": [
+            "type",
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count",
+      "items"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "react-repo",
+      "input": {
+        "mode": "repo",
+        "repo_or_url": "facebook/react"
+      },
+      "expect": {
+        "outputMatches": {
+          "items": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

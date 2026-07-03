@@ -1,0 +1,11 @@
+{
+  "name": "better-fetch-tools",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "tools/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

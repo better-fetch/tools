@@ -1,0 +1,190 @@
+{
+  "name": "contact_info_scraper",
+  "version": "0.1.1",
+  "title": "Contact Info Scraper",
+  "description": "Extract public emails, phone numbers, social profiles, and contact-page URLs from company websites with a bounded same-origin browser crawl.",
+  "category": "leads",
+  "logo": {
+    "label": "Address book contact card mark",
+    "svg": "<svg viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"7\" width=\"28\" height=\"34\" rx=\"4\" fill=\"none\" stroke=\"black\" stroke-width=\"3\"/><path d=\"M16 7v34M7 16h6M7 24h6M7 32h6\" fill=\"none\" stroke=\"black\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"27\" cy=\"19\" r=\"4\" fill=\"none\" stroke=\"black\" stroke-width=\"3\"/><path d=\"M20 32c2-5 12-5 14 0\" fill=\"none\" stroke=\"black\" stroke-width=\"3\" stroke-linecap=\"round\"/></svg>"
+  },
+  "seo": {
+    "title": "Contact Info Scraper Tool for Emails, Phones, and Social Profiles",
+    "description": "Extract public contact details from company websites with Better Fetch: emails, phone numbers, social profiles, contact pages, and source URLs for lead generation and CRM enrichment.",
+    "intro": "Contact Info Scraper turns public company websites into structured outreach signals. It starts from one URL or a short list of URLs, renders each site through Better Fetch, follows likely same-origin contact, about, support, team, press, and legal pages, then returns public emails, phone numbers, social profile links, contact-page URLs, and per-page evidence. It is built for lead enrichment and agent workflows that need contact signals without hand-copying details from a website.",
+    "useCases": [
+      {
+        "title": "Lead list enrichment",
+        "description": "Add public emails, phone numbers, and social profile URLs to a list of company websites before routing records into a CRM."
+      },
+      {
+        "title": "Sales and partnership research",
+        "description": "Give an agent the contact pages and source URLs it needs to draft outreach or decide whether a company is reachable."
+      },
+      {
+        "title": "Directory QA",
+        "description": "Check whether listed businesses still expose valid-looking public contact details and social profiles on their own websites."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Contact Info Scraper verify email deliverability?",
+        "answer": "No. This v0.1 extracts public email-looking strings and mailto links from visible website pages. It does not send verification probes or enrich private contact databases."
+      },
+      {
+        "question": "How far does it crawl?",
+        "answer": "It keeps a bounded same-origin crawl. By default it scans the start page plus likely contact/about/support pages, with max_pages_per_site and max_total_pages caps for predictable agent runs."
+      },
+      {
+        "question": "Does it scrape private social data?",
+        "answer": "No. It only returns public social profile URLs linked from the website, such as LinkedIn, Facebook, Instagram, X/Twitter, YouTube, TikTok, Threads, Snapchat, or Telegram links."
+      }
+    ],
+    "keywords": [
+      "contact info scraper",
+      "email extractor",
+      "phone number scraper",
+      "social profile scraper",
+      "lead enrichment",
+      "website contact finder"
+    ]
+  },
+  "popularity": {
+    "rank": 46,
+    "score": 53358
+  },
+  "creditsEstimate": 4,
+  "maxEngineCalls": 30,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public website URL to scan"
+      },
+      "urls": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "format": "uri"
+        },
+        "maxItems": 10,
+        "description": "Optional additional public website URLs to scan"
+      },
+      "max_pages_per_site": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10,
+        "default": 4,
+        "description": "Maximum same-origin pages to scan per starting URL"
+      },
+      "max_total_pages": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 30,
+        "default": 10,
+        "description": "Maximum pages to scan across all starting URLs"
+      },
+      "max_emails": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 200,
+        "default": 50,
+        "description": "Maximum unique emails to return per site"
+      },
+      "max_phones": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 30,
+        "description": "Maximum unique phone numbers to return per site"
+      },
+      "include_social_profiles": {
+        "type": "boolean",
+        "default": true,
+        "description": "Return public social profile URLs linked from scanned pages"
+      },
+      "wait_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 500,
+        "description": "Additional browser wait time after DOMContentLoaded"
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "count": {
+        "type": "integer",
+        "description": "Number of start sites scanned"
+      },
+      "total_pages_scanned": {
+        "type": "integer",
+        "description": "Total pages scanned across sites"
+      },
+      "sites": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start_url": {
+              "type": "string",
+              "description": "Original normalized start URL"
+            },
+            "origin": {
+              "type": "string",
+              "description": "Scanned origin"
+            },
+            "pages_scanned": {
+              "type": "integer",
+              "description": "Number of pages scanned for this site"
+            }
+          },
+          "required": [
+            "start_url",
+            "origin",
+            "pages_scanned"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "count",
+      "total_pages_scanned",
+      "sites"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "w3c-contact",
+      "input": {
+        "url": "https://www.w3.org/Consortium/contact",
+        "max_pages_per_site": 1,
+        "max_total_pages": 1,
+        "max_emails": 20,
+        "max_phones": 10
+      },
+      "expect": {
+        "outputMatches": {
+          "count": 1,
+          "sites": {
+            "minLength": 1
+          },
+          "sites.0.emails": {
+            "minLength": 1
+          },
+          "sites.0.phones": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

@@ -1,0 +1,186 @@
+{
+  "name": "linkedin_company_scraper",
+  "version": "0.1.2",
+  "title": "LinkedIn Company Scraper",
+  "description": "Scrape public LinkedIn company profile data from a slug or company URL, including name, description, website, industry, company size, headquarters, type, follower count, logo, and recent public posts.",
+  "category": "leads",
+  "logo": {
+    "label": "LinkedIn logo",
+    "svg": "<svg height=\"72\" viewBox=\"0 0 72 72\" width=\"72\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" fill-rule=\"evenodd\"><path d=\"M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z\" fill=\"#007EBB\"/><path d=\"M62,62 L51.315625,62 L51.315625,43.8021149 C51.315625,38.8127542 49.4197917,36.0245323 45.4707031,36.0245323 C41.1746094,36.0245323 38.9300781,38.9261103 38.9300781,43.8021149 L38.9300781,62 L28.6333333,62 L28.6333333,27.3333333 L38.9300781,27.3333333 L38.9300781,32.0029283 C38.9300781,32.0029283 42.0260417,26.2742151 49.3825521,26.2742151 C56.7356771,26.2742151 62,30.7644705 62,40.051212 L62,62 Z M16.349349,22.7940133 C12.8420573,22.7940133 10,19.9296567 10,16.3970067 C10,12.8643566 12.8420573,10 16.349349,10 C19.8566406,10 22.6970052,12.8643566 22.6970052,16.3970067 C22.6970052,19.9296567 19.8566406,22.7940133 16.349349,22.7940133 Z M11.0325521,62 L21.769401,62 L21.769401,27.3333333 L11.0325521,27.3333333 L11.0325521,62 Z\" fill=\"#FFF\"/></g></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:LinkedIn_icon.svg"
+  },
+  "seo": {
+    "title": "LinkedIn Company Scraper Tool for Public Company Profiles",
+    "description": "Scrape public LinkedIn company profile data with Better Fetch, including name, description, website, industry, company size, headquarters, type, followers, logo, and recent posts.",
+    "intro": "LinkedIn Company Scraper turns a public LinkedIn company URL into a structured profile record. The tool reads the logged-out company page, normalizes the about section, pulls visible follower and logo metadata, and includes recent public company posts when LinkedIn publishes them in page-level structured data.",
+    "useCases": [
+      {
+        "title": "B2B lead enrichment",
+        "description": "Enrich company records with LinkedIn profile URLs, industry, website, company size, headquarters, description, logo, and follower counts."
+      },
+      {
+        "title": "Market mapping",
+        "description": "Compare public LinkedIn company positioning, industries, sizes, headquarters, and recent post themes across competitors or prospect lists."
+      },
+      {
+        "title": "Account research",
+        "description": "Give sales, recruiting, or research agents a concise public company snapshot before they decide whether to crawl websites or run deeper tools."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does LinkedIn Company Scraper require cookies?",
+        "answer": "No. Version 0.1 reads the public logged-out LinkedIn company page and does not use passwords, exported sessions, private cookies, or private LinkedIn API tokens."
+      },
+      {
+        "question": "Can it scrape employee lists?",
+        "answer": "No. This version returns company profile metadata and recent public company posts when visible. Employee lists and deep enrichment should be added as separate validated tools."
+      },
+      {
+        "question": "Why are some company fields missing?",
+        "answer": "The tool only returns fields present on the public company page. If LinkedIn hides a website, size, headquarters, or post list, the tool does not guess those values."
+      }
+    ],
+    "keywords": [
+      "LinkedIn company scraper",
+      "LinkedIn company profile",
+      "company profile scraper",
+      "B2B lead enrichment",
+      "public LinkedIn data",
+      "company research"
+    ]
+  },
+  "popularity": {
+    "rank": 15,
+    "score": 11000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "company_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public LinkedIn company URL. Use company_url or slug."
+      },
+      "slug": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120,
+        "description": "LinkedIn company slug, such as openai. Use company_url or slug."
+      },
+      "max_recent_posts": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 10,
+        "default": 5,
+        "description": "Maximum recent public company posts to return."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "company_url": {
+        "type": "string",
+        "description": "Canonical LinkedIn company URL"
+      },
+      "slug": {
+        "type": "string",
+        "description": "LinkedIn company slug"
+      },
+      "name": {
+        "type": "string",
+        "description": "Company name"
+      },
+      "description": {
+        "type": "string",
+        "description": "Public company description"
+      },
+      "website": {
+        "type": "string",
+        "description": "Company website URL"
+      },
+      "industry": {
+        "type": "string",
+        "description": "Visible LinkedIn industry"
+      },
+      "company_size": {
+        "type": "string",
+        "description": "Visible company size"
+      },
+      "headquarters": {
+        "type": "string",
+        "description": "Visible headquarters location"
+      },
+      "organization_type": {
+        "type": "string",
+        "description": "Visible organization type"
+      },
+      "specialties": {
+        "type": "array",
+        "description": "Visible specialties",
+        "items": {
+          "type": "string"
+        }
+      },
+      "follower_count": {
+        "type": "integer",
+        "description": "Visible follower count"
+      },
+      "logo": {
+        "type": "string",
+        "description": "Visible company logo URL"
+      },
+      "recent_posts": {
+        "type": "array",
+        "description": "Recent public company posts from LinkedIn structured data",
+        "items": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "LinkedIn post URL"
+            },
+            "text": {
+              "type": "string",
+              "description": "Post text excerpt"
+            },
+            "date_published": {
+              "type": "string",
+              "description": "Post publish timestamp"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "company_url",
+      "slug",
+      "name"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "openai-company",
+      "input": {
+        "slug": "openai",
+        "max_recent_posts": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "name": "OpenAI",
+          "slug": "openai"
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

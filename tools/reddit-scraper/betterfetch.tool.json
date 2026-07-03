@@ -1,0 +1,342 @@
+{
+  "name": "reddit_scraper",
+  "version": "0.1.1",
+  "title": "Reddit Scraper",
+  "description": "Scrape public Reddit through the official JSON views: list a subreddit's hot/new/top/rising posts, run a keyword search across Reddit or one subreddit, or pull a submission's comment thread — returning normalized posts and comments.",
+  "category": "social",
+  "logo": {
+    "label": "Reddit alien mascot logo",
+    "svg": "<svg viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"black\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"24\" cy=\"28\" r=\"13\"/><path d=\"M24 15l3-8 7 3\"/><path d=\"M18 31q6 5 12 0\"/></g><circle cx=\"19\" cy=\"27\" r=\"2.5\" fill=\"black\"/><circle cx=\"29\" cy=\"27\" r=\"2.5\" fill=\"black\"/></svg>",
+    "sourceUrl": "https://www.reddit.com/brand"
+  },
+  "seo": {
+    "title": "Reddit Scraper Tool for Public Posts and Comments",
+    "description": "Scrape public Reddit with Better Fetch: list subreddit hot, new, top, and rising posts, search Reddit by keyword, and pull submission comment threads as normalized JSON for agents, research, and monitoring.",
+    "intro": "Reddit Scraper gives agents structured access to public Reddit without an account. It reads Reddit's official JSON views through the Better Fetch stealth engine, normalizes submissions and comment trees, and returns clean fields — titles, authors, scores, upvote ratios, comment counts, permalinks, and flattened comment threads — that are easy to store, rank, or summarize in an LLM workflow.",
+    "useCases": [
+      {
+        "title": "Community monitoring",
+        "description": "Track a subreddit's hot, new, top, or rising posts to watch product mentions, sentiment, and emerging discussion for a brand or topic."
+      },
+      {
+        "title": "Voice-of-customer research",
+        "description": "Search Reddit for a keyword and collect the highest-signal submissions and their comment threads for market and product research."
+      },
+      {
+        "title": "Agent context gathering",
+        "description": "Let an agent pull a submission's comments before summarizing the debate, extracting answers, or deciding what to read next."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Reddit Scraper require a Reddit login or API key?",
+        "answer": "No. It reads Reddit's public JSON views through the Better Fetch engine, so it only returns data any logged-out visitor can see and never touches private or account-only content."
+      },
+      {
+        "question": "Can it read a submission's comments?",
+        "answer": "Yes. In comments mode, pass a post URL or ID and the tool returns the submission plus a flattened, depth-tagged slice of its comment thread up to your requested limit."
+      },
+      {
+        "question": "Why might a request come back empty or rate-limited?",
+        "answer": "Reddit rate-limits aggressively. The tool escalates through a residential proxy automatically when the direct path is blocked, but a busy moment can still return no data — retry shortly."
+      }
+    ],
+    "keywords": [
+      "Reddit scraper",
+      "subreddit scraper",
+      "Reddit search API",
+      "Reddit comments scraper",
+      "social listening",
+      "Reddit agent tool"
+    ]
+  },
+  "popularity": {
+    "rank": 4,
+    "score": 210000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "posts",
+          "search",
+          "comments"
+        ],
+        "description": "posts = a subreddit feed; search = keyword search; comments = one submission's thread. Defaults from the fields you provide."
+      },
+      "subreddit": {
+        "type": "string",
+        "description": "Subreddit name, r/name, or subreddit URL. Required for posts mode; optional in search mode to restrict the search."
+      },
+      "query": {
+        "type": "string",
+        "description": "Keyword query for search mode."
+      },
+      "sort": {
+        "type": "string",
+        "description": "posts mode: hot, new, top, or rising. search mode: relevance, hot, top, new, or comments."
+      },
+      "time": {
+        "type": "string",
+        "enum": [
+          "hour",
+          "day",
+          "week",
+          "month",
+          "year",
+          "all"
+        ],
+        "description": "Time window applied when sort is top."
+      },
+      "post_url": {
+        "type": "string",
+        "description": "Submission URL or ID for comments mode."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 10,
+        "description": "Maximum posts to return in posts and search modes."
+      },
+      "max_comments": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 20,
+        "description": "Maximum comments to return in comments mode."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Resolved run mode"
+      },
+      "subreddit": {
+        "type": "string",
+        "description": "Resolved subreddit, when applicable"
+      },
+      "query": {
+        "type": "string",
+        "description": "Search query, when applicable"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Reddit JSON URL fetched"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of posts or comments returned"
+      },
+      "posts": {
+        "type": "array",
+        "description": "Submissions (posts and search modes)",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Reddit submission id"
+            },
+            "title": {
+              "type": "string",
+              "description": "Submission title"
+            },
+            "author": {
+              "type": "string",
+              "description": "Author username"
+            },
+            "subreddit": {
+              "type": "string",
+              "description": "Subreddit name"
+            },
+            "score": {
+              "type": "integer",
+              "description": "Net upvotes"
+            },
+            "upvote_ratio": {
+              "type": "number",
+              "description": "Fraction of votes that are upvotes"
+            },
+            "num_comments": {
+              "type": "integer",
+              "description": "Comment count"
+            },
+            "created_utc": {
+              "type": "number",
+              "description": "Creation time, unix seconds"
+            },
+            "permalink": {
+              "type": "string",
+              "description": "Full Reddit permalink"
+            },
+            "url": {
+              "type": "string",
+              "description": "Linked URL (external or self)"
+            },
+            "domain": {
+              "type": "string",
+              "description": "Linked domain"
+            },
+            "flair": {
+              "type": "string",
+              "description": "Link flair text"
+            },
+            "over_18": {
+              "type": "boolean",
+              "description": "NSFW flag"
+            },
+            "is_self": {
+              "type": "boolean",
+              "description": "True for text posts"
+            },
+            "selftext": {
+              "type": "string",
+              "description": "Truncated self-post body"
+            }
+          },
+          "required": [
+            "id",
+            "title"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "post": {
+        "type": "object",
+        "description": "The submission in comments mode",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Reddit submission id"
+          },
+          "title": {
+            "type": "string",
+            "description": "Submission title"
+          },
+          "author": {
+            "type": "string",
+            "description": "Author username"
+          },
+          "subreddit": {
+            "type": "string",
+            "description": "Subreddit name"
+          },
+          "score": {
+            "type": "integer",
+            "description": "Net upvotes"
+          },
+          "num_comments": {
+            "type": "integer",
+            "description": "Comment count"
+          },
+          "permalink": {
+            "type": "string",
+            "description": "Full Reddit permalink"
+          },
+          "selftext": {
+            "type": "string",
+            "description": "Truncated self-post body"
+          }
+        },
+        "additionalProperties": false
+      },
+      "comments": {
+        "type": "array",
+        "description": "Flattened comment thread (comments mode)",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Comment id"
+            },
+            "author": {
+              "type": "string",
+              "description": "Comment author"
+            },
+            "body": {
+              "type": "string",
+              "description": "Truncated comment text"
+            },
+            "score": {
+              "type": "integer",
+              "description": "Comment score"
+            },
+            "created_utc": {
+              "type": "number",
+              "description": "Creation time, unix seconds"
+            },
+            "depth": {
+              "type": "integer",
+              "description": "Reply depth, 0 = top level"
+            },
+            "is_submitter": {
+              "type": "boolean",
+              "description": "True if the post author wrote it"
+            },
+            "permalink": {
+              "type": "string",
+              "description": "Full Reddit permalink"
+            }
+          },
+          "required": [
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "subreddit-hot",
+      "input": {
+        "mode": "posts",
+        "subreddit": "programming",
+        "sort": "hot",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "posts",
+          "posts": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "search-subreddit",
+      "input": {
+        "mode": "search",
+        "subreddit": "webdev",
+        "query": "typescript",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "search",
+          "posts": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

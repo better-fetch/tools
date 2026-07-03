@@ -1,0 +1,159 @@
+{
+  "name": "ecommerce_product_scraper",
+  "version": "0.1.1",
+  "title": "E-commerce Product Scraper",
+  "description": "Extract clean product metadata from a public product page, including title, price, currency, availability, image, brand, SKU, rating, review count, and description when visible.",
+  "category": "ecommerce",
+  "logo": {
+    "label": "E-commerce price tag icon",
+    "svg": "<svg viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 23 23 7h14l4 4v14L25 41 7 23Z\" fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linejoin=\"round\"/><circle cx=\"32\" cy=\"16\" r=\"3\" fill=\"black\"/><path d=\"M18 24h14M18 30h9\" fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linecap=\"round\"/></svg>"
+  },
+  "seo": {
+    "title": "E-commerce Product Scraper Tool for Price and Product Data",
+    "description": "Extract structured product data from public ecommerce pages with Better Fetch, including title, price, currency, availability, images, brand, SKU, ratings, and description.",
+    "intro": "E-commerce Product Scraper turns a public product detail page into normalized product metadata for monitoring, catalog enrichment, competitive research, and agent workflows. It renders the target through Better Fetch, prefers standards-based JSON-LD Product markup, and falls back to Open Graph, product meta tags, itemprop attributes, and common storefront HTML patterns.",
+    "useCases": [
+      {
+        "title": "Price monitoring",
+        "description": "Track public product pages over time and return normalized price, currency, availability, and final URL fields for comparison or alerting."
+      },
+      {
+        "title": "Catalog enrichment",
+        "description": "Pull product titles, images, brand names, SKUs, descriptions, ratings, and review counts into an internal product database or agent context."
+      },
+      {
+        "title": "Competitive research",
+        "description": "Let an agent inspect comparable product pages without hand-copying page text, price blocks, and visible product metadata."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does E-commerce Product Scraper work on every store?",
+        "answer": "It works best on public product detail pages that expose JSON-LD Product data, Open Graph product tags, itemprop attributes, or common visible price and availability markup."
+      },
+      {
+        "question": "Does the tool need store API keys?",
+        "answer": "No. The tool reads public page content through Better Fetch and does not use private store APIs, carts, checkout sessions, or account-specific credentials."
+      },
+      {
+        "question": "What happens when a field is not visible?",
+        "answer": "Missing values are omitted from the output rather than guessed, so downstream systems can distinguish visible data from unavailable metadata."
+      }
+    ],
+    "keywords": [
+      "ecommerce scraper",
+      "product scraper",
+      "price monitoring",
+      "product metadata",
+      "product page extraction",
+      "catalog enrichment"
+    ]
+  },
+  "popularity": {
+    "rank": 14,
+    "score": 12000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public product page URL"
+      },
+      "max_description_chars": {
+        "type": "integer",
+        "minimum": 200,
+        "maximum": 5000,
+        "default": 1200,
+        "description": "Maximum number of characters to keep from the product description"
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "Requested product URL"
+      },
+      "final_url": {
+        "type": "string",
+        "description": "Final URL after redirects"
+      },
+      "status": {
+        "type": "integer",
+        "description": "HTTP status code"
+      },
+      "title": {
+        "type": "string",
+        "description": "Product title"
+      },
+      "price": {
+        "type": "number",
+        "description": "Visible product price"
+      },
+      "currency": {
+        "type": "string",
+        "description": "ISO currency code or visible currency marker"
+      },
+      "availability": {
+        "type": "string",
+        "description": "Visible availability status"
+      },
+      "image": {
+        "type": "string",
+        "description": "Primary product image URL"
+      },
+      "brand": {
+        "type": "string",
+        "description": "Brand or manufacturer name"
+      },
+      "sku": {
+        "type": "string",
+        "description": "SKU, product ID, or MPN"
+      },
+      "rating": {
+        "type": "number",
+        "description": "Aggregate rating value"
+      },
+      "review_count": {
+        "type": "integer",
+        "description": "Aggregate review count"
+      },
+      "description": {
+        "type": "string",
+        "description": "Product description text"
+      }
+    },
+    "required": [
+      "url",
+      "final_url",
+      "title"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "books-to-scrape",
+      "input": {
+        "url": "https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html",
+        "max_description_chars": 800
+      },
+      "expect": {
+        "outputMatches": {
+          "title": "A Light in the Attic",
+          "price": 51.77,
+          "currency": "GBP"
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

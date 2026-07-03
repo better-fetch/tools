@@ -1,0 +1,319 @@
+{
+  "name": "huggingface_models_scraper",
+  "version": "0.1.1",
+  "title": "Hugging Face Models Scraper",
+  "description": "Search public Hugging Face Hub models or fetch one model repo's public metadata through the Hugging Face Hub API, returning normalized model IDs, authors, tasks, libraries, downloads, likes, licenses, tags, timestamps, URLs, and filenames.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "Hugging Face face mark",
+    "svg": "<svg viewBox=\"0 0 72 72\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"36\" cy=\"38\" r=\"21\"/><path d=\"M19 25c-5-6-6-11-2-14 5 0 9 4 11 10\"/><path d=\"M53 25c5-6 6-11 2-14-5 0-9 4-11 10\"/><path d=\"M27 36h.1M45 36h.1\"/><path d=\"M27 48c5 4 13 4 18 0\"/></g></svg>",
+    "sourceUrl": "https://huggingface.co/"
+  },
+  "seo": {
+    "title": "Hugging Face Models Scraper Tool for Model Discovery and AI Market Research",
+    "description": "Search Hugging Face Hub models or fetch exact model metadata with Better Fetch, including model ID, author, task, library, downloads, likes, license, tags, timestamps, URLs, and files.",
+    "intro": "Hugging Face Models Scraper gives agents a structured route into public Hugging Face Hub model metadata. Search models by keyword and sort by downloads, likes, created date, update time, or trending score, or fetch one exact model repo by ID or URL. The tool normalizes model IDs, authors, Hub URLs, pipeline tasks, library names, license hints, download counts, likes, public/private and gated labels, tags, created and last-modified timestamps, and sibling filenames. It is designed for AI model discovery, LLM ecosystem monitoring, open-source competitive research, model catalog enrichment, leaderboard preparation, DevRel research, and RAG-ready AI tooling inventories.",
+    "useCases": [
+      {
+        "title": "Model discovery",
+        "description": "Search the Hugging Face Hub by keyword and rank public models by downloads, likes, freshness, or trending score."
+      },
+      {
+        "title": "AI ecosystem monitoring",
+        "description": "Track popular model families, tasks, libraries, tags, and license hints for research, DevRel, and competitive intelligence workflows."
+      },
+      {
+        "title": "Agent catalog enrichment",
+        "description": "Fetch exact model metadata and filenames before deciding which model card, weights, or repository files an agent should inspect next."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Hugging Face Models Scraper require a Hugging Face token?",
+        "answer": "No. Version 0.1 uses public Hugging Face Hub API endpoints and only returns public metadata visible without account-specific access."
+      },
+      {
+        "question": "Does it download model weights?",
+        "answer": "No. It returns metadata and public sibling filenames. It does not download model files, bypass gated repositories, or access private models."
+      },
+      {
+        "question": "Is this tool affiliated with Hugging Face?",
+        "answer": "No. Better Fetch is not affiliated with or endorsed by Hugging Face. The logo mark is used only to identify the public target service."
+      }
+    ],
+    "keywords": [
+      "Hugging Face scraper",
+      "Hugging Face models API",
+      "AI model discovery",
+      "LLM model metadata",
+      "model downloads",
+      "model likes",
+      "Hugging Face Hub",
+      "open source models"
+    ]
+  },
+  "popularity": {
+    "rank": 39,
+    "score": 28
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "details"
+        ],
+        "default": "search",
+        "description": "search = search public Hub models; details = fetch one exact model repo."
+      },
+      "query": {
+        "type": "string",
+        "description": "Search query for search mode, such as llama, bert, diffusion, or sentence-transformers."
+      },
+      "model_id": {
+        "type": "string",
+        "description": "Model ID or Hugging Face model URL for details mode, such as bert-base-uncased or meta-llama/Llama-3.1-8B-Instruct."
+      },
+      "sort": {
+        "type": "string",
+        "enum": [
+          "downloads",
+          "likes",
+          "lastModified",
+          "createdAt",
+          "trendingScore"
+        ],
+        "default": "downloads",
+        "description": "Sort field for search mode."
+      },
+      "direction": {
+        "type": "string",
+        "enum": [
+          "desc",
+          "asc",
+          "-1",
+          "1"
+        ],
+        "default": "desc",
+        "description": "Sort direction for search mode."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 50,
+        "default": 10,
+        "description": "Maximum model rows to return."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Hugging Face Hub API URL fetched"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of model rows returned"
+      },
+      "query": {
+        "type": "string",
+        "description": "Search query used"
+      },
+      "model_id": {
+        "type": "string",
+        "description": "Exact model ID used"
+      },
+      "models": {
+        "type": "array",
+        "description": "Public Hugging Face model rows",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "id": {
+              "type": "string",
+              "description": "Model repository ID"
+            },
+            "author": {
+              "type": "string",
+              "description": "Author or namespace"
+            },
+            "model_url": {
+              "type": "string",
+              "description": "Hugging Face model URL"
+            },
+            "pipeline_tag": {
+              "type": "string",
+              "description": "Pipeline/task tag"
+            },
+            "library_name": {
+              "type": "string",
+              "description": "Library name"
+            },
+            "license": {
+              "type": "string",
+              "description": "License tag hint"
+            },
+            "downloads": {
+              "type": "integer",
+              "description": "Download count"
+            },
+            "likes": {
+              "type": "integer",
+              "description": "Like count"
+            },
+            "private": {
+              "type": "boolean",
+              "description": "Private flag when returned"
+            },
+            "gated": {
+              "type": "string",
+              "description": "Gated label when returned"
+            },
+            "tags": {
+              "type": "string",
+              "description": "Comma-separated tags"
+            },
+            "created_at": {
+              "type": "string",
+              "description": "Created timestamp"
+            },
+            "last_modified": {
+              "type": "string",
+              "description": "Last modified timestamp"
+            },
+            "siblings": {
+              "type": "string",
+              "description": "Comma-separated public sibling filenames"
+            }
+          },
+          "required": [
+            "rank",
+            "id",
+            "model_url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "model": {
+        "type": "object",
+        "description": "Exact public Hugging Face model metadata",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "description": "Result rank"
+          },
+          "id": {
+            "type": "string",
+            "description": "Model repository ID"
+          },
+          "author": {
+            "type": "string",
+            "description": "Author or namespace"
+          },
+          "model_url": {
+            "type": "string",
+            "description": "Hugging Face model URL"
+          },
+          "pipeline_tag": {
+            "type": "string",
+            "description": "Pipeline/task tag"
+          },
+          "library_name": {
+            "type": "string",
+            "description": "Library name"
+          },
+          "license": {
+            "type": "string",
+            "description": "License tag hint"
+          },
+          "downloads": {
+            "type": "integer",
+            "description": "Download count"
+          },
+          "likes": {
+            "type": "integer",
+            "description": "Like count"
+          },
+          "private": {
+            "type": "boolean",
+            "description": "Private flag when returned"
+          },
+          "gated": {
+            "type": "string",
+            "description": "Gated label when returned"
+          },
+          "tags": {
+            "type": "string",
+            "description": "Comma-separated tags"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Created timestamp"
+          },
+          "last_modified": {
+            "type": "string",
+            "description": "Last modified timestamp"
+          },
+          "siblings": {
+            "type": "string",
+            "description": "Comma-separated public sibling filenames"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "llama-search",
+      "input": {
+        "mode": "search",
+        "query": "llama",
+        "sort": "downloads",
+        "direction": "desc",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "models": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "bert-details",
+      "input": {
+        "mode": "details",
+        "model_id": "bert-base-uncased"
+      },
+      "expect": {
+        "outputMatches": {
+          "count": 1
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

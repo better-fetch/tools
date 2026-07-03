@@ -1,0 +1,368 @@
+{
+  "name": "clinicaltrials_study_scraper",
+  "version": "0.1.1",
+  "title": "ClinicalTrials.gov Study Scraper",
+  "description": "Search ClinicalTrials.gov studies or fetch one exact NCT record through the public ClinicalTrials.gov v2 API, returning normalized trial metadata, status, sponsors, conditions, interventions, phases, enrollment, dates, eligibility, outcomes, and locations.",
+  "category": "research",
+  "logo": {
+    "label": "ClinicalTrials.gov wordmark",
+    "svg": "<svg viewBox=\"0 0 96 64\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"8\" y=\"10\" width=\"80\" height=\"44\" rx=\"8\" fill=\"none\" stroke=\"black\" stroke-width=\"5\"/><path d=\"M28 22v20M18 32h20\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\"/><path d=\"M50 24h20M50 34h26M50 44h16\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\"/></svg>",
+    "sourceUrl": "https://clinicaltrials.gov/data-api"
+  },
+  "seo": {
+    "title": "ClinicalTrials.gov Study Scraper Tool for Trial Data",
+    "description": "Search ClinicalTrials.gov studies or fetch exact NCT IDs with Better Fetch via the public v2 API, including trial status, sponsors, conditions, interventions, phases, enrollment, dates, eligibility, outcomes, and locations.",
+    "intro": "ClinicalTrials.gov Study Scraper gives agents a structured route into the official ClinicalTrials.gov v2 API. Search by condition, intervention, sponsor, location, or free-text term, filter by overall status or supported aggregate filters, or fetch a known NCT record directly. The tool normalizes the nested API response into compact trial rows with NCT IDs, study URLs, titles, current status, result availability, conditions, interventions, phases, study type, enrollment, sponsors, important dates, eligibility criteria, outcome measures, countries, and locations. It is designed for clinical-trial monitoring, pharma pipeline research, patient-recruitment discovery, competitive intelligence, medical literature triage, and research-agent workflows that need reliable public trial metadata without scraping the website.",
+    "useCases": [
+      {
+        "title": "Recruiting trial discovery",
+        "description": "Find currently recruiting studies for a disease, intervention, sponsor, or location and return normalized trial rows for review."
+      },
+      {
+        "title": "Pharma pipeline monitoring",
+        "description": "Track sponsor, condition, phase, enrollment, result availability, start dates, completion dates, and last update dates from official records."
+      },
+      {
+        "title": "Patient and site research",
+        "description": "Collect eligibility snippets, contacts-ready study URLs, countries, and facility locations before deeper manual screening."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does ClinicalTrials.gov Study Scraper require an API key?",
+        "answer": "No. Version 0.1 uses the public ClinicalTrials.gov v2 API and keeps each run to one bounded request. Large exports should page through results politely with the returned next_page_token."
+      },
+      {
+        "question": "Can it filter by clinical-trial phase?",
+        "answer": "Yes, through the agg_filters input using ClinicalTrials.gov aggregate filter syntax, for example phase:3. The normalized output always includes the phase labels reported by each returned study."
+      },
+      {
+        "question": "Is this tool affiliated with ClinicalTrials.gov or NIH?",
+        "answer": "No. This Better Fetch tool uses public ClinicalTrials.gov API data and is not endorsed by or affiliated with ClinicalTrials.gov, NIH, NLM, or the U.S. government."
+      }
+    ],
+    "keywords": [
+      "ClinicalTrials.gov scraper",
+      "clinical trials API",
+      "NCT study data",
+      "trial recruitment",
+      "pharma pipeline",
+      "clinical research",
+      "trial eligibility",
+      "medical research data"
+    ]
+  },
+  "popularity": {
+    "rank": 34,
+    "score": 37
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "study"
+        ],
+        "default": "search",
+        "description": "Search ClinicalTrials.gov studies or fetch one exact NCT record."
+      },
+      "nct_id": {
+        "type": "string",
+        "maxLength": 16,
+        "description": "Exact NCT identifier for study mode, e.g. NCT04280705."
+      },
+      "query": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 240,
+        "description": "General free-text search across ClinicalTrials.gov study fields."
+      },
+      "condition": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 160,
+        "description": "Disease or condition query, mapped to query.cond."
+      },
+      "intervention": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 160,
+        "description": "Drug, device, procedure, or other intervention query, mapped to query.intr."
+      },
+      "sponsor": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 160,
+        "description": "Sponsor or collaborator query, mapped to query.spons."
+      },
+      "location": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 160,
+        "description": "Location query such as Boston, Massachusetts or United States, mapped to query.locn."
+      },
+      "status": {
+        "type": "string",
+        "maxLength": 200,
+        "description": "Overall status filter. Use API enum values such as RECRUITING, COMPLETED, ACTIVE_NOT_RECRUITING, NOT_YET_RECRUITING, TERMINATED, or comma-separated values."
+      },
+      "agg_filters": {
+        "type": "string",
+        "maxLength": 240,
+        "description": "Optional raw ClinicalTrials.gov aggregate filter expression, e.g. phase:3 or studyType:int."
+      },
+      "page_size": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 20,
+        "default": 10,
+        "description": "Maximum studies to return in search mode."
+      },
+      "page_token": {
+        "type": "string",
+        "maxLength": 300,
+        "description": "ClinicalTrials.gov nextPageToken from a previous search response."
+      },
+      "sort": {
+        "type": "string",
+        "enum": [
+          "@relevance",
+          "LastUpdatePostDate:desc",
+          "StudyFirstPostDate:desc",
+          "StartDate:desc",
+          "EnrollmentCount:desc"
+        ],
+        "default": "@relevance",
+        "description": "Sort expression for search mode."
+      },
+      "include_eligibility": {
+        "type": "boolean",
+        "default": false,
+        "description": "Include truncated eligibility criteria text when available."
+      },
+      "include_locations": {
+        "type": "boolean",
+        "default": true,
+        "description": "Include compact facility/city/country location strings."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "ClinicalTrials.gov API URL fetched"
+      },
+      "query": {
+        "type": "string",
+        "description": "Search query summary"
+      },
+      "nct_id": {
+        "type": "string",
+        "description": "Exact NCT ID used"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned studies"
+      },
+      "total_matches": {
+        "type": "integer",
+        "description": "Total matches reported by ClinicalTrials.gov when requested"
+      },
+      "next_page_token": {
+        "type": "string",
+        "description": "Token for the next search page"
+      },
+      "studies": {
+        "type": "array",
+        "description": "Normalized ClinicalTrials.gov study records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank in this response"
+            },
+            "nct_id": {
+              "type": "string",
+              "description": "NCT identifier"
+            },
+            "url": {
+              "type": "string",
+              "description": "ClinicalTrials.gov study URL"
+            },
+            "brief_title": {
+              "type": "string",
+              "description": "Brief study title"
+            },
+            "official_title": {
+              "type": "string",
+              "description": "Official study title"
+            },
+            "status": {
+              "type": "string",
+              "description": "Overall study status"
+            },
+            "has_results": {
+              "type": "boolean",
+              "description": "Whether results are posted"
+            },
+            "conditions": {
+              "type": "string",
+              "description": "Comma-separated conditions"
+            },
+            "interventions": {
+              "type": "string",
+              "description": "Comma-separated interventions"
+            },
+            "intervention_types": {
+              "type": "string",
+              "description": "Comma-separated intervention types"
+            },
+            "phases": {
+              "type": "string",
+              "description": "Comma-separated phase labels"
+            },
+            "study_type": {
+              "type": "string",
+              "description": "Study type"
+            },
+            "enrollment": {
+              "type": "integer",
+              "description": "Enrollment count"
+            },
+            "enrollment_type": {
+              "type": "string",
+              "description": "Actual or estimated enrollment"
+            },
+            "lead_sponsor": {
+              "type": "string",
+              "description": "Lead sponsor name"
+            },
+            "collaborators": {
+              "type": "string",
+              "description": "Collaborator names"
+            },
+            "start_date": {
+              "type": "string",
+              "description": "Study start date"
+            },
+            "primary_completion_date": {
+              "type": "string",
+              "description": "Primary completion date"
+            },
+            "completion_date": {
+              "type": "string",
+              "description": "Completion date"
+            },
+            "first_posted_date": {
+              "type": "string",
+              "description": "First posted date"
+            },
+            "last_update_posted_date": {
+              "type": "string",
+              "description": "Last update posted date"
+            },
+            "minimum_age": {
+              "type": "string",
+              "description": "Minimum eligible age"
+            },
+            "maximum_age": {
+              "type": "string",
+              "description": "Maximum eligible age"
+            },
+            "sex": {
+              "type": "string",
+              "description": "Eligible sex"
+            },
+            "healthy_volunteers": {
+              "type": "boolean",
+              "description": "Healthy volunteer flag"
+            },
+            "countries": {
+              "type": "string",
+              "description": "Comma-separated country names"
+            },
+            "locations": {
+              "type": "string",
+              "description": "Compact location strings"
+            },
+            "primary_outcomes": {
+              "type": "string",
+              "description": "Primary outcome measures"
+            },
+            "secondary_outcomes": {
+              "type": "string",
+              "description": "Secondary outcome measures"
+            },
+            "brief_summary": {
+              "type": "string",
+              "description": "Truncated brief summary"
+            },
+            "eligibility_criteria": {
+              "type": "string",
+              "description": "Truncated eligibility criteria"
+            }
+          },
+          "required": [
+            "rank",
+            "nct_id",
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count",
+      "studies"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "recruiting-diabetes",
+      "input": {
+        "mode": "search",
+        "condition": "diabetes",
+        "status": "RECRUITING",
+        "page_size": 2
+      },
+      "expect": {
+        "outputMatches": {
+          "studies": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "actt-study",
+      "input": {
+        "mode": "study",
+        "nct_id": "NCT04280705",
+        "include_eligibility": true
+      },
+      "expect": {
+        "outputMatches": {
+          "studies": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

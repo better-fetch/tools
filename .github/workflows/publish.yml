@@ -1,0 +1,125 @@
+# Better Fetch first-party tools pipeline. Every push to main that touches
+# tools/<name>/ runs that tool through validate → bundle → live example runs →
+# publish to the Better Fetch registry. Green CI IS the production gate.
+#
+# Pull requests run the same pipeline without the publish step. Fork PRs run
+# without secrets, so the live example step is skipped for them.
+name: publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      tools: ${{ steps.changed.outputs.tools }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            range="origin/${{ github.base_ref }}...HEAD"
+          elif git rev-parse HEAD^ >/dev/null 2>&1; then
+            range="HEAD^..HEAD"
+          else
+            range="" # first commit — every tool
+          fi
+          if [ -z "$range" ]; then
+            dirs=$(ls -d tools/*/ | xargs -n1 basename)
+          else
+            dirs=$(git diff --name-only $range -- tools/ | awk -F/ 'NF>2 {print $2}' | sort -u)
+          fi
+          list="[]"
+          for d in $dirs; do
+            [ -f "tools/$d/betterfetch.tool.json" ] && list=$(echo "$list" | jq -c --arg d "$d" '. + [$d]')
+          done
+          echo "tools=$list" >> "$GITHUB_OUTPUT"
+          echo "changed tools: $list"
+
+  pipeline:
+    needs: detect
+    if: needs.detect.outputs.tools != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        tool: ${{ fromJSON(needs.detect.outputs.tools) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install workspace
+        run: npm ci
+
+      - name: Manifest name must match directory name
+        working-directory: tools/${{ matrix.tool }}
+        run: |
+          dir_tool_name="$(echo "${{ matrix.tool }}" | tr '-' '_')"
+          manifest_name="$(node -p "JSON.parse(require('fs').readFileSync('betterfetch.tool.json','utf8')).name")"
+          if [ "$manifest_name" != "$dir_tool_name" ]; then
+            echo "manifest name '$manifest_name' != dir-derived name '$dir_tool_name'" >&2
+            exit 1
+          fi
+
+      - name: Validate
+        working-directory: tools/${{ matrix.tool }}
+        run: npx bf-tool validate
+
+      - name: Bundle
+        id: bundle
+        working-directory: tools/${{ matrix.tool }}
+        run: |
+          npx bf-tool bundle --out dist/bundle.mjs | tee bundle.json
+          echo "sha256=$(node -p "JSON.parse(require('fs').readFileSync('bundle.json','utf8')).sha256")" >> "$GITHUB_OUTPUT"
+
+      - name: Run examples against the live engine
+        # Fork PRs have no secrets; skip the live run there rather than fail.
+        if: ${{ env.HAS_CI_KEY == 'true' }}
+        working-directory: tools/${{ matrix.tool }}
+        env:
+          BETTER_FETCH_API_KEY: ${{ secrets.BF_CI_API_KEY }}
+        run: npx bf-tool test
+
+      - name: Publish to the Better Fetch registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: tools/${{ matrix.tool }}
+        env:
+          INGEST_SECRET: ${{ secrets.BF_INGEST_SECRET }}
+          SITE: https://betterfetch.co
+          SHA256: ${{ steps.bundle.outputs.sha256 }}
+          SOURCE_DIR: tools/${{ matrix.tool }}
+        run: |
+          base64 -w0 dist/bundle.mjs > bundle.b64 2>/dev/null || base64 dist/bundle.mjs | tr -d '\n' > bundle.b64
+          node -e '
+            const fs = require("fs");
+            const payload = {
+              manifest: JSON.parse(fs.readFileSync("betterfetch.tool.json", "utf8")),
+              bundle_b64: fs.readFileSync("bundle.b64", "utf8"),
+              bundle_sha256: process.env.SHA256,
+              repo: process.env.GITHUB_REPOSITORY,
+              source_dir: process.env.SOURCE_DIR,
+              commit_sha: process.env.GITHUB_SHA,
+              channel: "live",
+            };
+            fs.writeFileSync("payload.json", JSON.stringify(payload));
+          '
+          code=$(curl -s -o response.json -w "%{http_code}" \
+            -X POST "$SITE/api/ingest" \
+            -H "Authorization: Bearer $INGEST_SECRET" \
+            -H "Content-Type: application/json" \
+            --data-binary @payload.json)
+          cat response.json
+          [ "$code" = "200" ]
+
+env:
+  HAS_CI_KEY: ${{ secrets.BF_CI_API_KEY != '' }}

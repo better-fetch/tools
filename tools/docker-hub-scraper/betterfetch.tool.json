@@ -1,0 +1,421 @@
+{
+  "name": "docker_hub_scraper",
+  "version": "0.1.1",
+  "title": "Docker Hub Scraper",
+  "description": "Search Docker Hub repositories, fetch one public repository's metadata, or list one page of tag metadata through Docker Hub JSON endpoints, returning normalized image names, pulls, stars, official flags, timestamps, URLs, sizes, digests, architectures, and OS fields.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "Docker whale and containers mark",
+    "svg": "<svg viewBox=\"0 0 88 64\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 34h56c-2 12-12 20-27 20H32c-13 0-21-8-22-20h6Z\"/><path d=\"M64 28c4-5 10-6 15-2-3 4-8 6-14 5\"/><path d=\"M25 22h10v10H25zM37 22h10v10H37zM49 22h10v10H49zM37 10h10v10H37zM49 10h10v10H49z\"/><path d=\"M27 43h.1\"/></g></svg>",
+    "sourceUrl": "https://www.docker.com/company/newsroom/media-resources/"
+  },
+  "seo": {
+    "title": "Docker Hub Scraper Tool for Container Images, Repositories, Pull Counts, and Tags",
+    "description": "Search Docker Hub repositories or fetch repository and tag metadata with Better Fetch, including image names, namespaces, pull counts, stars, official flags, descriptions, timestamps, URLs, sizes, digests, architectures, and OS fields.",
+    "intro": "Docker Hub Scraper gives agents and DevOps workflows structured access to public Docker Hub repository metadata. Search public image repositories by keyword, fetch one exact repository by name or Docker Hub URL, or list a bounded page of tags for a repository. The tool normalizes namespaces, image names, repository URLs, pull counts, stars, official and automated flags, privacy labels when returned, repository type, status, descriptions, registration and update timestamps, tag names, tag URLs, image sizes, digests, architectures, operating systems, variants, and last-updated metadata. It is designed for container ecosystem research, image popularity monitoring, DevOps catalog enrichment, supply-chain inventory, base-image discovery, migration planning, and agent-readable Docker image context.",
+    "useCases": [
+      {
+        "title": "Container discovery",
+        "description": "Search Docker Hub for images by keyword and rank candidates by pulls, stars, official status, and descriptions."
+      },
+      {
+        "title": "Image monitoring",
+        "description": "Fetch repository metadata and tag update timestamps for base images, vendor images, or internal dependency watchlists."
+      },
+      {
+        "title": "Supply-chain inventory",
+        "description": "Collect repository URLs, namespaces, tag sizes, digests, architectures, and OS metadata before deeper SBOM or vulnerability checks."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Docker Hub Scraper require a Docker Hub login?",
+        "answer": "No. Version 0.1 uses public Docker Hub JSON endpoints and only returns metadata visible without account-specific authentication."
+      },
+      {
+        "question": "Does it download container images or layers?",
+        "answer": "No. It returns repository and tag metadata. It does not pull images, download layers, inspect filesystems, or scan vulnerabilities."
+      },
+      {
+        "question": "How do I query official images such as nginx?",
+        "answer": "Pass repository nginx or library/nginx. The tool resolves single-part names to the official library namespace."
+      }
+    ],
+    "keywords": [
+      "Docker Hub scraper",
+      "Docker image metadata",
+      "Docker tags API",
+      "container image search",
+      "Docker pull count",
+      "Docker repository scraper",
+      "container supply chain",
+      "DevOps image catalog"
+    ]
+  },
+  "popularity": {
+    "rank": 41,
+    "score": 7
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "repository",
+          "tags"
+        ],
+        "default": "search",
+        "description": "search = keyword search; repository = one repository metadata record; tags = one page of repository tags."
+      },
+      "query": {
+        "type": "string",
+        "description": "Keyword query for search mode."
+      },
+      "repository": {
+        "type": "string",
+        "description": "Repository name or Docker Hub URL for repository/tags modes, such as nginx, library/nginx, nginxinc/nginx-unprivileged, or https://hub.docker.com/r/library/nginx."
+      },
+      "namespace": {
+        "type": "string",
+        "description": "Optional Docker Hub namespace when repository is not supplied."
+      },
+      "name": {
+        "type": "string",
+        "description": "Optional Docker Hub repository name when repository is not supplied."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 10,
+        "description": "Maximum search result or tag rows to return."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Docker Hub JSON URL fetched"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of repository or tag rows returned"
+      },
+      "query": {
+        "type": "string",
+        "description": "Search query used"
+      },
+      "repository": {
+        "type": "string",
+        "description": "Resolved namespace/name repository"
+      },
+      "repositories": {
+        "type": "array",
+        "description": "Docker Hub repository search rows",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "repo_name": {
+              "type": "string",
+              "description": "namespace/name repository identifier"
+            },
+            "namespace": {
+              "type": "string",
+              "description": "Repository namespace"
+            },
+            "name": {
+              "type": "string",
+              "description": "Repository name"
+            },
+            "repository_url": {
+              "type": "string",
+              "description": "Docker Hub repository URL"
+            },
+            "short_description": {
+              "type": "string",
+              "description": "Short description"
+            },
+            "description": {
+              "type": "string",
+              "description": "Longer description when returned"
+            },
+            "pull_count": {
+              "type": "integer",
+              "description": "Pull count"
+            },
+            "star_count": {
+              "type": "integer",
+              "description": "Star count"
+            },
+            "is_official": {
+              "type": "boolean",
+              "description": "Official image flag"
+            },
+            "is_automated": {
+              "type": "boolean",
+              "description": "Automated build flag"
+            },
+            "is_private": {
+              "type": "boolean",
+              "description": "Private flag when returned"
+            },
+            "repository_type": {
+              "type": "string",
+              "description": "Repository type"
+            },
+            "status": {
+              "type": "integer",
+              "description": "Status code"
+            },
+            "status_description": {
+              "type": "string",
+              "description": "Status description"
+            },
+            "date_registered": {
+              "type": "string",
+              "description": "Registration timestamp"
+            },
+            "last_updated": {
+              "type": "string",
+              "description": "Last update timestamp"
+            },
+            "last_modified": {
+              "type": "string",
+              "description": "Last metadata modification timestamp"
+            },
+            "affiliation": {
+              "type": "string",
+              "description": "Affiliation label when returned"
+            }
+          },
+          "required": [
+            "rank",
+            "repo_name",
+            "repository_url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "repository_record": {
+        "type": "object",
+        "description": "Exact repository metadata record",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "description": "Result rank"
+          },
+          "repo_name": {
+            "type": "string",
+            "description": "namespace/name repository identifier"
+          },
+          "namespace": {
+            "type": "string",
+            "description": "Repository namespace"
+          },
+          "name": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "repository_url": {
+            "type": "string",
+            "description": "Docker Hub repository URL"
+          },
+          "short_description": {
+            "type": "string",
+            "description": "Short description"
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description when returned"
+          },
+          "pull_count": {
+            "type": "integer",
+            "description": "Pull count"
+          },
+          "star_count": {
+            "type": "integer",
+            "description": "Star count"
+          },
+          "is_official": {
+            "type": "boolean",
+            "description": "Official image flag"
+          },
+          "is_automated": {
+            "type": "boolean",
+            "description": "Automated build flag"
+          },
+          "is_private": {
+            "type": "boolean",
+            "description": "Private flag when returned"
+          },
+          "repository_type": {
+            "type": "string",
+            "description": "Repository type"
+          },
+          "status": {
+            "type": "integer",
+            "description": "Status code"
+          },
+          "status_description": {
+            "type": "string",
+            "description": "Status description"
+          },
+          "date_registered": {
+            "type": "string",
+            "description": "Registration timestamp"
+          },
+          "last_updated": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "last_modified": {
+            "type": "string",
+            "description": "Last metadata modification timestamp"
+          },
+          "affiliation": {
+            "type": "string",
+            "description": "Affiliation label when returned"
+          }
+        },
+        "additionalProperties": false
+      },
+      "tags": {
+        "type": "array",
+        "description": "Docker Hub tag rows",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank"
+            },
+            "name": {
+              "type": "string",
+              "description": "Tag name"
+            },
+            "tag_url": {
+              "type": "string",
+              "description": "Docker Hub tag URL"
+            },
+            "digest": {
+              "type": "string",
+              "description": "Tag digest"
+            },
+            "full_size": {
+              "type": "integer",
+              "description": "Tag size in bytes"
+            },
+            "last_updated": {
+              "type": "string",
+              "description": "Last update timestamp"
+            },
+            "last_updater_username": {
+              "type": "string",
+              "description": "Last updater username"
+            },
+            "architecture": {
+              "type": "string",
+              "description": "First image architecture"
+            },
+            "os": {
+              "type": "string",
+              "description": "First image OS"
+            },
+            "os_version": {
+              "type": "string",
+              "description": "First image OS version"
+            },
+            "variant": {
+              "type": "string",
+              "description": "First image variant"
+            },
+            "image_digest": {
+              "type": "string",
+              "description": "First image digest"
+            },
+            "image_status": {
+              "type": "string",
+              "description": "First image status"
+            }
+          },
+          "required": [
+            "rank",
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "next_url": {
+        "type": "string",
+        "description": "Docker Hub pagination URL when returned"
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "nginx-search",
+      "input": {
+        "mode": "search",
+        "query": "nginx",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "repositories": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "nginx-repository",
+      "input": {
+        "mode": "repository",
+        "repository": "nginx"
+      },
+      "expect": {
+        "outputMatches": {
+          "repository": "library/nginx",
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "nginx-tags",
+      "input": {
+        "mode": "tags",
+        "repository": "library/nginx",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "tags": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

@@ -1,0 +1,335 @@
+{
+  "name": "openalex_works_scraper",
+  "version": "0.1.1",
+  "title": "OpenAlex Works Scraper",
+  "description": "Search OpenAlex scholarly works or fetch one exact OpenAlex work by ID or DOI through the public OpenAlex API, returning normalized paper metadata, authors, institutions, publication venues, citation counts, open-access links, concepts, topics, and optional abstract text.",
+  "category": "research",
+  "logo": {
+    "label": "OpenAlex logo icon",
+    "svg": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"black\" d=\"M9 54 27.5 8h9L55 54H44.7l-3.5-9.6H22.7L19.3 54H9Zm17-19h12L32 18.3 26 35Z\"/><path fill=\"black\" d=\"M10 8h8v8h-8V8Zm36 0h8v8h-8V8ZM10 24h8v8h-8v-8Zm36 0h8v8h-8v-8Z\"/></svg>",
+    "sourceUrl": "https://blog.openalex.org/a-new-logo-for-openalex/"
+  },
+  "seo": {
+    "title": "OpenAlex Works Scraper Tool for Scholarly Metadata",
+    "description": "Search OpenAlex works or fetch exact OpenAlex IDs and DOIs with Better Fetch via the public OpenAlex API, including titles, authors, affiliations, venues, dates, citation counts, open-access URLs, concepts, topics, and abstracts.",
+    "intro": "OpenAlex Works Scraper gives agents a public-API route into OpenAlex scholarly work metadata. Search by keyword with optional publication date, year, type, open-access, and raw OpenAlex filters, or fetch a known OpenAlex work ID, DOI, or DOI URL. The tool normalizes OpenAlex JSON into compact paper rows with OpenAlex IDs, DOI URLs, titles, publication dates, authors, ORCIDs, institutions, countries, venues, publishers, citation and reference counts, open-access status, landing pages, PDF URLs, concepts, topics, and reconstructed abstracts when requested. It is designed for literature discovery, bibliometric analysis, RAG corpus triage, open-access harvesting, institution research maps, citation monitoring, and research-agent workflows that need open scholarly metadata without publisher scraping.",
+    "useCases": [
+      {
+        "title": "Literature discovery",
+        "description": "Search OpenAlex works by topic, year range, type, or open-access status, then return normalized papers for review or ranking."
+      },
+      {
+        "title": "Citation and venue analysis",
+        "description": "Fetch citation counts, reference counts, source names, publishers, concepts, topics, and authorship metadata for bibliometric workflows."
+      },
+      {
+        "title": "RAG corpus triage",
+        "description": "Collect OpenAlex IDs, DOI URLs, landing pages, open-access links, PDF URLs, and abstracts before deciding which papers to download or embed."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does OpenAlex Works Scraper require an API key?",
+        "answer": "No. Version 0.1 uses the public OpenAlex API and keeps each run to one bounded request. OpenAlex may enforce request budgets, so high-volume workflows should use OpenAlex's current authentication and pricing guidance directly."
+      },
+      {
+        "question": "Does it download PDFs or crawl publisher pages?",
+        "answer": "No. It returns metadata, landing-page URLs, open-access URLs, and PDF URLs when OpenAlex provides them. It does not download PDFs, parse full text, or scrape publisher websites."
+      },
+      {
+        "question": "Is this tool affiliated with OpenAlex?",
+        "answer": "No. OpenAlex is operated by OurResearch. This Better Fetch tool uses public OpenAlex API data and is not endorsed by or affiliated with OpenAlex or OurResearch."
+      }
+    ],
+    "keywords": [
+      "OpenAlex scraper",
+      "OpenAlex API",
+      "academic papers",
+      "scholarly metadata",
+      "citation analysis",
+      "open access",
+      "research papers",
+      "bibliometrics"
+    ]
+  },
+  "popularity": {
+    "rank": 33,
+    "score": 39
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "work"
+        ],
+        "default": "search",
+        "description": "Search OpenAlex works or fetch one exact work."
+      },
+      "work_id": {
+        "type": "string",
+        "maxLength": 240,
+        "description": "OpenAlex work ID, OpenAlex URL, DOI, DOI URL, or DOI-prefixed value, e.g. W2919115771, https://openalex.org/W2919115771, 10.1038/nature14539, or https://doi.org/10.1038/nature14539."
+      },
+      "query": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 300,
+        "description": "Keyword query for OpenAlex works search."
+      },
+      "filter": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 400,
+        "description": "Optional raw OpenAlex filter expression, e.g. type:article,authorships.institutions.country_code:US."
+      },
+      "from_publication_date": {
+        "type": "string",
+        "maxLength": 10,
+        "description": "Earliest publication date filter in YYYY, YYYY-MM, or YYYY-MM-DD format."
+      },
+      "to_publication_date": {
+        "type": "string",
+        "maxLength": 10,
+        "description": "Latest publication date filter in YYYY, YYYY-MM, or YYYY-MM-DD format."
+      },
+      "publication_year": {
+        "type": "integer",
+        "minimum": 1800,
+        "maximum": 2100,
+        "description": "Exact publication year filter."
+      },
+      "type": {
+        "type": "string",
+        "maxLength": 80,
+        "description": "OpenAlex work type such as article, preprint, book-chapter, or dataset."
+      },
+      "is_open_access": {
+        "type": "boolean",
+        "description": "Filter search results to open-access or closed works."
+      },
+      "per_page": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 20,
+        "default": 10,
+        "description": "Maximum works to return in search mode."
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 1,
+        "description": "OpenAlex search page number."
+      },
+      "sort": {
+        "type": "string",
+        "enum": [
+          "relevance_score",
+          "cited_by_count:desc",
+          "publication_date:desc",
+          "publication_year:desc"
+        ],
+        "default": "relevance_score",
+        "description": "OpenAlex sort expression for search mode."
+      },
+      "include_abstract": {
+        "type": "boolean",
+        "default": true,
+        "description": "Reconstruct abstract text from OpenAlex inverted-index abstracts when available."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "OpenAlex API URL fetched"
+      },
+      "query": {
+        "type": "string",
+        "description": "OpenAlex search query used"
+      },
+      "work_id": {
+        "type": "string",
+        "description": "Exact work identifier used"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned works"
+      },
+      "total_matches": {
+        "type": "integer",
+        "description": "Total OpenAlex matches reported by the API"
+      },
+      "works": {
+        "type": "array",
+        "description": "Structured OpenAlex work records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank in this response"
+            },
+            "openalex_id": {
+              "type": "string",
+              "description": "OpenAlex work ID URL"
+            },
+            "openalex_work_id": {
+              "type": "string",
+              "description": "Short OpenAlex work ID"
+            },
+            "doi": {
+              "type": "string",
+              "description": "DOI URL when available"
+            },
+            "title": {
+              "type": "string",
+              "description": "Work title"
+            },
+            "publication_year": {
+              "type": "integer",
+              "description": "Publication year"
+            },
+            "publication_date": {
+              "type": "string",
+              "description": "Publication date"
+            },
+            "type": {
+              "type": "string",
+              "description": "OpenAlex work type"
+            },
+            "cited_by_count": {
+              "type": "integer",
+              "description": "OpenAlex cited-by count"
+            },
+            "referenced_works_count": {
+              "type": "integer",
+              "description": "OpenAlex referenced works count"
+            },
+            "authors": {
+              "type": "string",
+              "description": "Comma-separated author names"
+            },
+            "first_author": {
+              "type": "string",
+              "description": "First listed author"
+            },
+            "last_author": {
+              "type": "string",
+              "description": "Last listed author"
+            },
+            "orcid_ids": {
+              "type": "string",
+              "description": "Comma-separated ORCID IDs"
+            },
+            "institutions": {
+              "type": "string",
+              "description": "Comma-separated affiliated institutions"
+            },
+            "countries": {
+              "type": "string",
+              "description": "Comma-separated country codes from authorships"
+            },
+            "source": {
+              "type": "string",
+              "description": "Primary venue/source name"
+            },
+            "publisher": {
+              "type": "string",
+              "description": "Primary source host organization"
+            },
+            "landing_page_url": {
+              "type": "string",
+              "description": "Primary landing page URL"
+            },
+            "pdf_url": {
+              "type": "string",
+              "description": "PDF URL when available"
+            },
+            "is_open_access": {
+              "type": "boolean",
+              "description": "OpenAlex open-access flag"
+            },
+            "oa_status": {
+              "type": "string",
+              "description": "OpenAlex OA status"
+            },
+            "oa_url": {
+              "type": "string",
+              "description": "Open-access URL when available"
+            },
+            "concepts": {
+              "type": "string",
+              "description": "Comma-separated top concepts"
+            },
+            "topics": {
+              "type": "string",
+              "description": "Comma-separated OpenAlex topics"
+            },
+            "abstract": {
+              "type": "string",
+              "description": "Reconstructed abstract text"
+            }
+          },
+          "required": [
+            "rank",
+            "openalex_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count",
+      "works"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "deep-learning-work",
+      "input": {
+        "mode": "work",
+        "work_id": "10.1038/nature14539"
+      },
+      "expect": {
+        "outputMatches": {
+          "works": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "llm-search",
+      "input": {
+        "mode": "search",
+        "query": "large language models",
+        "from_publication_date": "2024-01-01",
+        "per_page": 2
+      },
+      "expect": {
+        "outputMatches": {
+          "works": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

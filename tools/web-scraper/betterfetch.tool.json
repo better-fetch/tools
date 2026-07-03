@@ -1,0 +1,242 @@
+{
+  "name": "web_scraper",
+  "version": "0.1.1",
+  "title": "Web Scraper",
+  "description": "Scrape one rendered web page into structured metadata, readable text, links, images, JSON-LD types, and optional simple selector matches.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "Web scraper globe icon",
+    "svg": "<svg viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"24\" cy=\"24\" r=\"18\" fill=\"none\" stroke=\"black\" stroke-width=\"4\"/><path d=\"M6 24h36M24 6c6 6 9 12 9 18s-3 12-9 18M24 6c-6 6-9 12-9 18s3 12 9 18\" fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M13 13h22M13 35h22\" fill=\"none\" stroke=\"black\" stroke-width=\"3\" stroke-linecap=\"round\"/></svg>"
+  },
+  "seo": {
+    "title": "Web Scraper Tool for Structured Page Extraction",
+    "description": "Scrape one rendered web page with Better Fetch and return structured metadata, readable text, links, images, JSON-LD types, and simple selector matches.",
+    "intro": "Web Scraper is the general-purpose single-page extraction tool in the Better Fetch marketplace. Provide any public URL and the tool renders the page through the browser engine, normalizes page metadata, extracts readable text, captures link and image inventories, reports structured-data types, and can pull text from a small list of simple selectors.",
+    "useCases": [
+      {
+        "title": "Quick page-to-JSON extraction",
+        "description": "Turn a rendered page into title, description, canonical URL, readable text, links, images, and structured-data hints without writing a custom scraper."
+      },
+      {
+        "title": "Agent research",
+        "description": "Let an agent inspect a product page, landing page, directory entry, documentation page, or public profile and reason over clean structured fields."
+      },
+      {
+        "title": "Selector checks",
+        "description": "Probe simple selectors such as h1, main, article, .price, or #content to see whether a page exposes the text you need before building a deeper tool."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Is Web Scraper a full recursive crawler?",
+        "answer": "No. Version 0.1 focuses on a single rendered page. Use Website Content Crawler for small same-origin crawls, or add a future Web Scraper slice for recursive request queues."
+      },
+      {
+        "question": "Can it run arbitrary JavaScript page functions?",
+        "answer": "No. It returns a fixed, safe structured extraction. Arbitrary page functions and custom execution should be added as a separate validated capability."
+      },
+      {
+        "question": "What selectors does this version support?",
+        "answer": "The selector helper supports simple tag, class, id, and tag.class patterns. It is intended for lightweight text probes, not complete CSS selector coverage."
+      }
+    ],
+    "keywords": [
+      "web scraper",
+      "page scraper",
+      "structured web extraction",
+      "HTML scraper",
+      "AI agent web scraping",
+      "single page scraper"
+    ]
+  },
+  "popularity": {
+    "rank": 7,
+    "score": 121000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "format": "uri",
+        "description": "The public page URL to scrape."
+      },
+      "selectors": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 10,
+        "description": "Optional simple selectors to extract text from, e.g. h1, main, .price, #content, article."
+      },
+      "max_text_chars": {
+        "type": "integer",
+        "minimum": 500,
+        "maximum": 100000,
+        "default": 12000,
+        "description": "Maximum readable text characters to return."
+      },
+      "max_links": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 25,
+        "description": "Maximum links to return."
+      },
+      "max_images": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 50,
+        "default": 10,
+        "description": "Maximum images to return."
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "Requested URL"
+      },
+      "final_url": {
+        "type": "string",
+        "description": "Final URL after redirects"
+      },
+      "title": {
+        "type": "string",
+        "description": "Page title"
+      },
+      "description": {
+        "type": "string",
+        "description": "Meta description"
+      },
+      "canonical_url": {
+        "type": "string",
+        "description": "Canonical page URL"
+      },
+      "text": {
+        "type": "string",
+        "description": "Readable page text"
+      },
+      "word_count": {
+        "type": "integer",
+        "description": "Words in extracted text"
+      },
+      "html_bytes": {
+        "type": "integer",
+        "description": "HTML byte length"
+      },
+      "json_ld_types": {
+        "type": "array",
+        "description": "Structured data @type values",
+        "items": {
+          "type": "string"
+        }
+      },
+      "links": {
+        "type": "array",
+        "description": "Links discovered in page order",
+        "items": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Absolute link URL"
+            },
+            "text": {
+              "type": "string",
+              "description": "Visible link text"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "images": {
+        "type": "array",
+        "description": "Images discovered in page order",
+        "items": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Absolute image URL"
+            },
+            "alt": {
+              "type": "string",
+              "description": "Image alt text"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "selector_results": {
+        "type": "array",
+        "description": "Optional selector text matches",
+        "items": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "description": "Requested selector"
+            },
+            "text": {
+              "type": "string",
+              "description": "Matched text"
+            },
+            "count": {
+              "type": "integer",
+              "description": "Number of matches"
+            }
+          },
+          "required": [
+            "selector",
+            "count"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "url",
+      "final_url",
+      "title",
+      "text",
+      "word_count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "example-page",
+      "input": {
+        "url": "https://example.com",
+        "selectors": [
+          "h1",
+          "p"
+        ],
+        "max_text_chars": 2000,
+        "max_links": 10,
+        "max_images": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "title": "Example Domain"
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

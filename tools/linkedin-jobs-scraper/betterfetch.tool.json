@@ -1,0 +1,208 @@
+{
+  "name": "linkedin_jobs_scraper",
+  "version": "0.1.1",
+  "title": "LinkedIn Jobs Scraper",
+  "description": "Scrape public LinkedIn jobs search result cards from a copied jobs search URL or from keywords and location, including title, company, location, job URL, logo, listed date, and visible benefits text.",
+  "category": "leads",
+  "logo": {
+    "label": "LinkedIn logo",
+    "svg": "<svg height=\"72\" viewBox=\"0 0 72 72\" width=\"72\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" fill-rule=\"evenodd\"><path d=\"M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z\" fill=\"#007EBB\"/><path d=\"M62,62 L51.315625,62 L51.315625,43.8021149 C51.315625,38.8127542 49.4197917,36.0245323 45.4707031,36.0245323 C41.1746094,36.0245323 38.9300781,38.9261103 38.9300781,43.8021149 L38.9300781,62 L28.6333333,62 L28.6333333,27.3333333 L38.9300781,27.3333333 L38.9300781,32.0029283 C38.9300781,32.0029283 42.0260417,26.2742151 49.3825521,26.2742151 C56.7356771,26.2742151 62,30.7644705 62,40.051212 L62,62 Z M16.349349,22.7940133 C12.8420573,22.7940133 10,19.9296567 10,16.3970067 C10,12.8643566 12.8420573,10 16.349349,10 C19.8566406,10 22.6970052,12.8643566 22.6970052,16.3970067 C22.6970052,19.9296567 19.8566406,22.7940133 16.349349,22.7940133 Z M11.0325521,62 L21.769401,62 L21.769401,27.3333333 L11.0325521,27.3333333 L11.0325521,62 Z\" fill=\"#FFF\"/></g></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:LinkedIn_icon.svg"
+  },
+  "seo": {
+    "title": "LinkedIn Jobs Scraper Tool for Public Job Search Results",
+    "description": "Scrape public LinkedIn jobs search result cards with Better Fetch, including job title, company, company URL, location, job URL, logo, listed date, and visible benefits text.",
+    "intro": "LinkedIn Jobs Scraper gives agents and recruiting workflows a practical public-job-search primitive. Provide a LinkedIn jobs search URL, or a keyword and location pair, and the tool reads LinkedIn's logged-out guest results page before returning clean job cards that can feed hiring research, lead routing, market maps, or daily job monitors.",
+    "useCases": [
+      {
+        "title": "Hiring market scans",
+        "description": "Collect current public LinkedIn job listings by keyword and location to map demand, active employers, locations, and role titles."
+      },
+      {
+        "title": "Recruiting lead lists",
+        "description": "Turn LinkedIn search results into structured company and job URLs for sourcing, enrichment, outreach planning, or CRM import."
+      },
+      {
+        "title": "Daily job monitors",
+        "description": "Schedule saved LinkedIn job searches and compare new result cards over time without using private LinkedIn credentials."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does LinkedIn Jobs Scraper require LinkedIn login cookies?",
+        "answer": "No. Version 0.1 reads the public guest jobs search page and does not use LinkedIn passwords, exported sessions, private cookies, or private API tokens."
+      },
+      {
+        "question": "Can I paste a LinkedIn jobs search URL?",
+        "answer": "Yes. Paste a public LinkedIn jobs search URL to preserve LinkedIn's own filters, or provide keywords and location and let the tool build the search URL."
+      },
+      {
+        "question": "Does this version return full job descriptions?",
+        "answer": "No. Version 0.1 returns search result cards. Full job descriptions, recruiter profiles, company enrichment, and logged-in filters should be added as separate validated tool slices."
+      }
+    ],
+    "keywords": [
+      "LinkedIn jobs scraper",
+      "LinkedIn job search scraper",
+      "job listings scraper",
+      "recruiting leads",
+      "hiring market data",
+      "public LinkedIn jobs"
+    ]
+  },
+  "popularity": {
+    "rank": 8,
+    "score": 112000
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "search_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public LinkedIn jobs search URL. Use this or provide keywords."
+      },
+      "keywords": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 160,
+        "description": "Job search keywords when search_url is not provided."
+      },
+      "location": {
+        "type": "string",
+        "maxLength": 160,
+        "default": "United States",
+        "description": "LinkedIn job search location when search_url is not provided."
+      },
+      "date_posted": {
+        "type": "string",
+        "enum": [
+          "any",
+          "past_24h",
+          "past_week",
+          "past_month"
+        ],
+        "default": "any",
+        "description": "Optional LinkedIn date filter when building a search URL."
+      },
+      "company_id": {
+        "type": "string",
+        "maxLength": 64,
+        "description": "Optional LinkedIn company id filter when building a search URL."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 25,
+        "default": 10,
+        "description": "Maximum job cards to return."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "search_url": {
+        "type": "string",
+        "description": "Fetched LinkedIn jobs search URL"
+      },
+      "query_title": {
+        "type": "string",
+        "description": "Page title or search heading"
+      },
+      "total_results_label": {
+        "type": "string",
+        "description": "Visible result count label when LinkedIn exposes it"
+      },
+      "jobs": {
+        "type": "array",
+        "description": "Public LinkedIn job result cards in result order",
+        "items": {
+          "type": "object",
+          "properties": {
+            "job_id": {
+              "type": "string",
+              "description": "LinkedIn job id"
+            },
+            "title": {
+              "type": "string",
+              "description": "Job title"
+            },
+            "company": {
+              "type": "string",
+              "description": "Company name"
+            },
+            "company_url": {
+              "type": "string",
+              "description": "LinkedIn company URL"
+            },
+            "location": {
+              "type": "string",
+              "description": "Visible job location"
+            },
+            "url": {
+              "type": "string",
+              "description": "Canonical LinkedIn job URL"
+            },
+            "logo": {
+              "type": "string",
+              "description": "Visible company logo URL"
+            },
+            "listed_at": {
+              "type": "string",
+              "description": "ISO date from the result card"
+            },
+            "listed_label": {
+              "type": "string",
+              "description": "Human list date label"
+            },
+            "benefit": {
+              "type": "string",
+              "description": "Visible benefit or hiring label"
+            },
+            "position": {
+              "type": "integer",
+              "description": "Result position, starting at 1"
+            }
+          },
+          "required": [
+            "title",
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of job cards returned"
+      }
+    },
+    "required": [
+      "search_url",
+      "jobs",
+      "count"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "openai-jobs",
+      "input": {
+        "keywords": "openai",
+        "location": "United States",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "jobs": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

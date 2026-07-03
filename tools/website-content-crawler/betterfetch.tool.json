@@ -1,0 +1,165 @@
+{
+  "name": "website_content_crawler",
+  "version": "0.1.1",
+  "title": "Website Content Crawler",
+  "description": "Crawl a small same-origin website slice and return clean page text, titles, final URLs, and discovered internal links for RAG, audits, and agent context.",
+  "category": "content",
+  "logo": {
+    "label": "Website crawler icon",
+    "svg": "<svg viewBox=\"0 0 48 48\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M24 6v8m0 20v8M6 24h8m20 0h8M18 18l-6-6m18 18 6 6m0-24-6 6M12 36l6-6\" fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linecap=\"round\"/><circle cx=\"24\" cy=\"24\" r=\"8\" fill=\"none\" stroke=\"black\" stroke-width=\"4\"/></svg>"
+  },
+  "seo": {
+    "title": "Website Content Crawler Tool for RAG and AI Agents",
+    "description": "Crawl a small same-origin website slice and return cleaned page titles, URLs, text, word counts, and internal links through Better Fetch's browser engine.",
+    "intro": "Website Content Crawler gives agents a controlled way to turn a public website into clean text. It starts from one URL, follows same-origin links up to a page budget, renders each page through Better Fetch, removes navigation-heavy markup, and returns pages that can be saved into RAG, audit, or monitoring workflows.",
+    "useCases": [
+      {
+        "title": "RAG ingestion",
+        "description": "Collect a small, targeted set of website pages and transform them into normalized text before loading them into a vector store or knowledge base."
+      },
+      {
+        "title": "Site audits",
+        "description": "Let an agent inspect visible titles, final URLs, word counts, and internal links without manually copying content from each page."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does Website Content Crawler crawl the whole site?",
+        "answer": "No. It intentionally keeps a small page budget so agent calls stay predictable. Increase max_pages only for focused same-origin crawls."
+      },
+      {
+        "question": "Does the crawler follow external links?",
+        "answer": "No. It keeps traversal on the same origin as the starting URL and records external links only as page text or markup context when visible."
+      }
+    ],
+    "keywords": [
+      "website crawler",
+      "RAG ingestion",
+      "AI agent crawler",
+      "content extraction",
+      "site text scraper"
+    ]
+  },
+  "popularity": {
+    "rank": 6,
+    "score": 137000
+  },
+  "creditsEstimate": 3,
+  "maxEngineCalls": 10,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "format": "uri",
+        "description": "The starting page URL"
+      },
+      "max_pages": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10,
+        "default": 3,
+        "description": "Maximum same-origin pages to fetch"
+      },
+      "max_chars_per_page": {
+        "type": "integer",
+        "minimum": 500,
+        "maximum": 50000,
+        "default": 12000,
+        "description": "Truncate each extracted page text to this many characters"
+      },
+      "include_path_prefixes": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 8,
+        "description": "Optional path prefixes to follow, e.g. /docs or /blog"
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "start_url": {
+        "type": "string",
+        "description": "Original URL"
+      },
+      "origin": {
+        "type": "string",
+        "description": "Crawled origin"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of pages returned"
+      },
+      "pages": {
+        "type": "array",
+        "description": "Fetched pages in crawl order",
+        "items": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Final page URL"
+            },
+            "title": {
+              "type": "string",
+              "description": "Page title"
+            },
+            "text": {
+              "type": "string",
+              "description": "Extracted text"
+            },
+            "word_count": {
+              "type": "integer",
+              "description": "Extracted word count"
+            },
+            "links": {
+              "type": "integer",
+              "description": "Number of same-origin links discovered on this page"
+            }
+          },
+          "required": [
+            "url",
+            "title",
+            "text",
+            "word_count",
+            "links"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "start_url",
+      "origin",
+      "count",
+      "pages"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "example-domain",
+      "input": {
+        "url": "https://example.com",
+        "max_pages": 1,
+        "max_chars_per_page": 2000
+      },
+      "expect": {
+        "outputMatches": {
+          "pages": {
+            "minLength": 1
+          },
+          "count": 1
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

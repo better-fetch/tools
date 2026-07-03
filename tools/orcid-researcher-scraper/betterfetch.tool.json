@@ -1,0 +1,303 @@
+{
+  "name": "orcid_researcher_scraper",
+  "version": "0.1.1",
+  "title": "ORCID Researcher Scraper",
+  "description": "Search public ORCID registry records or fetch one exact ORCID iD through the official ORCID Public API, returning researcher identifiers, profile URLs, public names, biography, keywords, researcher URLs, external identifiers, affiliation summaries, activity counts, and record timestamps.",
+  "category": "research",
+  "logo": {
+    "label": "ORCID iD icon",
+    "svg": "<svg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"black\" d=\"M128 0C57.31 0 0 57.31 0 128s57.31 128 128 128 128-57.31 128-128S198.69 0 128 0Zm-24.5 73.5c0 8.56-6.94 15.5-15.5 15.5s-15.5-6.94-15.5-15.5S79.44 58 88 58s15.5 6.94 15.5 15.5ZM75 108h26v78H75v-78Zm48-35h45.5c28.75 0 49.5 20.92 49.5 55s-20.75 58-49.5 58H123V73Zm26 24v65h16.5c17.5 0 26.5-12.6 26.5-33.5S183 97 165.5 97H149Z\"/></svg>",
+    "sourceUrl": "https://info.orcid.org/brand-guidelines/"
+  },
+  "seo": {
+    "title": "ORCID Researcher Scraper Tool for Public Researcher Profiles",
+    "description": "Search ORCID public registry records or fetch exact ORCID iDs with Better Fetch via the official ORCID Public API, including profile URLs, public names, biography, keywords, external identifiers, affiliations, activity counts, and record timestamps.",
+    "intro": "ORCID Researcher Scraper gives agents a reliable public-API route into ORCID registry data. Search by ORCID query syntax, given name, family name, affiliation, or keyword, or fetch a known ORCID iD such as 0000-0002-1825-0097. The tool normalizes ORCID JSON into compact researcher records with canonical ORCID URLs, public names, biography text, other names, keyword labels, researcher URLs, external identifiers, employment and education summaries, work and funding counts, claimed status, and modification timestamps. It is designed for scholarly CRM enrichment, institution researcher discovery, grant and publication workflow automation, RAG source attribution, author disambiguation, and research-agent pipelines that need public ORCID metadata without browser scraping.",
+    "useCases": [
+      {
+        "title": "Researcher disambiguation",
+        "description": "Search public ORCID records by name, affiliation, or keyword, then capture canonical ORCID iDs and profile URLs for downstream matching."
+      },
+      {
+        "title": "Academic CRM enrichment",
+        "description": "Fetch one public ORCID record and return public profile fields, external identifiers, researcher URLs, affiliations, and activity counts."
+      },
+      {
+        "title": "Literature workflow automation",
+        "description": "Attach public ORCID identifiers to author, grant, or publication workflows before deeper Crossref, PubMed, arXiv, or institutional enrichment."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does ORCID Researcher Scraper require an API key?",
+        "answer": "No. Version 0.1 uses the official ORCID Public API for public search and public record reads. It does not require ORCID member API credentials."
+      },
+      {
+        "question": "Can it read private or limited-access ORCID data?",
+        "answer": "No. It only retrieves public data returned by the ORCID Public API. It does not use an authenticated member API token and cannot access private, trusted-party, or limited-access record fields."
+      },
+      {
+        "question": "Is this tool affiliated with ORCID?",
+        "answer": "No. ORCID and the ORCID iD icon are trademarks of ORCID, Inc. This tool uses public ORCID API data and is not endorsed by or affiliated with ORCID."
+      }
+    ],
+    "keywords": [
+      "ORCID scraper",
+      "ORCID API",
+      "ORCID researcher profile",
+      "researcher discovery",
+      "author disambiguation",
+      "academic metadata",
+      "scholarly identity",
+      "research CRM"
+    ]
+  },
+  "popularity": {
+    "rank": 32,
+    "score": 9
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "record"
+        ],
+        "default": "search",
+        "description": "Search public ORCID records or fetch one exact ORCID iD."
+      },
+      "orcid_id": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "Exact ORCID iD or ORCID URL, e.g. 0000-0002-1825-0097 or https://orcid.org/0000-0002-1825-0097."
+      },
+      "query": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 300,
+        "description": "Raw ORCID public search query, e.g. family-name:Smith AND given-names:John."
+      },
+      "given_names": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120,
+        "description": "Given name text to search with the ORCID given-names field."
+      },
+      "family_name": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120,
+        "description": "Family name text to search with the ORCID family-name field."
+      },
+      "affiliation": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 180,
+        "description": "Affiliation or organization text to search with ORCID affiliation-org-name."
+      },
+      "keyword": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120,
+        "description": "Keyword text to search with ORCID keyword metadata."
+      },
+      "rows": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 20,
+        "default": 10,
+        "description": "Maximum researcher identifiers to return in search mode."
+      },
+      "start": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 5000,
+        "default": 0,
+        "description": "Zero-based ORCID search result offset."
+      },
+      "include_biography": {
+        "type": "boolean",
+        "default": true,
+        "description": "Include public biography text in record mode when ORCID returns it."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Mode used for this run"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "ORCID Public API URL fetched"
+      },
+      "query": {
+        "type": "string",
+        "description": "ORCID search query used"
+      },
+      "orcid_id": {
+        "type": "string",
+        "description": "Exact ORCID iD used in record mode"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of returned researcher records"
+      },
+      "total_matches": {
+        "type": "integer",
+        "description": "Total ORCID search matches reported by the API"
+      },
+      "researchers": {
+        "type": "array",
+        "description": "Structured public ORCID researcher records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "Result rank in this response"
+            },
+            "orcid_id": {
+              "type": "string",
+              "description": "Canonical ORCID iD"
+            },
+            "orcid_url": {
+              "type": "string",
+              "description": "Canonical ORCID profile URL"
+            },
+            "host": {
+              "type": "string",
+              "description": "ORCID host returned by the API"
+            },
+            "given_names": {
+              "type": "string",
+              "description": "Public given names"
+            },
+            "family_name": {
+              "type": "string",
+              "description": "Public family name"
+            },
+            "credit_name": {
+              "type": "string",
+              "description": "Public credit name"
+            },
+            "display_name": {
+              "type": "string",
+              "description": "Best public display name"
+            },
+            "other_names": {
+              "type": "string",
+              "description": "Comma-separated public other names"
+            },
+            "biography": {
+              "type": "string",
+              "description": "Public biography text"
+            },
+            "keywords": {
+              "type": "string",
+              "description": "Comma-separated public keywords"
+            },
+            "researcher_urls": {
+              "type": "string",
+              "description": "Comma-separated public researcher URLs"
+            },
+            "external_identifiers": {
+              "type": "string",
+              "description": "Comma-separated public external identifiers"
+            },
+            "employments": {
+              "type": "string",
+              "description": "Comma-separated public employment summaries"
+            },
+            "educations": {
+              "type": "string",
+              "description": "Comma-separated public education summaries"
+            },
+            "works_count": {
+              "type": "integer",
+              "description": "Number of public work groups in the ORCID activities summary"
+            },
+            "funding_count": {
+              "type": "integer",
+              "description": "Number of public funding groups in the ORCID activities summary"
+            },
+            "peer_review_count": {
+              "type": "integer",
+              "description": "Number of public peer-review groups in the ORCID activities summary"
+            },
+            "claimed": {
+              "type": "boolean",
+              "description": "Whether ORCID reports the record as claimed"
+            },
+            "created_at": {
+              "type": "string",
+              "description": "ORCID record creation timestamp"
+            },
+            "last_modified_at": {
+              "type": "string",
+              "description": "ORCID record last modified timestamp"
+            }
+          },
+          "required": [
+            "rank",
+            "orcid_id",
+            "orcid_url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "acknowledgement": {
+        "type": "string",
+        "description": "Trademark and affiliation statement"
+      }
+    },
+    "required": [
+      "mode",
+      "source_url",
+      "count",
+      "researchers",
+      "acknowledgement"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "josiah-carberry-record",
+      "input": {
+        "mode": "record",
+        "orcid_id": "0000-0002-1825-0097"
+      },
+      "expect": {
+        "outputMatches": {
+          "researchers": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "john-smith-search",
+      "input": {
+        "mode": "search",
+        "given_names": "John",
+        "family_name": "Smith",
+        "rows": 2
+      },
+      "expect": {
+        "outputMatches": {
+          "researchers": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}
