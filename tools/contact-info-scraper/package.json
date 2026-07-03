@@ -6,7 +6,7 @@
   "scripts": {
     "validate": "bf-tool validate",
     "test": "bf-tool test",
-    "start": "bf-tool run --example w3c-contact"
+    "start": "bf-tool run --example iana-contact"
   },
   "dependencies": {
     "@better-fetch/tools": "github:better-fetch/tools-sdk"

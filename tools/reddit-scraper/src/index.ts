@@ -145,7 +145,21 @@ function commentsUrl(postUrl: string, limit: number): string {
 }
 
 async function getJson(bf: Parameters<Parameters<typeof defineTool>[0]>[1], url: string): Promise<unknown> {
-  const r = await bf.fetch({ url, json_mode: true, proxy: "auto" });
+  // json_mode issues an in-page fetch() from Reddit's origin. Without a
+  // same-origin Referer, Reddit's CORS policy rejects the call outright
+  // ("TypeError: Failed to fetch") before the engine can classify it as a
+  // block — so proxy:"auto" never escalates. With the Referer the request
+  // goes through; datacenter IPs still get a plain http_403, which the
+  // engine's block-retry then escalates to residential egress automatically.
+  const r = await bf.fetch({
+    url,
+    json_mode: true,
+    proxy: "auto",
+    extra_headers: {
+      accept: "application/json",
+      referer: `${BASE}/`,
+    },
+  });
   if (r.json != null) return r.json;
   const text = r.body_text ?? "";
   try {

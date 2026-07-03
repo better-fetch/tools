@@ -136,7 +136,12 @@ function buildSearchQuery(input: Input): string {
   const category = cleanCategory(input.category);
   if (category) parts.push(`cat:${category}`);
   if (!parts.length) throw new Error("search mode requires query, title, author, abstract, category, or arxiv_id");
-  return parts.join(" AND ");
+  // arXiv's query parser groups right-to-left, so an unparenthesized join like
+  // `all:large language models AND cat:cs.CL` parses as
+  // `all:large OR (all:language OR (all:models AND cat:cs.CL))` — the added
+  // fields stop constraining the query. Group each part explicitly.
+  if (parts.length === 1) return parts[0];
+  return parts.map((part) => `(${part})`).join(" AND ");
 }
 
 function buildUrl(input: Input, mode: Mode): { url: string; query?: string; arxivId?: string } {
@@ -314,12 +319,34 @@ async function fetchAtom(bf: Bf, url: string): Promise<string> {
   return response.body_text;
 }
 
+const MAX_ATTEMPTS = 3;
+
+// The arXiv API intermittently returns an empty feed for valid queries due to
+// load balancing (arXiv's API docs recommend retrying). Retry when the feed has
+// zero entries but the OpenSearch metadata does not confirm an empty result set.
+async function fetchFeed(bf: Bf, url: string): Promise<{ xml: string; entries: string[] }> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let xml: string;
+    try {
+      xml = await fetchAtom(bf, url);
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+    const entries = splitEntries(xml);
+    if (entries.length || numberTag(xml, "totalResults") === 0) return { xml, entries };
+    lastError = new Error("arXiv returned an empty feed for a non-empty result set");
+  }
+  throw lastError instanceof Error ? lastError : new Error("arXiv request failed");
+}
+
 export default defineTool<Input, Output>(async (input, bf) => {
   const mode = modeFrom(input);
   const built = buildUrl(input, mode);
-  const xml = await fetchAtom(bf, built.url);
+  const { xml, entries } = await fetchFeed(bf, built.url);
   const includeAbstract = input.include_abstract !== false;
-  const papers = splitEntries(xml)
+  const papers = entries
     .map((entry, index) => paperRecord(entry, index + 1, includeAbstract))
     .filter((paper): paper is PaperRecord => Boolean(paper));
   return {

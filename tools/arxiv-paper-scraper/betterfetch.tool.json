@@ -1,6 +1,6 @@
 {
   "name": "arxiv_paper_scraper",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "title": "arXiv Paper Scraper",
   "description": "Search arXiv or fetch a specific arXiv ID through the official arXiv Atom API, returning normalized preprint metadata with titles, abstracts, authors, categories, dates, DOI values, journal references, PDF URLs, and arXiv URLs.",
   "category": "research",
@@ -30,7 +30,7 @@
     "faqs": [
       {
         "question": "Does arXiv Paper Scraper require an API key?",
-        "answer": "No. Version 0.1 uses the official public arXiv Atom API through Better Fetch. It keeps each run to one bounded request and does not require login cookies or private credentials."
+        "answer": "No. Version 0.1 uses the official public arXiv Atom API through Better Fetch. It keeps each run to a single bounded query (retrying only when arXiv returns a transient empty feed) and does not require login cookies or private credentials."
       },
       {
         "question": "Can it fetch PDFs or full paper text?",
@@ -57,7 +57,7 @@
     "score": 19
   },
   "creditsEstimate": 1,
-  "maxEngineCalls": 1,
+  "maxEngineCalls": 3,
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -300,7 +300,7 @@
       "name": "recent-llm-search",
       "input": {
         "mode": "search",
-        "query": "all:large language models",
+        "query": "all:\"large language models\"",
         "category": "cs.CL",
         "max_results": 3,
         "sort_by": "submittedDate",

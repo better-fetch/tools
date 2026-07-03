@@ -15,7 +15,7 @@ verification, and no broad whole-site crawl.
 ```sh
 npm install
 export BETTER_FETCH_API_KEY=bf_...
-npx bf-tool run --example w3c-contact
+npx bf-tool run --example iana-contact
 npx bf-tool test
 npx bf-tool validate
 ```

@@ -1,8 +1,8 @@
 {
   "name": "app_store_reviews_scraper",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "title": "App Store Reviews Scraper",
-  "description": "Fetch public Apple App Store review rows for a numeric app ID or App Store URL, returning review IDs, titles, body text, star ratings, versions, authors, dates, vote counts, and review URLs.",
+  "description": "Fetch public Apple App Store review rows for a numeric app ID or App Store URL, returning review IDs, titles, body text, star ratings, authors, author profile URLs, dates, vote counts, and review URLs.",
   "category": "app-stores",
   "logo": {
     "label": "Apple logo",
@@ -11,8 +11,8 @@
   },
   "seo": {
     "title": "App Store Reviews Scraper Tool for iOS Feedback",
-    "description": "Extract public Apple App Store reviews with Better Fetch, including review IDs, titles, body text, star ratings, versions, authors, dates, vote counts, and review URLs.",
-    "intro": "App Store Reviews Scraper gives agents a validated path into public iOS review feedback. Provide a numeric Apple App Store ID or App Store URL and the tool reads Apple's public iTunes customer-review RSS JSON feed, normalizing review IDs, titles, body text, star ratings, app versions, author names, author profile URLs, publication dates, vote counts, and direct review URLs.",
+    "description": "Extract public Apple App Store reviews with Better Fetch, including review IDs, titles, body text, star ratings, authors, dates, vote counts, and review URLs.",
+    "intro": "App Store Reviews Scraper gives agents a validated path into public iOS review feedback. Provide a numeric Apple App Store ID or App Store URL and the tool reads Apple's public iTunes Store customer-reviews API, normalizing review IDs, titles, body text, star ratings, author names, author profile URLs, publication dates, vote counts, and review URLs.",
     "useCases": [
       {
         "title": "iOS sentiment snapshots",
@@ -20,7 +20,7 @@
       },
       {
         "title": "Release monitoring",
-        "description": "Track review titles, body text, ratings, dates, and app versions after an iOS release to catch regressions and recurring complaints."
+        "description": "Track review titles, body text, ratings, and dates after an iOS release to catch regressions and recurring complaints."
       },
       {
         "title": "Cross-platform feedback",
@@ -30,7 +30,7 @@
     "faqs": [
       {
         "question": "Does App Store Reviews Scraper fetch every review?",
-        "answer": "No. Version 0.1 fetches one public review feed page at a time. Multi-page orchestration and multi-country fan-out should be separate validated slices."
+        "answer": "No. Version 0.1 fetches one public review page (up to 50 reviews) at a time. Multi-page orchestration and multi-country fan-out should be separate validated slices."
       },
       {
         "question": "Can I pass an App Store URL instead of an ID?",
@@ -38,7 +38,7 @@
       },
       {
         "question": "Does this require App Store Connect credentials?",
-        "answer": "No. The tool reads public customer-review feed data through Better Fetch and does not require App Store Connect or account-specific Apple credentials."
+        "answer": "No. The tool reads public customer-review data through Better Fetch and does not require App Store Connect or account-specific Apple credentials."
       }
     ],
     "keywords": [
@@ -74,7 +74,7 @@
         "minimum": 1,
         "maximum": 10,
         "default": 1,
-        "description": "Apple review feed page to fetch."
+        "description": "Review page to fetch (50 most-recent reviews per page)."
       },
       "max_reviews": {
         "type": "integer",
@@ -106,7 +106,7 @@
       },
       "source_url": {
         "type": "string",
-        "description": "Fetched iTunes customer-review feed URL"
+        "description": "Fetched iTunes Store customer-reviews API URL"
       },
       "count": {
         "type": "integer",
@@ -136,7 +136,7 @@
             },
             "version": {
               "type": "string",
-              "description": "App version reported with the review"
+              "description": "App version reported with the review, when Apple provides it (the current public reviews API omits it)"
             },
             "author": {
               "type": "string",
@@ -152,7 +152,7 @@
             },
             "url": {
               "type": "string",
-              "description": "Direct review URL"
+              "description": "App Store reviews URL for the app"
             },
             "vote_sum": {
               "type": "integer",

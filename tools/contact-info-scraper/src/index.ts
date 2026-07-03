@@ -134,15 +134,24 @@ function uniq(values: string[], max: number): string[] {
   return [...new Set(values)].slice(0, max);
 }
 
+function deobfuscate(text: string): string {
+  return text
+    .replace(/\s*[\[({]\s*at\s*[\])}]\s*/gi, "@")
+    .replace(/\s*[\[({]\s*dot\s*[\])}]\s*/gi, ".");
+}
+
 function emailsFrom(text: string, max: number): string[] {
   const emails = new Set<string>();
   const re = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
-  let match: RegExpExecArray | null;
-  while ((match = re.exec(text)) && emails.size < max) {
-    const email = match[0].replace(/[),.;:!?]+$/g, "").toLowerCase();
-    if (/\.(png|jpe?g|gif|webp|svg|css|js)$/i.test(email)) continue;
-    if (email.includes("example.com")) continue;
-    emails.add(email);
+  for (const source of [text, deobfuscate(text)]) {
+    re.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = re.exec(source)) && emails.size < max) {
+      const email = match[0].replace(/[),.;:!?]+$/g, "").toLowerCase();
+      if (/\.(png|jpe?g|gif|webp|svg|css|js)$/i.test(email)) continue;
+      if (email.includes("example.com")) continue;
+      emails.add(email);
+    }
   }
   return [...emails];
 }
@@ -226,6 +235,46 @@ function compact<T extends Record<string, unknown>>(obj: T): T {
   return out as T;
 }
 
+type EngineBudget = { calls: number; maxCalls: number };
+
+type FetchedPage = { finalParsed: ParsedUrl; html: string };
+
+async function fetchPage(
+  url: string,
+  waitMs: number,
+  bf: Parameters<Parameters<typeof defineTool>[0]>[1],
+  budget: EngineBudget,
+): Promise<FetchedPage> {
+  budget.calls += 1;
+  const page = await bf.fetch({
+    url,
+    include_html: true,
+    strategy: "browser",
+    wait_until: "domcontentloaded",
+    wait_ms: waitMs,
+    proxy: "auto",
+  });
+  // Prefer rendered HTML; fall back to body_text. Guard against empty-string
+  // html (the direct-HTTP path returns html: "" with the doc in body_text).
+  let html = page.html?.trim() ? page.html : (page.body_text ?? "");
+  let finalUrl = page.final_url ?? url;
+  if (!html.trim() && budget.calls < budget.maxCalls) {
+    // Browser render came back empty — retry once over direct HTTP where the
+    // raw document is returned in body_text.
+    budget.calls += 1;
+    const raw = await bf.fetch({
+      url,
+      return_response_text: true,
+      strategy: "http",
+      proxy: "auto",
+    });
+    html = raw.body_text?.trim() ? raw.body_text : (raw.html ?? "");
+    finalUrl = raw.final_url ?? finalUrl;
+  }
+  const finalParsed = parseUrl(finalUrl) ?? parseUrl(url)!;
+  return { finalParsed, html };
+}
+
 async function scanSite(
   start: ParsedUrl,
   input: Required<Pick<Input, "include_social_profiles">> & {
@@ -237,6 +286,7 @@ async function scanSite(
   },
   bf: Parameters<Parameters<typeof defineTool>[0]>[1],
   remainingBudget: () => number,
+  budget: EngineBudget,
 ): Promise<SiteResult> {
   const queue = [start.href];
   const seen = new Set<string>();
@@ -247,22 +297,9 @@ async function scanSite(
   const siteSocials: Record<string, Set<string>> = {};
   const pageFindings: PageFinding[] = [];
 
-  while (queue.length && seen.size < input.maxPagesPerSite && remainingBudget() > 0) {
-    const url = queue.shift()!;
-    if (seen.has(url)) continue;
+  const scanPage = async (url: string): Promise<void> => {
     seen.add(url);
-
-    const page = await bf.fetch({
-      url,
-      include_html: true,
-      return_response_text: true,
-      strategy: "browser",
-      wait_until: "domcontentloaded",
-      wait_ms: input.waitMs,
-      proxy: "auto",
-    });
-    const finalParsed = parseUrl(page.final_url ?? url) ?? parseUrl(url)!;
-    const html = page.html ?? page.body_text ?? "";
+    const { finalParsed, html } = await fetchPage(url, input.waitMs, bf, budget);
     const text = `${html}\n${stripTags(html)}`;
     sourceUrls.push(finalParsed.href);
 
@@ -279,7 +316,12 @@ async function scanSite(
       if (input.include_social_profiles) addSocial(siteSocials, link.url);
       if (isContactCandidate(link, start.origin)) {
         contactPages.add(link.url);
-        if (!seen.has(link.url) && !queue.includes(link.url)) queue.push(link.url);
+        if (!seen.has(link.url) && !queue.includes(link.url)) {
+          // Strong contact hints jump the queue so tight page budgets still
+          // reach the page most likely to carry emails/phones.
+          if (/contact/i.test(link.url)) queue.unshift(link.url);
+          else queue.push(link.url);
+        }
       }
     }
 
@@ -300,6 +342,27 @@ async function scanSite(
       social_profiles: socialOutput(pageSocials),
     }) as PageFinding;
     if (finding.emails || finding.phones || finding.social_profiles) pageFindings.push(finding);
+  };
+
+  while (
+    queue.length &&
+    seen.size < input.maxPagesPerSite &&
+    remainingBudget() > seen.size &&
+    budget.calls < budget.maxCalls
+  ) {
+    const url = queue.shift()!;
+    if (seen.has(url)) continue;
+    await scanPage(url);
+  }
+
+  // If the crawl found neither an email nor a phone, spend one bonus fetch on
+  // the most promising unvisited contact page (still bounded by the global
+  // engine-call budget).
+  if (!siteEmails.size && !sitePhones.size && budget.calls < budget.maxCalls) {
+    const candidate =
+      [...contactPages].find((url) => !seen.has(url) && /contact/i.test(url)) ??
+      [...contactPages].find((url) => !seen.has(url));
+    if (candidate) await scanPage(candidate);
   }
 
   return compact({
@@ -339,15 +402,20 @@ export default defineTool<Input, Output>(async (input, bf) => {
     waitMs: clamp(input.wait_ms, 500, 0, 5_000),
   };
 
+  // Hard cap on engine calls across all sites (manifest maxEngineCalls is 30;
+  // keep headroom for the rare direct-HTTP fallback fetch).
+  const budget: { calls: number; maxCalls: number } = { calls: 0, maxCalls: 28 };
+
   let scanned = 0;
   const sites: SiteResult[] = [];
   for (const start of starts) {
-    if (scanned >= maxTotalPages) break;
+    if (scanned >= maxTotalPages || budget.calls >= budget.maxCalls) break;
     const site = await scanSite(
       start,
       options,
       bf,
       () => Math.max(0, maxTotalPages - scanned),
+      budget,
     );
     scanned += site.pages_scanned;
     sites.push(site);

@@ -1,6 +1,6 @@
 {
   "name": "contact_info_scraper",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "title": "Contact Info Scraper",
   "description": "Extract public emails, phone numbers, social profiles, and contact-page URLs from company websites with a bounded same-origin browser crawl.",
   "category": "leads",
@@ -162,9 +162,9 @@
   },
   "examples": [
     {
-      "name": "w3c-contact",
+      "name": "iana-contact",
       "input": {
-        "url": "https://www.w3.org/Consortium/contact",
+        "url": "https://www.iana.org/contact",
         "max_pages_per_site": 1,
         "max_total_pages": 1,
         "max_emails": 20,
