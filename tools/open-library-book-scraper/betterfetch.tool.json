@@ -6,8 +6,8 @@
   "category": "content",
   "logo": {
     "label": "Open Library logo",
-    "svg": "<svg viewBox=\"0 0 96 64\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"none\" stroke=\"black\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M48 52c-9-8-21-10-34-6V13c13-4 25-2 34 6v33Zm0 0c9-8 21-10 34-6V13c-13-4-25-2-34 6v33Z\"/><path fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linecap=\"round\" d=\"M24 24c5-1 10 0 15 3M24 35c5-1 10 0 15 3M57 27c5-3 10-4 15-3M57 38c5-3 10-4 15-3\"/></svg>",
-    "sourceUrl": "https://openlibrary.org/developers/api"
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 415 415\"><path fill=\"#f68712\" d=\"M390.77,96.27c-6.23-49.05-51.32-83.13-100.5-75.97-49.19,7.16-84.15,52.9-77.92,101.96,6.21,49.06,51.31,83.16,100.49,76,42.87-6.25,74.92-41.79,78.33-83.31v-14.69c-.11-1.33-.23-2.66-.4-3.99M333.79,141.51c-16.66,16.66-43.42,16.9-59.78.55-16.34-16.33-16.09-43.1.57-59.77,16.67-16.67,43.44-16.92,59.78-.58,16.35,16.35,16.1,43.12-.58,59.8\"/><path fill=\"#f68712\" d=\"M303.15,246.64c-68.88,2.18-129.12-47.75-137.96-117.51-5.32-41.89,9.01-82.18,35.79-111.51H17.62v104.05c25.44,21.48,146.7,127.17,186.28,222.07,20.97-38.62,60.88-71.86,99.25-97.09\"/><path fill=\"#f68712\" d=\"M233.62,398.39h157.56v-92.36c-41.6,3.13-157.56,18.5-157.56,92.36\"/><path fill=\"#f68712\" d=\"M17.62,232.27v166.12h154.12c0-69.3-97.48-135.84-154.12-166.12\"/></svg>",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Open_Library_Badge_Logo.svg"
   },
   "seo": {
     "title": "Open Library Book Scraper Tool for Book and Author Metadata",

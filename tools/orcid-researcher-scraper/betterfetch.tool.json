@@ -5,9 +5,9 @@
   "description": "Search public ORCID registry records or fetch one exact ORCID iD through the official ORCID Public API, returning researcher identifiers, profile URLs, public names, biography, keywords, researcher URLs, external identifiers, affiliation summaries, activity counts, and record timestamps.",
   "category": "research",
   "logo": {
-    "label": "ORCID iD icon",
-    "svg": "<svg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"black\" d=\"M128 0C57.31 0 0 57.31 0 128s57.31 128 128 128 128-57.31 128-128S198.69 0 128 0Zm-24.5 73.5c0 8.56-6.94 15.5-15.5 15.5s-15.5-6.94-15.5-15.5S79.44 58 88 58s15.5 6.94 15.5 15.5ZM75 108h26v78H75v-78Zm48-35h45.5c28.75 0 49.5 20.92 49.5 55s-20.75 58-49.5 58H123V73Zm26 24v65h16.5c17.5 0 26.5-12.6 26.5-33.5S183 97 165.5 97H149Z\"/></svg>",
-    "sourceUrl": "https://info.orcid.org/brand-guidelines/"
+    "label": "ORCID iD logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12s12-5.372 12-12S18.628 0 12 0zM7.369 4.378c.525 0 .947.431.947.947s-.422.947-.947.947a.95.95 0 0 1-.947-.947c0-.525.422-.947.947-.947zm-.722 3.038h1.444v10.041H6.647V7.416zm3.562 0h3.9c3.712 0 5.344 2.653 5.344 5.025c0 2.578-2.016 5.025-5.325 5.025h-3.919V7.416zm1.444 1.303v7.444h2.297c3.272 0 4.022-2.484 4.022-3.722c0-2.016-1.284-3.722-4.097-3.722h-2.222z\"/></svg>",
+    "sourceUrl": "https://simpleicons.org/icons/orcid.svg"
   },
   "seo": {
     "title": "ORCID Researcher Scraper Tool for Public Researcher Profiles",

@@ -5,9 +5,9 @@
   "description": "Search Docker Hub repositories, fetch one public repository's metadata, or list one page of tag metadata through Docker Hub JSON endpoints, returning normalized image names, pulls, stars, official flags, timestamps, URLs, sizes, digests, architectures, and OS fields.",
   "category": "developer-tools",
   "logo": {
-    "label": "Docker whale and containers mark",
-    "svg": "<svg viewBox=\"0 0 88 64\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 34h56c-2 12-12 20-27 20H32c-13 0-21-8-22-20h6Z\"/><path d=\"M64 28c4-5 10-6 15-2-3 4-8 6-14 5\"/><path d=\"M25 22h10v10H25zM37 22h10v10H37zM49 22h10v10H49zM37 10h10v10H37zM49 10h10v10H49z\"/><path d=\"M27 43h.1\"/></g></svg>",
-    "sourceUrl": "https://www.docker.com/company/newsroom/media-resources/"
+    "label": "Docker logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 185\"><path fill=\"#2396ED\" d=\"M250.716 70.497c-5.765-4-18.976-5.5-29.304-3.5c-1.2-10-6.725-18.749-16.333-26.499l-5.524-4l-3.844 5.75c-4.803 7.5-7.205 18-6.485 28c.24 3.499 1.441 9.749 5.044 15.249c-3.362 2-10.328 4.5-19.455 4.5H1.155l-.48 2c-1.682 9.999-1.682 41.248 18.014 65.247c14.892 18.249 36.99 27.499 66.053 27.499c62.93 0 109.528-30.25 131.386-84.997c8.647.25 27.142 0 36.51-18.75c.24-.5.72-1.5 2.401-5.249l.961-2l-5.284-3.25ZM139.986 0h-26.42v24.999h26.42V0Zm0 29.999h-26.42v24.999h26.42v-25Zm-31.225 0h-26.42v24.999h26.42v-25Zm-31.225 0H51.115v24.999h26.421v-25ZM46.311 59.998H19.89v24.999h26.42v-25Zm31.225 0H51.115v24.999h26.421v-25Zm31.225 0h-26.42v24.999h26.42v-25Zm31.226 0h-26.422v24.999h26.422v-25Zm31.225 0H144.79v24.999h26.422v-25Z\"/></svg>",
+    "sourceUrl": "https://icon-sets.iconify.design/logos/docker-icon/"
   },
   "seo": {
     "title": "Docker Hub Scraper Tool for Container Images, Repositories, Pull Counts, and Tags",

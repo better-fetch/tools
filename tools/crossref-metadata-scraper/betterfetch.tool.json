@@ -6,8 +6,8 @@
   "category": "research",
   "logo": {
     "label": "Crossref logo",
-    "svg": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><path fill=\"black\" d=\"M21 18a14 14 0 1 0 0 28h11v-7H21a7 7 0 1 1 0-14h11v-7H21Zm11 7h11a7 7 0 1 1 0 14H32v7h11a14 14 0 1 0 0-28H32v7Zm-9 4h18v6H23v-6Z\"/></svg>",
-    "sourceUrl": "https://www.crossref.org/brand/"
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"105 0 80 100\" overflow=\"hidden\"><polygon fill=\"#3EB1C8\" points=\"111.8,95.5 111.8,66.8 135.4,59 177.2,73.3\"/><polygon fill=\"#D8D2C4\" points=\"153.6,36.8 111.8,51.2 135.4,59 177.2,44.6\"/><polygon fill=\"#4F5858\" points=\"135.4,59 177.2,44.6 177.2,73.3\"/><polygon fill=\"#FFC72C\" points=\"177.2,0.3 177.2,29 153.6,36.8 111.8,22.5\"/><polygon fill=\"#EF3340\" points=\"153.6,36.8 111.8,51.2 111.8,22.5\"/></svg>",
+    "sourceUrl": "https://assets.crossref.org/logo/crossref-logo-200.svg"
   },
   "seo": {
     "title": "Crossref Metadata Scraper Tool for DOI and Citation Data",
