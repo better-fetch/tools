@@ -1,4 +1,4 @@
-# Better Fetch Tools
+# Better Fetch tools — ready-made web data for AI
 
 First-party tools for the [Better Fetch](https://betterfetch.co) marketplace.
 Every directory under [`tools/`](tools/) is one tool: a `betterfetch.tool.json`
@@ -8,8 +8,10 @@ tool's only capability — it calls the Better Fetch engine (stealth browser
 rendering, sessions, geo-emulation, network capture) and bills the caller's
 API key per engine call.
 
-Browse and run these tools at [betterfetch.co/tools](https://betterfetch.co/tools),
-or call them through the [MCP server](https://betterfetch.co/mcp).
+Browse them at [betterfetch.co/tools](https://betterfetch.co/tools). In Claude,
+ChatGPT, Codex, or another MCP client, call `search_tools` to find a capability,
+then pass its exact name and input to `run_tool`. The catalogue can grow without
+loading every specialist schema into the default agent tool surface.
 
 ## Run a tool yourself
 
@@ -32,8 +34,9 @@ Start from [better-fetch/tool-template](https://github.com/better-fetch/tool-tem
 Schema subset, and the `bf` host API are documented in
 [better-fetch/tools-sdk](https://github.com/better-fetch/tools-sdk).
 
-Third-party publishing into the marketplace is not open yet; tools published
-from this repository are Better Fetch first-party. Watch
+Third-party publishing into the hosted catalogue is not open yet; tools in this
+repository are Better Fetch first-party. The public SDK and template can still
+be used for local tools today. Watch
 [betterfetch.co/blog](https://betterfetch.co/blog) for the community
 marketplace.
 
