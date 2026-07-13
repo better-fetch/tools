@@ -1,0 +1,117 @@
+{
+  "name": "website_technology_detector",
+  "version": "0.1.0",
+  "title": "Website Technology Detector",
+  "description": "Inspect rendered HTML, scripts, meta tags, and response clues to identify common frameworks, platforms, analytics, and CDNs.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "Website Technology Detector icon",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h7v-2H7Z\"/></svg>",
+    "sourceUrl": "https://www.wappalyzer.com/"
+  },
+  "seo": {
+    "title": "Website Technology Detector Tool for Structured Web Data",
+    "description": "Inspect rendered HTML, scripts, meta tags, and response clues to identify common frameworks, platforms, analytics, and CDNs. Better Fetch returns clean structured records ready for agents, exports, monitoring, and downstream workflows.",
+    "intro": "Inspect rendered HTML, scripts, meta tags, and response clues to identify common frameworks, platforms, analytics, and CDNs. This first-party Better Fetch tool turns a focused request into predictable structured output that can be inspected in the web workspace, exported as JSON or CSV, called through REST, or composed by an AI agent over MCP. It is designed for repeatable production research rather than fragile copy-and-paste scraping.",
+    "useCases": [
+      {
+        "title": "Agent research",
+        "description": "Give AI agents bounded, normalized website technology detector results without writing source-specific retrieval and parsing code."
+      },
+      {
+        "title": "Repeatable monitoring",
+        "description": "Save the configuration, rerun it on a consistent source, and export comparable structured artifacts for operational review."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What does Website Technology Detector return?",
+        "answer": "It returns normalized structured fields documented in the output schema, plus the fetched source URL and a record count for receipts and exports."
+      },
+      {
+        "question": "Does this tool store the retrieved output?",
+        "answer": "No. Better Fetch records privacy-safe run metadata for reliability and retention analysis, but the output payload itself is not stored by the workspace."
+      }
+    ],
+    "keywords": [
+      "Website Technology Detector",
+      "web data tool",
+      "AI agent retrieval",
+      "structured scraper",
+      "Better Fetch"
+    ]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "Website URL to inspect.",
+        "format": "uri"
+      }
+    },
+    "required": [
+      "url"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source_url": {
+        "type": "string",
+        "description": "Fetched source URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of records returned"
+      },
+      "technologies": {
+        "type": "array",
+        "description": "Normalized technologies records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "name value"
+            },
+            "category": {
+              "type": "string",
+              "description": "category value"
+            },
+            "evidence": {
+              "type": "string",
+              "description": "evidence value"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "source_url",
+      "count",
+      "technologies"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "first-run",
+      "input": {
+        "url": "https://nextjs.org"
+      },
+      "expect": {
+        "outputMatches": {
+          "technologies": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

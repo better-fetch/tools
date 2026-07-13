@@ -1,0 +1,152 @@
+{
+  "name": "github_trending_scraper",
+  "version": "0.1.0",
+  "title": "GitHub Trending Scraper",
+  "description": "Scrape GitHub Trending repositories by language and time window with descriptions, languages, stars, forks, and trend counts.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "GitHub Trending Scraper icon",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h7v-2H7Z\"/></svg>",
+    "sourceUrl": "https://github.com/trending"
+  },
+  "seo": {
+    "title": "GitHub Trending Scraper Tool for Structured Web Data",
+    "description": "Scrape GitHub Trending repositories by language and time window with descriptions, languages, stars, forks, and trend counts. Better Fetch returns clean structured records ready for agents, exports, monitoring, and downstream workflows.",
+    "intro": "Scrape GitHub Trending repositories by language and time window with descriptions, languages, stars, forks, and trend counts. This first-party Better Fetch tool turns a focused request into predictable structured output that can be inspected in the web workspace, exported as JSON or CSV, called through REST, or composed by an AI agent over MCP. It is designed for repeatable production research rather than fragile copy-and-paste scraping.",
+    "useCases": [
+      {
+        "title": "Agent research",
+        "description": "Give AI agents bounded, normalized github trending scraper results without writing source-specific retrieval and parsing code."
+      },
+      {
+        "title": "Repeatable monitoring",
+        "description": "Save the configuration, rerun it on a consistent source, and export comparable structured artifacts for operational review."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What does GitHub Trending Scraper return?",
+        "answer": "It returns normalized structured fields documented in the output schema, plus the fetched source URL and a record count for receipts and exports."
+      },
+      {
+        "question": "Does this tool store the retrieved output?",
+        "answer": "No. Better Fetch records privacy-safe run metadata for reliability and retention analysis, but the output payload itself is not stored by the workspace."
+      }
+    ],
+    "keywords": [
+      "GitHub Trending Scraper",
+      "web data tool",
+      "AI agent retrieval",
+      "structured scraper",
+      "Better Fetch"
+    ]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "language": {
+        "type": "string",
+        "description": "Optional GitHub language slug, such as typescript or python."
+      },
+      "since": {
+        "type": "string",
+        "description": "Trending time window.",
+        "enum": [
+          "daily",
+          "weekly",
+          "monthly"
+        ],
+        "default": "daily"
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Maximum repositories to return.",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 25
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source_url": {
+        "type": "string",
+        "description": "Fetched source URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of records returned"
+      },
+      "repositories": {
+        "type": "array",
+        "description": "Normalized repositories records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "description": "rank value"
+            },
+            "repository": {
+              "type": "string",
+              "description": "repository value"
+            },
+            "url": {
+              "type": "string",
+              "description": "url value"
+            },
+            "description": {
+              "type": "string",
+              "description": "description value"
+            },
+            "language": {
+              "type": "string",
+              "description": "language value"
+            },
+            "stars": {
+              "type": "integer",
+              "description": "stars value"
+            },
+            "forks": {
+              "type": "integer",
+              "description": "forks value"
+            },
+            "stars_in_period": {
+              "type": "integer",
+              "description": "stars in period value"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "source_url",
+      "count",
+      "repositories"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "first-run",
+      "input": {
+        "language": "typescript",
+        "since": "daily",
+        "limit": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "repositories": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

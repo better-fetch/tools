@@ -1,0 +1,145 @@
+{
+  "name": "cisa_kev_scraper",
+  "version": "0.1.0",
+  "title": "CISA Known Exploited Vulnerabilities Scraper",
+  "description": "Search the CISA Known Exploited Vulnerabilities catalog by vendor, product, CVE, or keyword and return remediation deadlines.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "CISA Known Exploited Vulnerabilities Scraper icon",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h7v-2H7Z\"/></svg>",
+    "sourceUrl": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+  },
+  "seo": {
+    "title": "CISA Known Exploited Vulnerabilities Scraper Tool for Structured Web Data",
+    "description": "Search the CISA Known Exploited Vulnerabilities catalog by vendor, product, CVE, or keyword and return remediation deadlines. Better Fetch returns clean structured records ready for agents, exports, monitoring, and downstream workflows.",
+    "intro": "Search the CISA Known Exploited Vulnerabilities catalog by vendor, product, CVE, or keyword and return remediation deadlines. This first-party Better Fetch tool turns a focused request into predictable structured output that can be inspected in the web workspace, exported as JSON or CSV, called through REST, or composed by an AI agent over MCP. It is designed for repeatable production research rather than fragile copy-and-paste scraping.",
+    "useCases": [
+      {
+        "title": "Agent research",
+        "description": "Give AI agents bounded, normalized cisa known exploited vulnerabilities scraper results without writing source-specific retrieval and parsing code."
+      },
+      {
+        "title": "Repeatable monitoring",
+        "description": "Save the configuration, rerun it on a consistent source, and export comparable structured artifacts for operational review."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What does CISA Known Exploited Vulnerabilities Scraper return?",
+        "answer": "It returns normalized structured fields documented in the output schema, plus the fetched source URL and a record count for receipts and exports."
+      },
+      {
+        "question": "Does this tool store the retrieved output?",
+        "answer": "No. Better Fetch records privacy-safe run metadata for reliability and retention analysis, but the output payload itself is not stored by the workspace."
+      }
+    ],
+    "keywords": [
+      "CISA Known Exploited Vulnerabilities Scraper",
+      "web data tool",
+      "AI agent retrieval",
+      "structured scraper",
+      "Better Fetch"
+    ]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Optional CVE, vendor, product, or vulnerability keyword."
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Maximum vulnerabilities to return.",
+        "default": 20,
+        "minimum": 1,
+        "maximum": 100
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source_url": {
+        "type": "string",
+        "description": "Fetched source URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of records returned"
+      },
+      "vulnerabilities": {
+        "type": "array",
+        "description": "Normalized vulnerabilities records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "cve": {
+              "type": "string",
+              "description": "cve value"
+            },
+            "vendor": {
+              "type": "string",
+              "description": "vendor value"
+            },
+            "product": {
+              "type": "string",
+              "description": "product value"
+            },
+            "name": {
+              "type": "string",
+              "description": "name value"
+            },
+            "date_added": {
+              "type": "string",
+              "description": "date added value"
+            },
+            "due_date": {
+              "type": "string",
+              "description": "due date value"
+            },
+            "action": {
+              "type": "string",
+              "description": "action value"
+            },
+            "ransomware_use": {
+              "type": "string",
+              "description": "ransomware use value"
+            },
+            "notes": {
+              "type": "string",
+              "description": "notes value"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "source_url",
+      "count",
+      "vulnerabilities"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "first-run",
+      "input": {
+        "query": "Microsoft",
+        "limit": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "vulnerabilities": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

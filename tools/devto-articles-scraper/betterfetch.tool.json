@@ -1,0 +1,153 @@
+{
+  "name": "devto_articles_scraper",
+  "version": "0.1.0",
+  "title": "DEV Community Articles Scraper",
+  "description": "Fetch current DEV Community articles by tag or username with titles, reactions, comments, tags, authors, dates, and canonical URLs.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "DEV Community Articles Scraper icon",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h7v-2H7Z\"/></svg>",
+    "sourceUrl": "https://dev.to/"
+  },
+  "seo": {
+    "title": "DEV Community Articles Scraper Tool for Structured Web Data",
+    "description": "Fetch current DEV Community articles by tag or username with titles, reactions, comments, tags, authors, dates, and canonical URLs. Better Fetch returns clean structured records ready for agents, exports, monitoring, and downstream workflows.",
+    "intro": "Fetch current DEV Community articles by tag or username with titles, reactions, comments, tags, authors, dates, and canonical URLs. This first-party Better Fetch tool turns a focused request into predictable structured output that can be inspected in the web workspace, exported as JSON or CSV, called through REST, or composed by an AI agent over MCP. It is designed for repeatable production research rather than fragile copy-and-paste scraping.",
+    "useCases": [
+      {
+        "title": "Agent research",
+        "description": "Give AI agents bounded, normalized dev community articles scraper results without writing source-specific retrieval and parsing code."
+      },
+      {
+        "title": "Repeatable monitoring",
+        "description": "Save the configuration, rerun it on a consistent source, and export comparable structured artifacts for operational review."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What does DEV Community Articles Scraper return?",
+        "answer": "It returns normalized structured fields documented in the output schema, plus the fetched source URL and a record count for receipts and exports."
+      },
+      {
+        "question": "Does this tool store the retrieved output?",
+        "answer": "No. Better Fetch records privacy-safe run metadata for reliability and retention analysis, but the output payload itself is not stored by the workspace."
+      }
+    ],
+    "keywords": [
+      "DEV Community Articles Scraper",
+      "web data tool",
+      "AI agent retrieval",
+      "structured scraper",
+      "Better Fetch"
+    ]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tag": {
+        "type": "string",
+        "description": "Optional DEV tag such as ai, webdev, or javascript."
+      },
+      "username": {
+        "type": "string",
+        "description": "Optional DEV username."
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Maximum articles to return.",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source_url": {
+        "type": "string",
+        "description": "Fetched source URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of records returned"
+      },
+      "articles": {
+        "type": "array",
+        "description": "Normalized articles records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "id value"
+            },
+            "title": {
+              "type": "string",
+              "description": "title value"
+            },
+            "url": {
+              "type": "string",
+              "description": "url value"
+            },
+            "author": {
+              "type": "string",
+              "description": "author value"
+            },
+            "tags": {
+              "type": "string",
+              "description": "tags value"
+            },
+            "published_at": {
+              "type": "string",
+              "description": "published at value"
+            },
+            "reactions": {
+              "type": "integer",
+              "description": "reactions value"
+            },
+            "comments": {
+              "type": "integer",
+              "description": "comments value"
+            },
+            "reading_minutes": {
+              "type": "integer",
+              "description": "reading minutes value"
+            },
+            "description": {
+              "type": "string",
+              "description": "description value"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "source_url",
+      "count",
+      "articles"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "first-run",
+      "input": {
+        "tag": "ai",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "articles": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

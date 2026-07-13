@@ -1,0 +1,140 @@
+{
+  "name": "github_releases_scraper",
+  "version": "0.1.0",
+  "title": "GitHub Releases Scraper",
+  "description": "Fetch public GitHub release metadata including tags, names, publication dates, prerelease flags, URLs, and release notes.",
+  "category": "developer-tools",
+  "logo": {
+    "label": "GitHub Releases Scraper icon",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h7v-2H7Z\"/></svg>",
+    "sourceUrl": "https://github.com/logos"
+  },
+  "seo": {
+    "title": "GitHub Releases Scraper Tool for Structured Web Data",
+    "description": "Fetch public GitHub release metadata including tags, names, publication dates, prerelease flags, URLs, and release notes. Better Fetch returns clean structured records ready for agents, exports, monitoring, and downstream workflows.",
+    "intro": "Fetch public GitHub release metadata including tags, names, publication dates, prerelease flags, URLs, and release notes. This first-party Better Fetch tool turns a focused request into predictable structured output that can be inspected in the web workspace, exported as JSON or CSV, called through REST, or composed by an AI agent over MCP. It is designed for repeatable production research rather than fragile copy-and-paste scraping.",
+    "useCases": [
+      {
+        "title": "Agent research",
+        "description": "Give AI agents bounded, normalized github releases scraper results without writing source-specific retrieval and parsing code."
+      },
+      {
+        "title": "Repeatable monitoring",
+        "description": "Save the configuration, rerun it on a consistent source, and export comparable structured artifacts for operational review."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What does GitHub Releases Scraper return?",
+        "answer": "It returns normalized structured fields documented in the output schema, plus the fetched source URL and a record count for receipts and exports."
+      },
+      {
+        "question": "Does this tool store the retrieved output?",
+        "answer": "No. Better Fetch records privacy-safe run metadata for reliability and retention analysis, but the output payload itself is not stored by the workspace."
+      }
+    ],
+    "keywords": [
+      "GitHub Releases Scraper",
+      "web data tool",
+      "AI agent retrieval",
+      "structured scraper",
+      "Better Fetch"
+    ]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "repository": {
+        "type": "string",
+        "description": "GitHub owner/repository or repository URL."
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Maximum releases to return.",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 50
+      }
+    },
+    "required": [
+      "repository"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source_url": {
+        "type": "string",
+        "description": "Fetched source URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of records returned"
+      },
+      "releases": {
+        "type": "array",
+        "description": "Normalized releases records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "tag": {
+              "type": "string",
+              "description": "tag value"
+            },
+            "name": {
+              "type": "string",
+              "description": "name value"
+            },
+            "url": {
+              "type": "string",
+              "description": "url value"
+            },
+            "published_at": {
+              "type": "string",
+              "description": "published at value"
+            },
+            "prerelease": {
+              "type": "boolean",
+              "description": "prerelease value"
+            },
+            "draft": {
+              "type": "boolean",
+              "description": "draft value"
+            },
+            "notes": {
+              "type": "string",
+              "description": "notes value"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "source_url",
+      "count",
+      "releases"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "first-run",
+      "input": {
+        "repository": "openai/openai-python",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "releases": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

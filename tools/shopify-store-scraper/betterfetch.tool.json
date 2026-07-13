@@ -1,0 +1,169 @@
+{
+  "name": "shopify_store_scraper",
+  "version": "0.1.0",
+  "title": "Shopify Store Scraper",
+  "description": "Fetch a public Shopify collection page and normalize product titles, handles, URLs, prices, availability, and images without relying on the commonly blocked products.json feed.",
+  "category": "ecommerce",
+  "logo": {
+    "label": "Shopify Store Scraper icon",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h7v-2H7Z\"/></svg>",
+    "sourceUrl": "https://www.shopify.com/"
+  },
+  "seo": {
+    "title": "Shopify Store Scraper Tool for Structured Web Data",
+    "description": "Fetch a public Shopify collection page and normalize product titles, handles, URLs, prices, availability, and images. Better Fetch returns clean structured records ready for agents, exports, monitoring, and downstream workflows.",
+    "intro": "Fetch a public Shopify collection page and normalize product titles, handles, URLs, prices, availability, and images. The tool deliberately reads storefront HTML instead of the frequently rate-limited products.json endpoint, keeping ordinary runs on Better Fetch's low-cost one-credit path. Results can be inspected in the web workspace, exported as JSON or CSV, called through REST, or composed by an AI agent over MCP.",
+    "useCases": [
+      {
+        "title": "Agent research",
+        "description": "Give AI agents bounded, normalized shopify store scraper results without writing source-specific retrieval and parsing code."
+      },
+      {
+        "title": "Repeatable monitoring",
+        "description": "Save the configuration, rerun it on a consistent source, and export comparable structured artifacts for operational review."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What does Shopify Store Scraper return?",
+        "answer": "It returns normalized structured fields documented in the output schema, plus the fetched source URL and a record count for receipts and exports."
+      },
+      {
+        "question": "Does this tool store the retrieved output?",
+        "answer": "No. Better Fetch records privacy-safe run metadata for reliability and retention analysis, but the output payload itself is not stored by the workspace."
+      }
+    ],
+    "keywords": [
+      "Shopify Store Scraper",
+      "web data tool",
+      "AI agent retrieval",
+      "structured scraper",
+      "Better Fetch"
+    ]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "store_url": {
+        "type": "string",
+        "description": "Shopify storefront base URL.",
+        "format": "uri"
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Maximum products to return.",
+        "default": 20,
+        "minimum": 1,
+        "maximum": 100
+      }
+    },
+    "required": [
+      "store_url"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source_url": {
+        "type": "string",
+        "description": "Fetched source URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of records returned"
+      },
+      "products": {
+        "type": "array",
+        "description": "Normalized products records",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "id value"
+            },
+            "title": {
+              "type": "string",
+              "description": "title value"
+            },
+            "handle": {
+              "type": "string",
+              "description": "handle value"
+            },
+            "url": {
+              "type": "string",
+              "description": "url value"
+            },
+            "vendor": {
+              "type": "string",
+              "description": "vendor value"
+            },
+            "product_type": {
+              "type": "string",
+              "description": "product type value"
+            },
+            "published_at": {
+              "type": "string",
+              "description": "published at value"
+            },
+            "price_min": {
+              "type": "number",
+              "description": "price min value"
+            },
+            "price_max": {
+              "type": "number",
+              "description": "price max value"
+            },
+            "currency": {
+              "type": "string",
+              "description": "currency value"
+            },
+            "available": {
+              "type": "boolean",
+              "description": "available value"
+            },
+            "variants": {
+              "type": "integer",
+              "description": "variants value"
+            },
+            "image": {
+              "type": "string",
+              "description": "image value"
+            },
+            "tags": {
+              "type": "string",
+              "description": "tags value"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "source_url",
+      "count",
+      "products"
+    ],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "first-run",
+      "input": {
+        "store_url": "https://theme-dawn-demo.myshopify.com",
+        "limit": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "products": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}
