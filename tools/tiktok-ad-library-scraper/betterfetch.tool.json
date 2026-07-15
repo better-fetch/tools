@@ -1,0 +1,123 @@
+{
+  "name": "tiktok_ad_library_scraper",
+  "version": "0.1.0",
+  "title": "TikTok Ad Library Scraper",
+  "description": "Search and inspect ads exposed by TikTok's official logged-out Creative Center, with source-linked media, engagement, objectives, destinations, and performance fields.",
+  "category": "social",
+  "logo": {
+    "label": "TikTok logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 290\"><path fill=\"#FF004F\" d=\"M189.72 104.421c18.678 13.345 41.56 21.197 66.273 21.197v-47.53a67.115 67.115 0 0 1-13.918-1.456v37.413c-24.711 0-47.59-7.851-66.272-21.195v96.996c0 48.523-39.356 87.855-87.9 87.855c-18.113 0-34.949-5.473-48.934-14.86c15.962 16.313 38.222 26.432 62.848 26.432c48.548 0 87.905-39.332 87.905-87.857v-96.995h-.002Zm17.17-47.952c-9.546-10.423-15.814-23.893-17.17-38.785v-6.113h-13.189c3.32 18.927 14.644 35.097 30.358 44.898ZM69.673 225.607a40.008 40.008 0 0 1-8.203-24.33c0-22.192 18.001-40.186 40.21-40.186a40.313 40.313 0 0 1 12.197 1.883v-48.593c-4.61-.631-9.262-.9-13.912-.801v37.822a40.268 40.268 0 0 0-12.203-1.882c-22.208 0-40.208 17.992-40.208 40.187c0 15.694 8.997 29.281 22.119 35.9Z\"/><path d=\"M175.803 92.849c18.683 13.344 41.56 21.195 66.272 21.195V76.631c-13.794-2.937-26.005-10.141-35.186-20.162c-15.715-9.802-27.038-25.972-30.358-44.898h-34.643v189.843c-.079 22.132-18.049 40.052-40.21 40.052c-13.058 0-24.66-6.221-32.007-15.86c-13.12-6.618-22.118-20.206-22.118-35.898c0-22.193 18-40.187 40.208-40.187c4.255 0 8.356.662 12.203 1.882v-37.822c-47.692.985-86.047 39.933-86.047 87.834c0 23.912 9.551 45.589 25.053 61.428c13.985 9.385 30.82 14.86 48.934 14.86c48.545 0 87.9-39.335 87.9-87.857V92.85h-.001Z\"/><path fill=\"#00F2EA\" d=\"M242.075 76.63V66.516a66.285 66.285 0 0 1-35.186-10.047a66.47 66.47 0 0 0 35.186 20.163ZM176.53 11.57a67.788 67.788 0 0 1-.728-5.457V0h-47.834v189.845c-.076 22.13-18.046 40.05-40.208 40.05a40.06 40.06 0 0 1-18.09-4.287c7.347 9.637 18.949 15.857 32.007 15.857c22.16 0 40.132-17.918 40.21-40.05V11.571h34.643ZM99.966 113.58v-10.769a88.787 88.787 0 0 0-12.061-.818C39.355 101.993 0 141.327 0 189.845c0 30.419 15.467 57.227 38.971 72.996c-15.502-15.838-25.053-37.516-25.053-61.427c0-47.9 38.354-86.848 86.048-87.833Z\"/></svg>",
+    "sourceUrl": "https://icon-sets.iconify.design/logos/tiktok-icon/"
+  },
+  "seo": {
+    "title": "TikTok Ad Library Search and Ad Details API",
+    "description": "Search TikTok Creative Center ads and inspect source-linked public ad details, media, engagement, objectives, destinations, geography, and performance data.",
+    "intro": "TikTok Ad Library Scraper reads TikTok's official Creative Center as a logged-out visitor. It captures the public data calls made by the rendered page and normalizes each result without TikTok credentials, private accounts, or synthetic records.",
+    "useCases": [
+      { "title": "Creative research", "description": "Review public top-ad titles, video assets, objectives, and visible performance signals by market and time period." },
+      { "title": "Campaign verification", "description": "Resolve a Creative Center ad ID to its current public detail record and source URL." },
+      { "title": "Landing-page intelligence", "description": "Connect public ad creative to the destination and countries TikTok exposes on the detail page." }
+    ],
+    "faqs": [
+      { "question": "Does this require TikTok login?", "answer": "No. It reads the data TikTok's official Creative Center exposes to logged-out visitors." },
+      { "question": "Is this every TikTok ad?", "answer": "No. Coverage is limited to ads TikTok publishes in Creative Center and varies by market and period." },
+      { "question": "How does keyword filtering work?", "answer": "The optional query filters the current public result page by visible ad title and brand. The response marks query_applied_locally so this bounded behavior is explicit." }
+    ],
+    "keywords": ["TikTok Ad Library API", "TikTok Creative Center scraper", "TikTok top ads", "ad creative intelligence", "TikTok ad details"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["search", "ad"], "description": "Search the public top-ads feed or inspect one ad." },
+      "ad_id": { "type": "string", "pattern": "^[0-9]{8,30}$", "description": "TikTok Creative Center material ID for ad mode." },
+      "region": { "type": "string", "pattern": "^[A-Za-z]{2}$", "default": "US", "description": "Two-letter market code for search mode." },
+      "period": { "type": "string", "enum": ["7", "30", "180"], "default": "30", "description": "Creative Center lookback period in days." },
+      "page": { "type": "integer", "minimum": 1, "maximum": 10, "default": 1, "description": "Requested public results page." },
+      "query": { "type": "string", "description": "Optional case-insensitive filter applied to visible title and brand fields on the returned public page." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10, "description": "Maximum normalized ads to return." }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation." },
+      "source_url": { "type": "string", "description": "Official Creative Center page fetched by Better Fetch." },
+      "api_source_url": { "type": "string", "description": "Public TikTok data request captured from that page." },
+      "count": { "type": "integer", "description": "Number of normalized ads returned." },
+      "total_count": { "type": "integer", "description": "Total results TikTok reports for the selected public feed." },
+      "page": { "type": "integer", "description": "Page number TikTok reports." },
+      "has_more": { "type": "boolean", "description": "Whether TikTok reports another page." },
+      "query_applied_locally": { "type": "boolean", "description": "True when query filtered the current public page locally." },
+      "ads": {
+        "type": "array",
+        "description": "Normalized public Creative Center ads.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "ad_id": { "type": "string", "description": "TikTok material ID." },
+            "url": { "type": "string", "description": "Official public Creative Center detail URL." },
+            "title": { "type": "string", "description": "Public ad title." },
+            "brand_name": { "type": "string", "description": "Public brand name when present." },
+            "industry_key": { "type": "string", "description": "TikTok industry label key." },
+            "objective_key": { "type": "string", "description": "TikTok campaign objective key." },
+            "landing_page": { "type": "string", "description": "Public campaign destination." },
+            "countries_csv": { "type": "string", "description": "Comma-separated market codes TikTok exposes for the ad." },
+            "source": { "type": "string", "description": "Public source label." },
+            "ctr": { "type": "number", "description": "CTR value exposed by TikTok." },
+            "cost": { "type": "number", "description": "Relative cost value exposed by TikTok." },
+            "like_count": { "type": "number", "description": "Visible likes." },
+            "comment_count": { "type": "number", "description": "Visible comments." },
+            "share_count": { "type": "number", "description": "Visible shares." },
+            "video_id": { "type": "string", "description": "TikTok video identifier." },
+            "video_duration_seconds": { "type": "number", "description": "Video duration in seconds." },
+            "video_cover_url": { "type": "string", "description": "Public video cover URL." },
+            "video_url": { "type": "string", "description": "Public playable video URL." },
+            "video_width": { "type": "number", "description": "Video width in pixels." },
+            "video_height": { "type": "number", "description": "Video height in pixels." }
+          },
+          "required": ["ad_id", "url"],
+          "additionalProperties": false
+        }
+      },
+      "ad": {
+        "type": "object",
+        "description": "Resolved individual public ad.",
+        "properties": {
+          "ad_id": { "type": "string" },
+          "url": { "type": "string" },
+          "title": { "type": "string" },
+          "brand_name": { "type": "string" },
+          "industry_key": { "type": "string" },
+          "objective_key": { "type": "string" },
+          "landing_page": { "type": "string" },
+          "countries_csv": { "type": "string" },
+          "source": { "type": "string" },
+          "ctr": { "type": "number" },
+          "cost": { "type": "number" },
+          "like_count": { "type": "number" },
+          "comment_count": { "type": "number" },
+          "share_count": { "type": "number" },
+          "video_id": { "type": "string" },
+          "video_duration_seconds": { "type": "number" },
+          "video_cover_url": { "type": "string" },
+          "video_url": { "type": "string" },
+          "video_width": { "type": "number" },
+          "video_height": { "type": "number" }
+        },
+        "required": ["ad_id", "url"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["mode", "source_url", "api_source_url", "count", "ads"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "search-top-ads", "input": { "mode": "search", "region": "AU", "period": "30", "max_results": 5 }, "expect": { "outputMatches": { "mode": "search", "ads": { "minLength": 1 } } } },
+    { "name": "ad-details", "input": { "mode": "ad", "ad_id": "7644503475464159239" }, "expect": { "outputMatches": { "mode": "ad", "count": 1, "ad.ad_id": "7644503475464159239" } } }
+  ],
+  "entry": "src/index.ts"
+}

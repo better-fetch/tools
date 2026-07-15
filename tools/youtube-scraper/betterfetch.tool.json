@@ -1,8 +1,8 @@
 {
   "name": "youtube_scraper",
-  "version": "0.1.1",
+  "version": "0.9.3",
   "title": "YouTube Scraper",
-  "description": "Search public YouTube results or inspect a public channel videos tab and return normalized video metadata: title, URL, channel, duration, views, published time, thumbnail, and description snippets.",
+  "description": "Search public YouTube, inspect channels, videos, Shorts, trending Shorts, live streams, playlists, community posts, sponsors, comments, and comment replies.",
   "category": "social",
   "logo": {
     "label": "YouTube logo",
@@ -10,9 +10,9 @@
     "sourceUrl": "https://icon-sets.iconify.design/logos/youtube-icon/"
   },
   "seo": {
-    "title": "YouTube Scraper Tool for Public Video Metadata",
-    "description": "Scrape public YouTube search results or channel videos with Better Fetch and return normalized titles, URLs, channel names, durations, views, published times, thumbnails, and snippets.",
-    "intro": "YouTube Scraper gives agents a focused way to collect public YouTube video metadata without using a private account. It renders search results or a channel videos tab through Better Fetch, parses YouTube's public page data, deduplicates video cards, and returns normalized fields that are easy to save, compare, or pass into an LLM workflow.",
+    "title": "YouTube Scraper for Videos, Channels, Comments and Sponsors",
+    "description": "Scrape public YouTube search, channels, videos, playlists, community posts, comments, replies, and sponsor evidence into normalized agent-ready data.",
+    "intro": "YouTube Scraper gives agents a focused way to collect public YouTube data without using a private account. It renders public YouTube surfaces through Better Fetch, parses page and network data, deduplicates results, and returns normalized fields that are easy to save, compare, or pass into an LLM workflow.",
     "useCases": [
       {
         "title": "Video research",
@@ -25,6 +25,14 @@
       {
         "title": "Agent briefs",
         "description": "Let an agent gather public YouTube results and summarize visible metadata before deciding which videos need deeper review."
+      },
+      {
+        "title": "Comment research",
+        "description": "Collect public comments or expand a targeted parent thread into normalized replies with author, like, permalink, and continuation evidence."
+      },
+      {
+        "title": "Trending Shorts discovery",
+        "description": "Collect YouTube's current logged-out Shorts sequence with public engagement, channel, publish, duration, keyword, and thumbnail metadata."
       }
     ],
     "faqs": [
@@ -39,6 +47,10 @@
       {
         "question": "Why are view counts returned as text and numbers?",
         "answer": "YouTube often renders compact labels such as 1.2M views. The tool preserves the visible text and also returns a best-effort integer when it can parse one."
+      },
+      {
+        "question": "Does comment collection require a YouTube login?",
+        "answer": "No. video_comments and comment_replies use the public logged-out watch page and return only discussion data YouTube exposes to that browser session."
       }
     ],
     "keywords": [
@@ -46,6 +58,7 @@
       "YouTube search scraper",
       "video metadata",
       "channel monitoring",
+      "YouTube comments scraper",
       "YouTube agent tool",
       "public video data"
     ]
@@ -59,6 +72,27 @@
   "inputSchema": {
     "type": "object",
     "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "search",
+          "channel",
+          "channel_videos",
+          "channel_shorts",
+          "channel_lives",
+          "channel_playlists",
+          "channel_posts",
+          "hashtag_search",
+          "playlist",
+          "community_post",
+          "video_comments",
+          "comment_replies",
+          "video_sponsors",
+          "trending_shorts",
+          "video"
+        ],
+        "description": "Operation to run. If omitted, the tool infers it from query, channel_url, or video_url."
+      },
       "query": {
         "type": "string",
         "description": "YouTube search query. Use either query or channel_url."
@@ -66,7 +100,34 @@
       "channel_url": {
         "type": "string",
         "format": "uri",
-        "description": "Public YouTube channel URL. The tool reads its videos tab."
+        "description": "Public YouTube channel URL used by channel modes."
+      },
+      "video_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public YouTube watch, Shorts, youtu.be, or embed URL used by video, video_comments, comment_replies, and video_sponsors modes."
+      },
+      "comment_id": {
+        "type": "string",
+        "description": "Public parent YouTube comment id required by comment_replies mode. video_comments returns this as each comment's id."
+      },
+      "playlist_id": {
+        "type": "string",
+        "description": "Public YouTube playlist id or playlist URL. Used by playlist mode."
+      },
+      "hashtag": {
+        "type": "string",
+        "description": "Hashtag with or without the leading #. Used by hashtag_search mode."
+      },
+      "post_url": {
+        "type": "string",
+        "description": "Public youtube.com/post URL or community post id. Used by community_post mode."
+      },
+      "content_type": {
+        "type": "string",
+        "enum": ["all", "shorts"],
+        "default": "all",
+        "description": "Return all visible hashtag content or only Shorts."
       },
       "max_results": {
         "type": "integer",
@@ -83,7 +144,7 @@
     "properties": {
       "source": {
         "type": "string",
-        "description": "Search query or channel URL used"
+        "description": "Search query, channel URL, video URL, playlist id, hashtag, or post id used"
       },
       "source_url": {
         "type": "string",
@@ -91,7 +152,7 @@
       },
       "count": {
         "type": "integer",
-        "description": "Number of videos returned"
+        "description": "Number of primary records returned for the selected mode"
       },
       "videos": {
         "type": "array",
@@ -115,6 +176,10 @@
               "type": "string",
               "description": "Visible channel name"
             },
+            "channel_id": {
+              "type": "string",
+              "description": "YouTube channel id"
+            },
             "channel_url": {
               "type": "string",
               "description": "Visible channel URL"
@@ -123,6 +188,10 @@
               "type": "string",
               "description": "Visible duration label"
             },
+            "duration_seconds": {
+              "type": "number",
+              "description": "Duration in seconds when YouTube exposes it"
+            },
             "views_text": {
               "type": "string",
               "description": "Visible view-count label"
@@ -130,6 +199,14 @@
             "view_count": {
               "type": "integer",
               "description": "Best-effort parsed view count"
+            },
+            "like_count": {
+              "type": "integer",
+              "description": "Public like count when YouTube exposes it"
+            },
+            "comment_count": {
+              "type": "integer",
+              "description": "Public comment count when YouTube exposes it"
             },
             "published": {
               "type": "string",
@@ -142,6 +219,10 @@
             "description": {
               "type": "string",
               "description": "Visible description snippet"
+            },
+            "keywords": {
+              "type": "string",
+              "description": "Newline-delimited public video keywords"
             }
           },
           "required": [
@@ -151,6 +232,186 @@
           ],
           "additionalProperties": false
         }
+      },
+      "playlists": {
+        "type": "array",
+        "description": "Public channel playlists when channel_playlists mode is used",
+        "items": {
+          "type": "object",
+          "properties": {
+            "playlist_id": { "type": "string" },
+            "title": { "type": "string" },
+            "url": { "type": "string" },
+            "video_count_text": { "type": "string" },
+            "updated": { "type": "string" },
+            "thumbnail": { "type": "string" }
+          },
+          "required": ["playlist_id", "title", "url"],
+          "additionalProperties": false
+        }
+      },
+      "channel": {
+        "type": "object",
+        "description": "Public channel metadata when channel mode is used",
+        "properties": {
+          "channel_id": { "type": "string" },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "handle_url": { "type": "string" },
+          "description": { "type": "string" },
+          "avatar": { "type": "string" },
+          "rss_url": { "type": "string" },
+          "is_family_safe": { "type": "boolean" }
+        },
+        "required": ["channel_id", "title", "url"],
+        "additionalProperties": false
+      },
+      "playlist": {
+        "type": "object",
+        "description": "Public playlist metadata when playlist mode is used",
+        "properties": {
+          "playlist_id": { "type": "string" },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "description": { "type": "string" },
+          "owner": { "type": "string" },
+          "owner_url": { "type": "string" },
+          "owner_channel_id": { "type": "string" },
+          "total_videos": { "type": "integer" },
+          "views_text": { "type": "string" },
+          "updated": { "type": "string" },
+          "thumbnail": { "type": "string" }
+        },
+        "required": ["playlist_id", "title", "url"],
+        "additionalProperties": false
+      },
+      "posts": {
+        "type": "array",
+        "description": "Public channel community posts or one community post detail",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "url": { "type": "string" },
+            "channel_title": { "type": "string" },
+            "channel_id": { "type": "string" },
+            "channel_url": { "type": "string" },
+            "content": { "type": "string" },
+            "image_urls": { "type": "string" },
+            "image_count": { "type": "integer" },
+            "like_count_text": { "type": "string" },
+            "like_count": { "type": "integer" },
+            "published": { "type": "string" },
+            "video_id": { "type": "string" },
+            "video_title": { "type": "string" },
+            "video_url": { "type": "string" },
+            "video_thumbnail": { "type": "string" }
+          },
+          "required": ["id", "url"],
+          "additionalProperties": false
+        }
+      },
+      "comments": {
+        "type": "array",
+        "description": "Logged-out public comments or replies returned by video_comments and comment_replies modes",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "content": { "type": "string" },
+            "url": { "type": "string" },
+            "published": { "type": "string" },
+            "reply_level": { "type": "integer" },
+            "author_name": { "type": "string" },
+            "author_channel_id": { "type": "string" },
+            "author_verified": { "type": "boolean" },
+            "author_creator": { "type": "boolean" },
+            "author_avatar_url": { "type": "string" },
+            "author_channel_url": { "type": "string" },
+            "like_count_text": { "type": "string" },
+            "like_count": { "type": "integer" },
+            "reply_count_text": { "type": "string" },
+            "reply_count": { "type": "integer" },
+            "replies_continuation_token": { "type": "string" }
+          },
+          "required": ["id", "content", "url"],
+          "additionalProperties": false
+        }
+      },
+      "total_count": {
+        "type": "integer",
+        "description": "Total public comment count displayed by YouTube when video_comments mode is used"
+      },
+      "parent_comment_id": {
+        "type": "string",
+        "description": "Parent comment id expanded by comment_replies mode"
+      },
+      "comments_continuation_token": {
+        "type": "string",
+        "description": "Evidence token exposed by YouTube for another public comment or reply page; pagination is not yet executed by this tool"
+      },
+      "continuation_token": {
+        "type": "string",
+        "description": "Public continuation token when YouTube exposes another page of channel posts"
+      },
+      "sponsor_video": {
+        "type": "object",
+        "description": "Video and paid-promotion context for video_sponsors mode",
+        "properties": {
+          "id": { "type": "string" },
+          "url": { "type": "string" },
+          "title": { "type": "string" },
+          "channel": { "type": "string" },
+          "channel_id": { "type": "string" },
+          "channel_url": { "type": "string" },
+          "is_paid_promotion": { "type": "boolean" }
+        },
+        "required": ["id", "url", "title", "is_paid_promotion"],
+        "additionalProperties": false
+      },
+      "suspected_sponsors": {
+        "type": "array",
+        "description": "Brands inferred from explicit public description evidence",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "website": { "type": "string" },
+            "confidence": { "type": "string" },
+            "evidence_source": { "type": "string" },
+            "evidence_text": { "type": "string" }
+          },
+          "required": ["name", "confidence", "evidence_source", "evidence_text"],
+          "additionalProperties": false
+        }
+      },
+      "sponsor_segments": {
+        "type": "array",
+        "description": "Public community sponsor/self-promotion timing segments from SponsorBlock",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start_seconds": { "type": "number" },
+            "end_seconds": { "type": "number" },
+            "duration_seconds": { "type": "number" },
+            "category": { "type": "string" },
+            "votes": { "type": "integer" },
+            "locked": { "type": "boolean" }
+          },
+          "required": ["start_seconds", "end_seconds", "duration_seconds", "category"],
+          "additionalProperties": false
+        }
+      },
+      "sponsor_detection": {
+        "type": "object",
+        "description": "Detection status, methods, and epistemic caveat",
+        "properties": {
+          "status": { "type": "string" },
+          "methods": { "type": "string" },
+          "note": { "type": "string" }
+        },
+        "required": ["status", "methods", "note"],
+        "additionalProperties": false
       }
     },
     "required": [
@@ -163,8 +424,21 @@
   },
   "examples": [
     {
+      "name": "video-details",
+      "input": {
+        "mode": "video",
+        "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "expect": {
+        "outputMatches": {
+          "count": 1
+        }
+      }
+    },
+    {
       "name": "search-openai",
       "input": {
+        "mode": "search",
         "query": "openai",
         "max_results": 3
       },
@@ -174,6 +448,155 @@
             "minLength": 1
           }
         }
+      }
+    },
+    {
+      "name": "channel-details",
+      "input": {
+        "mode": "channel",
+        "channel_url": "https://www.youtube.com/@OpenAI"
+      },
+      "expect": {
+        "outputMatches": {
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "channel-videos",
+      "input": {
+        "mode": "channel_videos",
+        "channel_url": "https://www.youtube.com/@OpenAI",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": { "videos": { "minLength": 1 } }
+      }
+    },
+    {
+      "name": "channel-shorts",
+      "input": {
+        "mode": "channel_shorts",
+        "channel_url": "https://www.youtube.com/@OpenAI",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": { "videos": { "minLength": 1 } }
+      }
+    },
+    {
+      "name": "channel-lives",
+      "input": {
+        "mode": "channel_lives",
+        "channel_url": "https://www.youtube.com/@OpenAI",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": { "videos": { "minLength": 1 } }
+      }
+    },
+    {
+      "name": "channel-playlists",
+      "input": {
+        "mode": "channel_playlists",
+        "channel_url": "https://www.youtube.com/@OpenAI",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": { "playlists": { "minLength": 1 } }
+      }
+    },
+    {
+      "name": "hashtag-search",
+      "input": {
+        "mode": "hashtag_search",
+        "hashtag": "funny",
+        "content_type": "all",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": { "videos": { "minLength": 1 } }
+      }
+    },
+    {
+      "name": "playlist-details",
+      "input": {
+        "mode": "playlist",
+        "playlist_id": "PLP32wGpgzmIlInfgKVFfCwVsxgGqZNIiS",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": { "videos": { "minLength": 1 }, "count": 3 }
+      }
+    },
+    {
+      "name": "video-sponsors",
+      "input": {
+        "mode": "video_sponsors",
+        "video_url": "https://www.youtube.com/watch?v=AVO0ifle-OU"
+      },
+      "expect": {
+        "outputMatches": { "suspected_sponsors": { "minLength": 1 }, "sponsor_segments": { "minLength": 1 } }
+      }
+    },
+    {
+      "name": "video-comments",
+      "input": {
+        "mode": "video_comments",
+        "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "max_results": 10
+      },
+      "expect": {
+        "outputMatches": { "comments": { "minLength": 1 } }
+      }
+    },
+    {
+      "name": "comment-replies",
+      "input": {
+        "mode": "comment_replies",
+        "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "comment_id": "Ugzge340dBgB75hWBm54AaABAg",
+        "max_results": 10
+      },
+      "expect": {
+        "outputMatches": {
+          "parent_comment_id": "Ugzge340dBgB75hWBm54AaABAg",
+          "comments": { "minLength": 1 }
+        }
+      }
+    },
+    {
+      "name": "trending-shorts",
+      "input": {
+        "mode": "trending_shorts",
+        "max_results": 10
+      },
+      "expect": {
+        "outputMatches": {
+          "source": "trending Shorts",
+          "videos": { "minLength": 1 }
+        }
+      }
+    },
+    {
+      "name": "channel-posts",
+      "input": {
+        "mode": "channel_posts",
+        "channel_url": "https://www.youtube.com/@MrBeast",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": { "posts": { "minLength": 1 } }
+      }
+    },
+    {
+      "name": "community-post",
+      "input": {
+        "mode": "community_post",
+        "post_url": "https://www.youtube.com/post/UgkxyRcQsbZeMdE9xN9WUohTnrQtxquVCbaE"
+      },
+      "expect": {
+        "outputMatches": { "posts": { "minLength": 1 }, "count": 1 }
       }
     }
   ],

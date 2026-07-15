@@ -1,0 +1,81 @@
+{
+  "name": "apple_music_scraper",
+  "version": "0.1.0",
+  "title": "Apple Music Scraper",
+  "description": "Search Apple Music or retrieve public artist, album, and track catalogue data through Apple's public iTunes Search and Lookup API.",
+  "category": "media",
+  "logo": {
+    "label": "Apple Music logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><defs><linearGradient id=\"a\" x1=\"0\" y1=\"1\" x2=\"1\" y2=\"0\"><stop stop-color=\"#fa2d48\"/><stop offset=\"1\" stop-color=\"#fb5c74\"/></linearGradient></defs><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"url(#a)\"/><path fill=\"#fff\" d=\"M45 15.5v30.2c0 5.1-4.4 8.3-9 8.3-4 0-7-2.2-7-5.5 0-4.3 4-6.5 8.3-6.5 1.3 0 2.4.2 3.2.5V25l-18 3.6v20.1c0 5.1-4.4 8.3-9 8.3-4 0-7-2.2-7-5.5 0-4.3 4-6.5 8.3-6.5 1.2 0 2.3.2 3.2.5V20.8L45 15.5Z\"/></svg>",
+    "sourceUrl": "https://music.apple.com/"
+  },
+  "seo": {
+    "title": "Apple Music Scraper API for Artists, Albums, Tracks, and Search",
+    "description": "Search Apple Music and retrieve public artist, album, and track catalogue metadata as normalized JSON.",
+    "intro": "Apple Music Scraper uses Apple's public iTunes Search and Lookup API to normalize music catalogue data without requiring an Apple developer token. It supports artist, album, track, and search modes with ids, names, artwork, genres, dates, prices, preview URLs, and catalogue links when exposed.",
+    "useCases": [
+      { "title": "Music catalogue enrichment", "description": "Resolve Apple Music ids and links into clean artist, release, artwork, genre, and pricing fields." },
+      { "title": "Track discovery", "description": "Search the public Apple music catalogue and return bounded normalized results." },
+      { "title": "Agent media research", "description": "Give an agent structured public catalogue context without teaching it the iTunes response format." }
+    ],
+    "faqs": [
+      { "question": "Does this require an Apple developer token?", "answer": "No. It uses Apple's public iTunes Search and Lookup API." },
+      { "question": "Can album mode return tracks?", "answer": "Yes. Album lookup returns the public collection record followed by the bounded track list exposed by Apple." },
+      { "question": "Are preview URLs included?", "answer": "They are returned when Apple's public catalogue response exposes one for a track." }
+    ],
+    "keywords": ["Apple Music scraper", "iTunes Search API", "Apple Music metadata", "music catalogue API"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["artist", "album", "track", "search"], "description": "Catalogue operation to run." },
+      "id": { "type": "string", "description": "Numeric Apple artist, album, or track id." },
+      "url": { "type": "string", "format": "uri", "description": "Public Apple Music URL containing a numeric id." },
+      "query": { "type": "string", "description": "Search term for search mode." },
+      "country": { "type": "string", "default": "US", "description": "Two-letter storefront country code." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10, "description": "Maximum search results or related records." }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation mode" },
+      "source_url": { "type": "string", "description": "Apple public catalogue endpoint fetched" },
+      "count": { "type": "integer", "description": "Number of normalized records" },
+      "items": { "type": "array", "description": "Normalized public catalogue records", "items": { "type": "object", "properties": {
+        "type": { "type": "string", "description": "Apple wrapper or entity type" },
+        "id": { "type": "string", "description": "Resolved entity id" },
+        "title": { "type": "string", "description": "Artist, collection, or track title" },
+        "artist_name": { "type": "string", "description": "Artist name" },
+        "artist_id": { "type": "string", "description": "Apple artist id" },
+        "collection_name": { "type": "string", "description": "Album or collection name" },
+        "collection_id": { "type": "string", "description": "Apple collection id" },
+        "url": { "type": "string", "description": "Public Apple Music URL" },
+        "preview_url": { "type": "string", "description": "Public preview URL" },
+        "artwork_url": { "type": "string", "description": "Artwork URL" },
+        "release_date": { "type": "string", "description": "Release timestamp" },
+        "genre": { "type": "string", "description": "Primary genre" },
+        "country": { "type": "string", "description": "Storefront country" },
+        "track_count": { "type": "integer", "description": "Collection track count" },
+        "track_number": { "type": "integer", "description": "Track number" },
+        "disc_number": { "type": "integer", "description": "Disc number" },
+        "duration_ms": { "type": "integer", "description": "Track duration in milliseconds" },
+        "price": { "type": "number", "description": "Public storefront price" },
+        "currency": { "type": "string", "description": "Price currency" },
+        "explicit": { "type": "boolean", "description": "Explicit-content flag when exposed" }
+      }, "required": ["type", "id", "title"], "additionalProperties": false } }
+    },
+    "required": ["mode", "source_url", "count", "items"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "apple-music-artist", "input": { "mode": "artist", "id": "262836961", "max_results": 3 }, "expect": { "outputMatches": { "mode": "artist", "items": { "minLength": 1 } } } },
+    { "name": "apple-music-album", "input": { "mode": "album", "id": "1544491232", "max_results": 3 }, "expect": { "outputMatches": { "mode": "album", "items": { "minLength": 1 } } } },
+    { "name": "apple-music-track", "input": { "mode": "track", "id": "1544491233" }, "expect": { "outputMatches": { "mode": "track", "items": { "minLength": 1 } } } },
+    { "name": "apple-music-search", "input": { "mode": "search", "query": "Adele", "max_results": 3 }, "expect": { "outputMatches": { "mode": "search", "items": { "minLength": 1 } } } }
+  ],
+  "entry": "src/index.ts"
+}

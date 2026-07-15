@@ -1,0 +1,65 @@
+{
+  "name": "creator_page_scraper",
+  "version": "0.1.0",
+  "title": "Creator Page Scraper",
+  "description": "Retrieve structured public creator profiles, social links, featured links, and visible products from Komi and Pillar pages.",
+  "category": "social",
+  "logo": {
+    "label": "Creator links icon",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#171923\"/><path fill=\"none\" stroke=\"#6ee7d8\" stroke-width=\"6\" stroke-linecap=\"round\" d=\"M27 19h-5a10 10 0 0 0 0 20h8m7-14h5a10 10 0 1 1 0 20h-8M24 32h16\"/></svg>",
+    "sourceUrl": "https://betterfetch.co/"
+  },
+  "seo": {
+    "title": "Komi and Pillar Creator Page Scraper API",
+    "description": "Retrieve structured public Komi and Pillar profiles, social accounts, creator links, and visible products for agents.",
+    "intro": "Creator Page Scraper follows the transport each creator platform actually exposes: Komi's public profile and module APIs, and Pillar's rendered public storefront. It normalizes identity, bio, social accounts, featured destinations, and visible commerce data without requiring creator credentials.",
+    "useCases": [
+      { "title": "Creator enrichment", "description": "Turn a public Komi or Pillar URL into normalized identity, bio, avatar, location, and social account data." },
+      { "title": "Link intelligence", "description": "Collect the public destinations a creator is actively featuring across their profile page." },
+      { "title": "Storefront monitoring", "description": "Track visible product names, descriptions, imagery, prices, and currencies where the platform exposes them." }
+    ],
+    "faqs": [
+      { "question": "Does this require a Komi or Pillar login?", "answer": "No. It reads only publicly accessible profile and storefront data." },
+      { "question": "Why do the two platforms use different retrieval strategies?", "answer": "Komi exposes public JSON resources, while Pillar materializes its useful profile data in the rendered application." },
+      { "question": "Are hidden products returned?", "answer": "No. The tool limits its normalized output to content the public page or public platform resources expose." }
+    ],
+    "keywords": ["Komi scraper", "Pillar scraper", "creator links API", "creator storefront", "link in bio scraper"]
+  },
+  "creditsEstimate": 2,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "platform": { "type": "string", "enum": ["komi", "pillar"] },
+      "url": { "type": "string", "description": "Public Komi or Pillar creator page URL. Scheme is optional." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 50, "default": 25 }
+    },
+    "required": ["platform", "url"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "platform": { "type": "string" }, "source_url": { "type": "string" }, "count": { "type": "integer" },
+      "profile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" }, "username": { "type": "string" }, "display_name": { "type": "string" }, "url": { "type": "string" },
+          "first_name": { "type": "string" }, "last_name": { "type": "string" }, "bio": { "type": "string" }, "location": { "type": "string" },
+          "email": { "type": "string" }, "avatar": { "type": "string" }
+        },
+        "required": ["username", "display_name", "url"], "additionalProperties": false
+      },
+      "socials": { "type": "array", "items": { "type": "object", "properties": { "platform": { "type": "string" }, "url": { "type": "string" } }, "required": ["platform", "url"], "additionalProperties": false } },
+      "links": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "type": { "type": "string" }, "title": { "type": "string" }, "url": { "type": "string" }, "thumbnail": { "type": "string" }, "price": { "type": "number" }, "currency": { "type": "string" } }, "required": ["title", "url"], "additionalProperties": false } },
+      "products": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" }, "description": { "type": "string" }, "url": { "type": "string" }, "image": { "type": "string" }, "price": { "type": "number" }, "currency": { "type": "string" } }, "required": ["title"], "additionalProperties": false } }
+    },
+    "required": ["platform", "source_url", "profile", "socials", "links", "products", "count"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "komi", "input": { "platform": "komi", "url": "kimkardashian.komi.io", "max_results": 10 }, "expect": { "outputMatches": { "platform": "komi", "socials": { "minLength": 1 }, "links": { "minLength": 1 } } } },
+    { "name": "pillar", "input": { "platform": "pillar", "url": "pillar.io/angelstrife", "max_results": 10 }, "expect": { "outputMatches": { "platform": "pillar", "socials": { "minLength": 1 }, "products": { "minLength": 1 } } } }
+  ],
+  "entry": "src/index.ts"
+}

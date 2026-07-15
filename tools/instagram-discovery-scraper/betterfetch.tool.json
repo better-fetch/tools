@@ -1,0 +1,87 @@
+{
+  "name": "instagram_discovery_scraper",
+  "version": "0.3.0",
+  "title": "Instagram Discovery Search",
+  "description": "Find Google-indexed public Instagram posts, reels, profiles, or recency-ranked reel candidates with transparent best-effort search semantics.",
+  "category": "social",
+  "logo": {
+    "label": "Instagram logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><defs><linearGradient id=\"g\" x1=\"0\" y1=\"1\" x2=\"1\"><stop stop-color=\"#fd5949\"/><stop offset=\".5\" stop-color=\"#d6249f\"/><stop offset=\"1\" stop-color=\"#285AEB\"/></linearGradient></defs><rect width=\"64\" height=\"64\" rx=\"15\" fill=\"url(#g)\"/><rect x=\"15\" y=\"15\" width=\"34\" height=\"34\" rx=\"10\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\"/><circle cx=\"32\" cy=\"32\" r=\"8\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\"/><circle cx=\"43\" cy=\"21\" r=\"2.5\" fill=\"#fff\"/></svg>",
+    "sourceUrl": "https://instagram.com/"
+  },
+  "seo": {
+    "title": "Instagram Hashtag, Profile and Trending Reels Search",
+    "description": "Search Google-indexed public Instagram posts, reels, profiles, and recency-ranked reel candidates.",
+    "intro": "Instagram Discovery Search uses Google's public index for Instagram matches, filters the result URLs by operation, and returns normalized titles, snippets, handles, shortcodes, and pagination. Trending-reels mode is explicitly a public-search recency rank with day-to-week-to-month fallback—not Instagram's authenticated Explore ranking or a complete Instagram-native index.",
+    "useCases": [
+      { "title": "Hashtag discovery", "description": "Find public posts and reels Google has indexed for a campaign or research hashtag." },
+      { "title": "Creator discovery", "description": "Find public Instagram profiles whose indexed profile or caption text matches a niche." },
+      { "title": "Acquisition research", "description": "Build a transparent first-pass lead or content set before deeper profile and post enrichment." },
+      { "title": "Public reel trend proxy", "description": "Collect recently indexed public reel candidates in search rank order, with the source and recency window disclosed." }
+    ],
+    "faqs": [
+      { "question": "Is this a complete Instagram search index?", "answer": "No. It is explicitly best-effort and depends on public Google indexing." },
+      { "question": "Does it need an Instagram login?", "answer": "No. It uses public search results and public Instagram URLs only." },
+      { "question": "Can it search only reels?", "answer": "Yes. Use reels mode for keyword search, hashtag mode with media_type set to reels, or trending_reels for a query-free public-search recency rank." },
+      { "question": "Is trending_reels Instagram's official trending feed?", "answer": "No. Logged-out Instagram Explore requires login. This mode transparently ranks recently Google-indexed public reels and reports that basis in every response." }
+    ],
+    "keywords": ["Instagram hashtag scraper", "Instagram profile search", "creator discovery", "Instagram Google search"]
+  },
+  "creditsEstimate": 2,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["hashtag", "profiles", "reels", "trending_reels"], "description": "Search indexed hashtag posts, public profiles, keyword reels, or query-free recency-ranked reel candidates." },
+      "hashtag": { "type": "string", "description": "Hashtag with or without # for hashtag mode." },
+      "query": { "type": "string", "description": "Keyword phrase for profiles or reels mode." },
+      "media_type": { "type": "string", "enum": ["all", "reels"], "default": "all", "description": "Return indexed posts and reels or reels only." },
+      "date_posted": { "type": "string", "enum": ["last-hour", "last-day", "last-week", "last-month", "last-year"], "description": "Optional Google recency filter for reels mode." },
+      "cursor": { "type": "string", "description": "Next Google results page number from a previous response." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10, "description": "Maximum indexed matches to return." },
+      "country": { "type": "string", "minLength": 2, "maxLength": 2, "description": "Optional two-letter country for localized Google results." }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved discovery mode" },
+      "source_url": { "type": "string", "description": "Rendered Google search URL" },
+      "query": { "type": "string", "description": "User-provided hashtag or keyword" },
+      "count": { "type": "integer", "description": "Number of indexed matches returned" },
+      "hashtag": { "type": "string", "description": "Normalized hashtag" },
+      "media_type": { "type": "string", "description": "Requested media filter" },
+      "date_posted": { "type": "string", "description": "Requested Google recency filter" },
+      "next_cursor": { "type": "string", "description": "Next Google results page number" },
+      "ranking_basis": { "type": "string", "description": "public_search_recency_rank for trending_reels mode" },
+      "results": {
+        "type": "array",
+        "description": "Normalized indexed Instagram matches",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string", "description": "Google result title" },
+            "url": { "type": "string", "description": "Canonical public Instagram URL" },
+            "snippet": { "type": "string", "description": "Google result snippet" },
+            "shortcode": { "type": "string", "description": "Instagram media shortcode when matched" },
+            "username": { "type": "string", "description": "Instagram username when identified" },
+            "matched_from": { "type": "string", "description": "Whether the match came from a profile or caption result" }
+          },
+          "required": ["title", "url"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["mode", "source_url", "query", "count", "results"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "hashtag-posts", "input": { "mode": "hashtag", "hashtag": "funnydogs", "media_type": "all", "max_results": 5 }, "expect": { "outputMatches": { "mode": "hashtag", "results": { "minLength": 1 } } } },
+    { "name": "profile-search", "input": { "mode": "profiles", "query": "fitness coach", "max_results": 5 }, "expect": { "outputMatches": { "mode": "profiles", "results": { "minLength": 1 } } } },
+    { "name": "reel-search", "input": { "mode": "reels", "query": "dogs", "max_results": 5 }, "expect": { "outputMatches": { "mode": "reels", "media_type": "reels", "results": { "minLength": 1 } } } },
+    { "name": "public-trending-reels", "input": { "mode": "trending_reels", "max_results": 5 }, "expect": { "outputMatches": { "mode": "trending_reels", "media_type": "reels", "ranking_basis": "public_search_recency_rank", "results": { "minLength": 1 } } } }
+  ],
+  "entry": "src/index.ts"
+}

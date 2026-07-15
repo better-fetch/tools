@@ -1,8 +1,8 @@
 {
   "name": "reddit_scraper",
-  "version": "0.1.1",
+  "version": "0.3.1",
   "title": "Reddit Scraper",
-  "description": "Scrape public Reddit through the official JSON views: list a subreddit's hot/new/top/rising posts, run a keyword search across Reddit or one subreddit, or pull a submission's comment thread — returning normalized posts and comments.",
+  "description": "Inspect public subreddits, posts, search, comments, and Reddit-hosted video transcripts through official JSON and VTT surfaces.",
   "category": "social",
   "logo": {
     "label": "Reddit logo",
@@ -62,15 +62,17 @@
       "mode": {
         "type": "string",
         "enum": [
+          "subreddit_details",
           "posts",
           "search",
           "comments"
+          ,"transcript"
         ],
-        "description": "posts = a subreddit feed; search = keyword search; comments = one submission's thread. Defaults from the fields you provide."
+        "description": "subreddit_details = community metadata; posts = a subreddit feed; search = keyword search; comments = one submission's thread; transcript = public Reddit video captions."
       },
       "subreddit": {
         "type": "string",
-        "description": "Subreddit name, r/name, or subreddit URL. Required for posts mode; optional in search mode to restrict the search."
+        "description": "Subreddit name, r/name, or subreddit URL. Required for subreddit_details and posts modes; optional in search mode to restrict the search."
       },
       "query": {
         "type": "string",
@@ -94,7 +96,7 @@
       },
       "post_url": {
         "type": "string",
-        "description": "Submission URL or ID for comments mode."
+        "description": "Submission URL or ID for comments/transcript mode, or a direct v.redd.it URL for transcript mode."
       },
       "max_results": {
         "type": "integer",
@@ -109,6 +111,10 @@
         "maximum": 100,
         "default": 20,
         "description": "Maximum comments to return in comments mode."
+      },
+      "language": {
+        "type": "string",
+        "description": "Caption language code for transcript mode. Defaults to en."
       }
     },
     "additionalProperties": false
@@ -135,6 +141,27 @@
       "count": {
         "type": "integer",
         "description": "Number of posts or comments returned"
+      },
+      "details": {
+        "type": "object",
+        "description": "Normalized community metadata in subreddit_details mode",
+        "properties": {
+          "id": { "type": "string", "description": "Reddit community id" },
+          "name": { "type": "string", "description": "Subreddit display name" },
+          "title": { "type": "string", "description": "Visible community title" },
+          "description": { "type": "string", "description": "Community description" },
+          "public_description": { "type": "string", "description": "Short public description" },
+          "subscribers": { "type": "integer", "description": "Visible subscriber count" },
+          "active_users": { "type": "integer", "description": "Visible active user count when exposed" },
+          "created_utc": { "type": "number", "description": "Creation time in unix seconds" },
+          "over_18": { "type": "boolean", "description": "NSFW community flag" },
+          "url": { "type": "string", "description": "Canonical subreddit URL" },
+          "icon": { "type": "string", "description": "Community icon URL" },
+          "banner": { "type": "string", "description": "Community banner URL" },
+          "language": { "type": "string", "description": "Community language code" }
+        },
+        "required": ["name"],
+        "additionalProperties": false
       },
       "posts": {
         "type": "array",
@@ -293,7 +320,14 @@
           ],
           "additionalProperties": false
         }
-      }
+      },
+      "post_id": { "type": "string", "description": "Reddit post id in transcript mode" },
+      "video_id": { "type": "string", "description": "v.redd.it media id" },
+      "caption_url": { "type": "string", "description": "Resolved public Reddit VTT URL" },
+      "language": { "type": "string", "description": "Resolved caption language" },
+      "raw_vtt": { "type": "string", "description": "Raw public WebVTT captions" },
+      "transcript": { "type": "string", "description": "Plain-text transcript with rolling caption overlap removed" },
+      "transcript_not_available": { "type": "boolean", "description": "True when the public post has no caption track for the requested language" }
     },
     "required": [
       "mode",
@@ -303,6 +337,19 @@
     "additionalProperties": false
   },
   "examples": [
+    {
+      "name": "subreddit-details",
+      "input": {
+        "mode": "subreddit_details",
+        "subreddit": "programming"
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "subreddit_details",
+          "count": 1
+        }
+      }
+    },
     {
       "name": "subreddit-hot",
       "input": {
@@ -334,6 +381,53 @@
           "posts": {
             "minLength": 1
           }
+        }
+      }
+    },
+    {
+      "name": "search-reddit",
+      "input": {
+        "mode": "search",
+        "query": "OpenAI",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "search",
+          "posts": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "post-comments",
+      "input": {
+        "mode": "comments",
+        "post_url": "1nlqi0c",
+        "max_comments": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "comments",
+          "comments": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "post-transcript",
+      "input": {
+        "mode": "transcript",
+        "post_url": "https://www.reddit.com/r/youseeingthisshit/comments/1oiu9xm/football_nostalgiasaints_punter_head_coach_cant/",
+        "language": "en"
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "transcript",
+          "count": 1,
+          "transcript_not_available": false
         }
       }
     }

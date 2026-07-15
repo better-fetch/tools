@@ -1,6 +1,6 @@
 {
   "name": "rag-web-browser",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "start": "bf-tool run --example example-domain-fetch"
   },
   "dependencies": {
-    "@better-fetch/tools": "github:better-fetch/tools-sdk"
+    "@better-fetch/tools": "github:better-fetch/tools-sdk#v0.5.0"
   },
   "devDependencies": {
     "typescript": "^5.6.0"

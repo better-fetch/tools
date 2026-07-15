@@ -1,6 +1,17 @@
 import { defineTool, type Bf } from "@better-fetch/tools";
 
-type Mode = "repo" | "profile" | "search" | "trending";
+type Mode =
+  | "repo"
+  | "profile"
+  | "repositories"
+  | "pull_requests"
+  | "activity"
+  | "followers"
+  | "following"
+  | "contributions"
+  | "search"
+  | "trending"
+  | "trending_developers";
 
 type Input = {
   mode?: Mode;
@@ -37,7 +48,7 @@ type GithubRepo = {
   forks_count?: number;
   watchers_count?: number;
   open_issues_count?: number;
-  topics?: string;
+  topics?: string[];
   license?: GithubLicense | null;
   archived?: boolean;
   fork?: boolean;
@@ -79,7 +90,7 @@ type RepoRecord = {
   forks?: number;
   watchers?: number;
   open_issues?: number;
-  topics?: string[];
+  topics?: string;
   license?: string;
   is_archived?: boolean;
   is_fork?: boolean;
@@ -108,11 +119,35 @@ type ProfileRecord = {
   updated_at?: string;
 };
 
+type SocialRecord = {
+  type: "pull_request" | "activity" | "user" | "contributions" | "trending_developer";
+  url: string;
+  name?: string;
+  username?: string;
+  owner?: string;
+  avatar_url?: string;
+  repository?: string;
+  state?: string;
+  event_type?: string;
+  number?: number;
+  comments?: number;
+  contributions?: number;
+  contribution_days?: number;
+  max_contribution_level?: number;
+  first_date?: string;
+  last_date?: string;
+  popular_repository?: string;
+  popular_repository_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  closed_at?: string;
+};
+
 type Output = {
   mode: Mode;
   source_url: string;
   count: number;
-  items: Array<RepoRecord | ProfileRecord>;
+  items: Array<RepoRecord | ProfileRecord | SocialRecord>;
 };
 
 function cleanMode(value: Mode | undefined): Mode {
@@ -183,6 +218,147 @@ function attr(attrs: string, name: string): string | undefined {
   return match?.[1] ? decodeEntities(match[1]).trim() : undefined;
 }
 
+function metaContent(html: string, key: string): string | undefined {
+  for (const match of html.matchAll(/<meta\b([^>]*)>/gi)) {
+    const attrs = match[1];
+    const label = attr(attrs, "property") ?? attr(attrs, "name") ?? attr(attrs, "itemprop");
+    if (label?.toLowerCase() === key.toLowerCase()) return attr(attrs, "content");
+  }
+  return undefined;
+}
+
+async function fetchHtml(url: string, bf: Bf): Promise<{ html: string; url: string }> {
+  const response = await bf.fetch({
+    url,
+    strategy: "http",
+    return_response_text: true,
+    include_html: true,
+    extra_headers: {
+      accept: "text/html,application/xhtml+xml,application/atom+xml;q=0.9,*/*;q=0.5",
+      "accept-language": "en-US,en;q=0.9",
+      "user-agent": "BetterFetchGitHubScraper/0.2 (+https://betterfetch.co/tools/github_scraper)",
+    },
+  });
+  if (response.status && response.status >= 400) {
+    throw new Error(`GitHub page request failed with HTTP ${response.status}`);
+  }
+  return {
+    html: response.body_text ?? response.html ?? "",
+    url: response.final_url ?? url,
+  };
+}
+
+function profileFromHtml(username: string, html: string): ProfileRecord {
+  const resolvedUsername = metaContent(html, "profile:username") ?? username;
+  const description = metaContent(html, "og:description");
+  const publicRepos = description?.match(/([\d,]+) repositories/i)?.[1];
+  const followerText = html.match(/href=["'][^"']*\?tab=followers["'][^>]*>([\s\S]*?)<\/a>/i)?.[1];
+  const followingText = html.match(/href=["'][^"']*\?tab=following["'][^>]*>([\s\S]*?)<\/a>/i)?.[1];
+  return compactProfile({
+    type: "profile",
+    username: resolvedUsername,
+    name: metaContent(html, "og:title"),
+    bio: description,
+    followers: numberFromCompactText(followerText),
+    following: numberFromCompactText(followingText),
+    public_repos: publicRepos ? Number(publicRepos.replace(/,/g, "")) : undefined,
+    avatar_url: metaContent(html, "og:image"),
+    url: `https://github.com/${resolvedUsername}`,
+  });
+}
+
+function repoFromHtml(slug: string, html: string): RepoRecord {
+  const [owner, name] = slug.split("/", 2);
+  const starText = html.match(new RegExp(`href=["']/${owner}/${name}/stargazers["'][^>]*>([\\s\\S]*?)<\\/a>`, "i"))?.[1];
+  const forkText = html.match(new RegExp(`href=["']/${owner}/${name}/forks["'][^>]*>([\\s\\S]*?)<\\/a>`, "i"))?.[1];
+  const language = stripTags(
+    html.match(/itemprop=["']programmingLanguage["'][^>]*>([\s\S]*?)<\//i)?.[1] ?? "",
+  );
+  const topics = [...html.matchAll(/href=["']\/topics\/([^"']+)["']/gi)]
+    .map((match) => decodeURIComponent(match[1]))
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .slice(0, 20);
+  return compactRepo({
+    type: "repository",
+    name,
+    full_name: slug,
+    owner,
+    url: `https://github.com/${slug}`,
+    description: metaContent(html, "og:description"),
+    language: language || undefined,
+    stars: numberFromCompactText(starText),
+    forks: numberFromCompactText(forkText),
+    topics: topics.length ? topics.join(", ") : undefined,
+  });
+}
+
+function repositoriesFromHtml(username: string, html: string, limit: number): RepoRecord[] {
+  const out: RepoRecord[] = [];
+  const seen = new Set<string>();
+  const pattern = new RegExp(
+    `<a\\b([^>]*)href=["']/${username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/([A-Za-z0-9_.-]+)["']([^>]*)itemprop=["']name codeRepository["'][^>]*>`,
+    "gi",
+  );
+  for (const match of html.matchAll(pattern)) {
+    const name = match[2];
+    const slug = `${username}/${name}`;
+    if (seen.has(slug)) continue;
+    seen.add(slug);
+    out.push({
+      type: "repository",
+      name,
+      full_name: slug,
+      owner: username,
+      url: `https://github.com/${slug}`,
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function usersFromHtml(html: string, limit: number): SocialRecord[] {
+  const out: SocialRecord[] = [];
+  const seen = new Set<string>();
+  for (const match of html.matchAll(/<a\b([^>]*)data-hovercard-type=["']user["']([^>]*)>([\s\S]*?)<\/a>/gi)) {
+    const attrs = `${match[1]} ${match[2]}`;
+    const path = attr(attrs, "href");
+    const username = path?.match(/^\/([A-Za-z0-9-]{1,39})$/)?.[1];
+    if (!username || seen.has(username)) continue;
+    const avatar = match[3].match(/<img\b([^>]*)>/i)?.[1];
+    seen.add(username);
+    out.push(compactSocial({
+      type: "user",
+      username,
+      name: stripTags(match[3]).replace(/^@/, "") || undefined,
+      avatar_url: avatar ? attr(avatar, "src") : undefined,
+      url: `https://github.com/${username}`,
+    }));
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function activityFromAtom(xml: string, limit: number): SocialRecord[] {
+  const entries = xml.match(/<entry\b[\s\S]*?<\/entry>/gi) ?? [];
+  return entries.slice(0, limit).map((entry) => {
+    const title = stripTags(entry.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "GitHub activity");
+    const linkTag = entry.match(/<link\b[^>]*rel=["']alternate["'][^>]*>/i)?.[0]
+      ?? entry.match(/<link\b[^>]*>/i)?.[0]
+      ?? "";
+    const url = attr(linkTag, "href") ?? "https://github.com";
+    const repository = url.match(/github\.com\/([^/?#]+\/[^/?#]+)/i)?.[1];
+    return compactSocial({
+      type: "activity",
+      url,
+      name: title,
+      event_type: title.split(" ")[0],
+      repository,
+      created_at: stripTags(entry.match(/<published\b[^>]*>([\s\S]*?)<\/published>/i)?.[1] ?? ""),
+      updated_at: stripTags(entry.match(/<updated\b[^>]*>([\s\S]*?)<\/updated>/i)?.[1] ?? ""),
+    });
+  });
+}
+
 function compactRepo(record: RepoRecord): RepoRecord {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(record)) {
@@ -197,6 +373,14 @@ function compactProfile(record: ProfileRecord): ProfileRecord {
     if (value !== undefined && value !== "") out[key] = value;
   }
   return out as ProfileRecord;
+}
+
+function compactSocial(record: SocialRecord): SocialRecord {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (value !== undefined && value !== "") out[key] = value;
+  }
+  return out as SocialRecord;
 }
 
 function repoFromApi(repo: GithubRepo): RepoRecord | undefined {
@@ -250,6 +434,106 @@ function profileFromApi(user: GithubUser): ProfileRecord | undefined {
     created_at: stringValue(user.created_at),
     updated_at: stringValue(user.updated_at),
   });
+}
+
+function userFromApi(value: unknown): SocialRecord | undefined {
+  const user = value && typeof value === "object" ? (value as Record<string, unknown>) : undefined;
+  const username = stringValue(user?.login);
+  const url = stringValue(user?.html_url);
+  if (!username || !url) return undefined;
+  return compactSocial({
+    type: "user",
+    url,
+    username,
+    name: stringValue(user?.name),
+    avatar_url: stringValue(user?.avatar_url),
+  });
+}
+
+function pullRequestFromApi(value: unknown): SocialRecord | undefined {
+  const item = value && typeof value === "object" ? (value as Record<string, unknown>) : undefined;
+  const url = stringValue(item?.html_url);
+  const name = stringValue(item?.title);
+  if (!url || !name) return undefined;
+  const user = item?.user && typeof item.user === "object" ? (item.user as Record<string, unknown>) : undefined;
+  const repository = stringValue(item?.repository_url)?.replace("https://api.github.com/repos/", "");
+  return compactSocial({
+    type: "pull_request",
+    url,
+    name,
+    username: stringValue(user?.login),
+    repository,
+    state: stringValue(item?.state),
+    number: numberValue(item?.number),
+    comments: numberValue(item?.comments),
+    created_at: stringValue(item?.created_at),
+    updated_at: stringValue(item?.updated_at),
+    closed_at: stringValue(item?.closed_at),
+  });
+}
+
+function activityFromApi(value: unknown): SocialRecord | undefined {
+  const item = value && typeof value === "object" ? (value as Record<string, unknown>) : undefined;
+  const actor = item?.actor && typeof item.actor === "object" ? (item.actor as Record<string, unknown>) : undefined;
+  const repo = item?.repo && typeof item.repo === "object" ? (item.repo as Record<string, unknown>) : undefined;
+  const repository = stringValue(repo?.name);
+  const eventType = stringValue(item?.type);
+  if (!repository || !eventType) return undefined;
+  return compactSocial({
+    type: "activity",
+    url: `https://github.com/${repository}`,
+    name: eventType,
+    event_type: eventType,
+    username: stringValue(actor?.login),
+    repository,
+    created_at: stringValue(item?.created_at),
+  });
+}
+
+function contributionRecord(username: string, html: string): SocialRecord {
+  const heading = stripTags(
+    html.match(/<h2\b[^>]*>([\s\S]*?contributions?[\s\S]*?)<\/h2>/i)?.[1] ?? "",
+  );
+  const contributions = numberFromCompactText(heading);
+  const days = [...html.matchAll(/<td\b[^>]*data-date=["']([^"']+)["'][^>]*data-level=["'](\d+)["'][^>]*>/gi)]
+    .map((match) => ({ date: match[1], level: Number(match[2]) }))
+    .filter((item) => item.date);
+  return compactSocial({
+    type: "contributions",
+    url: `https://github.com/${username}`,
+    username,
+    contributions,
+    contribution_days: days.filter((day) => day.level > 0).length,
+    max_contribution_level: days.length ? Math.max(...days.map((day) => day.level)) : undefined,
+    first_date: days[0]?.date,
+    last_date: days.at(-1)?.date,
+  });
+}
+
+function parseTrendingDevelopers(html: string, limit: number): SocialRecord[] {
+  const articles = html.match(/<article\b[\s\S]*?<\/article>/gi) ?? [];
+  const out: SocialRecord[] = [];
+  for (const article of articles) {
+    const profileLink = [...article.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)]
+      .map((match) => ({ attrs: match[1], text: stripTags(match[2]) }))
+      .find((item) => /^\/[A-Za-z0-9-]{1,39}$/.test(attr(item.attrs, "href") ?? ""));
+    const path = profileLink ? attr(profileLink.attrs, "href") : undefined;
+    const username = path?.slice(1);
+    if (!username) continue;
+    const repoMatch = article.match(/href=["']\/(?:[^"']+)\/([^"']+)["'][^>]*data-hydro-click/iu)
+      ?? article.match(/href=["']\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)["']/i);
+    const repoSlug = repoMatch?.[1]?.includes("/") ? repoMatch[1] : undefined;
+    out.push(compactSocial({
+      type: "trending_developer",
+      url: `https://github.com/${username}`,
+      username,
+      name: profileLink?.text || username,
+      popular_repository: repoSlug?.split("/").pop(),
+      popular_repository_url: repoSlug ? `https://github.com/${repoSlug}` : undefined,
+    }));
+    if (out.length >= limit) break;
+  }
+  return out;
 }
 
 function parseJson(text: string): unknown {
@@ -332,18 +616,79 @@ export default defineTool<Input, Output>(async (input, bf) => {
 
   if (mode === "repo") {
     const slug = repoSlugFrom(input.repo_or_url);
-    const url = `https://api.github.com/repos/${slug}`;
-    const repo = repoFromApi((await fetchJson(url, bf)) as GithubRepo);
-    if (!repo) throw new Error("No public GitHub repository metadata was found");
+    const url = `https://github.com/${slug}`;
+    const page = await fetchHtml(url, bf);
+    const repo = repoFromHtml(slug, page.html);
     return { mode, source_url: url, count: 1, items: [repo] };
   }
 
   if (mode === "profile") {
     const username = usernameFrom(input.username_or_url);
-    const url = `https://api.github.com/users/${encodeURIComponent(username)}`;
-    const profile = profileFromApi((await fetchJson(url, bf)) as GithubUser);
-    if (!profile) throw new Error("No public GitHub profile metadata was found");
+    const url = `https://github.com/${encodeURIComponent(username)}`;
+    const page = await fetchHtml(url, bf);
+    const profile = profileFromHtml(username, page.html);
     return { mode, source_url: url, count: 1, items: [profile] };
+  }
+
+  if (mode === "repositories") {
+    const username = usernameFrom(input.username_or_url);
+    const url = `https://github.com/${encodeURIComponent(username)}?tab=repositories`;
+    const page = await fetchHtml(url, bf);
+    const items = repositoriesFromHtml(username, page.html, limit);
+    return { mode, source_url: url, count: items.length, items };
+  }
+
+  if (mode === "pull_requests") {
+    const username = usernameFrom(input.username_or_url);
+    const params = new URLSearchParams({
+      q: `author:${username} is:pr`,
+      sort: "updated",
+      order: "desc",
+      per_page: String(limit),
+    });
+    const url = `https://api.github.com/search/issues?${params}`;
+    const payload = (await fetchJson(url, bf)) as { items?: unknown[] };
+    const items = (payload.items ?? [])
+      .map(pullRequestFromApi)
+      .filter((item): item is SocialRecord => Boolean(item))
+      .slice(0, limit);
+    return { mode, source_url: url, count: items.length, items };
+  }
+
+  if (mode === "activity") {
+    const username = usernameFrom(input.username_or_url);
+    const url = `https://github.com/${encodeURIComponent(username)}.atom`;
+    const page = await fetchHtml(url, bf);
+    const items = activityFromAtom(page.html, limit);
+    return { mode, source_url: url, count: items.length, items };
+  }
+
+  if (mode === "followers" || mode === "following") {
+    const username = usernameFrom(input.username_or_url);
+    const url = `https://github.com/${encodeURIComponent(username)}?tab=${mode}`;
+    const page = await fetchHtml(url, bf);
+    const items = usersFromHtml(page.html, limit);
+    return { mode, source_url: url, count: items.length, items };
+  }
+
+  if (mode === "contributions") {
+    const username = usernameFrom(input.username_or_url);
+    const url = `https://github.com/users/${encodeURIComponent(username)}/contributions`;
+    const response = await bf.fetch({
+      url,
+      strategy: "http",
+      return_response_text: true,
+      include_html: true,
+      extra_headers: {
+        accept: "text/html,*/*;q=0.5",
+        "user-agent": "BetterFetchGitHubScraper/0.2 (+https://betterfetch.co/tools/github_scraper)",
+      },
+    });
+    if (response.status && response.status >= 400) {
+      throw new Error(`GitHub contributions request failed with HTTP ${response.status}`);
+    }
+    const item = contributionRecord(username, response.body_text ?? response.html ?? "");
+    return { mode, source_url: response.final_url ?? url, count: 1, items: [item] };
   }
 
   if (mode === "search") {
@@ -360,6 +705,28 @@ export default defineTool<Input, Output>(async (input, bf) => {
     const items = (payload.items ?? []).map(repoFromApi).filter((repo): repo is RepoRecord => Boolean(repo)).slice(0, limit);
     if (!items.length) throw new Error("No public GitHub repositories were found for this search");
     return { mode, source_url: url, count: items.length, items };
+  }
+
+  if (mode === "trending_developers") {
+    const since = cleanSince(input.since);
+    const url = `https://github.com/trending/developers?since=${since}`;
+    const response = await bf.fetch({
+      url,
+      strategy: "http",
+      return_response_text: true,
+      include_html: true,
+      extra_headers: {
+        accept: "text/html,*/*;q=0.5",
+        "accept-language": "en-US,en;q=0.9",
+        "user-agent": "BetterFetchGitHubScraper/0.2 (+https://betterfetch.co/tools/github_scraper)",
+      },
+    });
+    if (response.status && response.status >= 400) {
+      throw new Error(`GitHub Trending Developers request failed with HTTP ${response.status}`);
+    }
+    const items = parseTrendingDevelopers(response.body_text ?? response.html ?? "", limit);
+    if (!items.length) throw new Error("No GitHub Trending developers were found");
+    return { mode, source_url: response.final_url ?? url, count: items.length, items };
   }
 
   const language = cleanLanguage(input.language);

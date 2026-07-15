@@ -2,10 +2,19 @@
 
 Public YouTube video metadata scraper for [Better Fetch](https://betterfetch.co).
 
-Run a search query or fetch the public videos tab for a YouTube channel URL. The
-tool renders YouTube through Better Fetch, parses public `ytInitialData`, and
-returns normalized video cards for agent research, monitoring, and content
+Search YouTube, inspect channel tabs, videos, playlists, community posts,
+sponsor evidence, logged-out public video comments, or a parent comment's
+public replies. The
+tool renders YouTube through Better Fetch, parses public page and network data,
+and returns normalized records for agent research, monitoring, and content
 briefs.
+
+`video_comments` scrolls the rendered public watch page to YouTube's comments
+section and parses the public request the page makes itself. `comment_replies`
+opens a public parent-comment permalink, expands its first visible reply
+control, and parses the public continuation response triggered by that click.
+Both return normalized author, engagement, permalink, and continuation
+evidence without logging in or posting directly to private APIs.
 
 ## Develop
 

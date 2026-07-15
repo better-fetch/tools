@@ -1,0 +1,9 @@
+{
+  "name": "age-gender-detector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@better-fetch/tools": "github:better-fetch/tools-sdk#v0.5.0"
+  }
+}

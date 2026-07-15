@@ -1,0 +1,153 @@
+{
+  "name": "facebook_ad_library_scraper",
+  "version": "0.2.9",
+  "title": "Facebook Ad Library Scraper",
+  "description": "Search Meta's public Ad Library, discover advertisers, inspect individual public ads, and transcribe public video creatives without login.",
+  "category": "social",
+  "logo": { "label": "Meta logo", "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\"><path fill=\"#0866FF\" d=\"M38 174c0 20 8 34 23 34 19 0 35-24 57-61l10-17 10 17c22 37 38 61 57 61 15 0 23-14 23-34 0-50-25-99-58-99-19 0-35 16-50 39l18 28c12-20 22-35 31-35 13 0 29 31 29 66 0 8-2 13-6 13-8 0-23-21-43-54l-29-47c-14-22-28-34-45-34-34 0-57 49-57 99zm29 12c-4 0-6-5-6-13 0-35 16-66 29-66 8 0 17 12 28 29l-10 17c-18 29-32 47-41 47z\"/></svg>", "sourceUrl": "https://www.facebook.com/ads/library/" },
+  "seo": {
+    "title": "Facebook Ad Library Search and Company Ads API",
+    "description": "Search Meta's public Ad Library, discover advertisers, list company ads, and inspect public Facebook ad details through Better Fetch.",
+    "intro": "Facebook Ad Library Scraper reads Meta's official public Ad Library without a Facebook account. It returns stable library IDs, activity state, start dates, advertiser page IDs and names, visible ad copy, destinations, and public creative assets when Meta exposes them.",
+    "useCases": [
+      { "title": "Competitor creative monitoring", "description": "Track source-linked ad copy, destinations, imagery, and activity state for public advertisers." },
+      { "title": "Advertiser discovery", "description": "Search a market phrase and group matching ads into stable advertiser page identities." },
+      { "title": "Ad verification", "description": "Resolve a known Meta Ad Library ID to the current public ad card and source URL." }
+    ],
+    "faqs": [
+      { "question": "Does this require Facebook login?", "answer": "No. It reads only data exposed by Meta's official public Ad Library without login." },
+      { "question": "Is every Facebook ad included?", "answer": "No. Coverage follows Meta's public library, selected country, status, and media filters." },
+      { "question": "Does advertiser search return page IDs?", "answer": "It returns Meta's numeric page ID when the public link exposes one; otherwise it returns the advertiser's public Facebook handle and page URL." }
+    ],
+    "keywords": ["Facebook Ad Library API", "Meta ads scraper", "Facebook company ads", "ad creative intelligence", "advertiser search"]
+  },
+  "creditsEstimate": 50,
+  "maxEngineCalls": 4,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["search_ads", "company_ads", "search_companies", "ad", "ad_transcript"], "description": "Search ads, list company ads, discover companies, inspect one ad, or transcribe one public video ad." },
+      "query": { "type": "string", "description": "Keyword or advertiser search query." },
+      "page_id": { "type": "string", "pattern": "^[0-9]{5,30}$", "description": "Meta advertiser page ID." },
+      "id": { "type": "string", "pattern": "^[0-9]{8,30}$", "description": "Meta Ad Library ID." },
+      "url": { "type": "string", "description": "Meta Ad Library URL containing an id query parameter." },
+      "country": { "type": "string", "default": "ALL", "description": "ALL or a 2-letter country code." },
+      "status": { "type": "string", "enum": ["ALL", "ACTIVE", "INACTIVE"], "default": "ACTIVE", "description": "Ad activity filter." },
+      "media_type": { "type": "string", "enum": ["ALL", "IMAGE", "VIDEO", "MEME", "IMAGE_AND_MEME", "NONE"], "default": "ALL", "description": "Media filter." },
+      "search_type": { "type": "string", "enum": ["keyword_unordered", "keyword_exact_phrase"], "default": "keyword_unordered", "description": "Keyword matching mode." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10, "description": "Maximum records to return." },
+      "max_body_chars": { "type": "integer", "minimum": 200, "maximum": 20000, "default": 3000, "description": "Maximum visible ad-copy characters per result." },
+      "language": { "type": "string", "pattern": "^[A-Za-z]{2,8}$", "description": "Optional spoken-language hint for ad_transcript mode; omit for detection." }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation." },
+      "source_url": { "type": "string", "description": "Fetched Meta Ad Library URL." },
+      "count": { "type": "integer", "description": "Primary record count." },
+      "total_matches": { "type": "integer", "description": "Visible total result count when exact." },
+      "ads": {
+        "type": "array",
+        "description": "Public Meta ad cards.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "ad_archive_id": { "type": "string", "description": "Stable Meta Library ID." },
+            "url": { "type": "string", "description": "Public Ad Library URL." },
+            "is_active": { "type": "boolean", "description": "Visible activity state." },
+            "started_running": { "type": "string", "description": "Visible start-date label." },
+            "page_id": { "type": "string", "description": "Linked advertiser page ID." },
+            "page_handle": { "type": "string", "description": "Public advertiser handle when Meta links by handle instead of numeric ID." },
+            "page_name": { "type": "string", "description": "Advertiser page name." },
+            "page_url": { "type": "string", "description": "Public advertiser page URL." },
+            "body": { "type": "string", "description": "Visible ad copy." },
+            "body_truncated": { "type": "boolean", "description": "True when visible ad copy exceeded max_body_chars." },
+            "destination_url": { "type": "string", "description": "Visible off-Facebook destination URL." },
+            "creative_image_url": { "type": "string", "description": "Public creative image." },
+            "creative_video_url": { "type": "string", "description": "Public video creative rendition when Meta exposes one." },
+            "page_image_url": { "type": "string", "description": "Public advertiser image." }
+          },
+          "required": ["ad_archive_id", "url"],
+          "additionalProperties": false
+        }
+      },
+      "companies": {
+        "type": "array",
+        "description": "Unique advertisers found in the returned ads.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "page_id": { "type": "string", "description": "Facebook advertiser page ID." },
+            "page_handle": { "type": "string", "description": "Facebook advertiser handle when no numeric ID is exposed." },
+            "page_name": { "type": "string", "description": "Advertiser name." },
+            "page_url": { "type": "string", "description": "Public Facebook page URL." },
+            "image_uri": { "type": "string", "description": "Public advertiser image." }
+          },
+          "required": ["page_name", "page_url"],
+          "additionalProperties": false
+        }
+      },
+      "ad": {
+        "type": "object",
+        "description": "Resolved individual ad.",
+        "properties": {
+          "ad_archive_id": { "type": "string", "description": "Stable Meta Library ID." },
+          "url": { "type": "string", "description": "Public Ad Library URL." },
+          "is_active": { "type": "boolean", "description": "Visible activity state." },
+          "started_running": { "type": "string", "description": "Visible start-date label." },
+          "page_id": { "type": "string", "description": "Linked advertiser page ID." },
+          "page_handle": { "type": "string", "description": "Public advertiser handle when Meta links by handle instead of numeric ID." },
+          "page_name": { "type": "string", "description": "Advertiser page name." },
+          "page_url": { "type": "string", "description": "Public advertiser page URL." },
+          "body": { "type": "string", "description": "Visible ad copy." },
+          "body_truncated": { "type": "boolean", "description": "True when visible ad copy exceeded max_body_chars." },
+          "destination_url": { "type": "string", "description": "Visible off-Facebook destination URL." },
+          "creative_image_url": { "type": "string", "description": "Public creative image." },
+          "creative_video_url": { "type": "string", "description": "Public video creative rendition when Meta exposes one." },
+          "page_image_url": { "type": "string", "description": "Public advertiser image." }
+        },
+        "required": ["ad_archive_id", "url"],
+        "additionalProperties": false
+      },
+      "transcript": {
+        "type": "object",
+        "description": "Speech transcript generated from the public video creative.",
+        "properties": {
+          "text": { "type": "string", "description": "Normalized spoken text." },
+          "language": { "type": "string", "description": "Detected or requested language code." },
+          "language_probability": { "type": "number", "description": "Language-detection confidence when available." },
+          "duration_seconds": { "type": "number", "description": "Media duration in seconds." }
+        },
+        "required": ["text"],
+        "additionalProperties": false
+      },
+      "transcript_segments": {
+        "type": "array",
+        "description": "Timed transcript segments.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start": { "type": "number" },
+            "end": { "type": "number" },
+            "text": { "type": "string" }
+          },
+          "required": ["start", "end", "text"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["mode", "source_url", "count", "ads", "companies"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "search-ads", "input": { "mode": "search_ads", "query": "Cholesterol Relief Community", "country": "IN", "max_results": 5 }, "expect": { "outputMatches": { "mode": "search_ads", "ads": { "minLength": 1 } } } },
+    { "name": "search-companies", "input": { "mode": "search_companies", "query": "Cholesterol Relief Community", "country": "IN", "max_results": 5 }, "expect": { "outputMatches": { "mode": "search_companies", "companies": { "minLength": 1 } } } },
+    { "name": "company-ads", "input": { "mode": "company_ads", "page_id": "866655706540346", "country": "ALL", "status": "ALL", "max_results": 5 }, "expect": { "outputMatches": { "mode": "company_ads", "ads": { "minLength": 1 } } } },
+    { "name": "ad-details", "input": { "mode": "ad", "id": "866569929827744", "query": "Cholesterol Relief Community", "country": "IN" }, "expect": { "outputMatches": { "mode": "ad", "count": 1 } } },
+    { "name": "video-ad-transcript", "input": { "mode": "ad_transcript", "id": "866569929827744", "query": "Cholesterol Relief Community", "country": "IN", "language": "en" }, "expect": { "outputMatches": { "mode": "ad_transcript", "count": 1 } } }
+  ],
+  "entry": "src/index.ts"
+}

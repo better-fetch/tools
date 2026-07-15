@@ -1,8 +1,8 @@
 {
   "name": "twitter_search",
-  "version": "0.1.1",
+  "version": "0.4.0",
   "title": "X/Twitter Search",
-  "description": "Extract public X/Twitter profile metadata from a handle or profile URL, including display name, bio, user id, joined date, avatar, banner image, follower count, following count, and post count.",
+  "description": "Extract public X/Twitter profiles, visible posts, Communities, and speech transcripts from public post videos.",
   "category": "social",
   "logo": {
     "label": "X logo",
@@ -10,9 +10,9 @@
     "sourceUrl": "https://simpleicons.org/icons/x.svg"
   },
   "seo": {
-    "title": "X/Twitter Profile Metadata Tool for Public Accounts",
-    "description": "Scrape public X/Twitter profile metadata with Better Fetch, including handle, display name, bio, user id, joined date, avatar, banner image, follower count, following count, and post count.",
-    "intro": "X/Twitter Search is the marketplace entry point for public X data in Better Fetch. Version 0.1 focuses on the reliable public profile surface: provide a handle or profile URL and the tool returns normalized account metadata from X's public JSON-LD and meta tags without requiring account cookies, passwords, or private API keys.",
+    "title": "X/Twitter Scraper for Profiles and Posts",
+    "description": "Scrape public X/Twitter profile metadata, visible profile posts, or one post with author, engagement, and media fields.",
+    "intro": "X/Twitter Search reads the structured data in X's logged-out public pages. Provide a handle for profile metadata or visible profile posts, or a post URL for one post, and receive normalized account, text, engagement, and media fields without private cookies or API keys.",
     "useCases": [
       {
         "title": "Social account research",
@@ -30,11 +30,11 @@
     "faqs": [
       {
         "question": "Does X/Twitter Search require an X account?",
-        "answer": "No. Version 0.1 reads public profile metadata visible in the logged-out X profile page and does not use private cookies, passwords, bearer tokens, or exported sessions."
+        "answer": "No. The tool reads structured data visible in logged-out public X pages and does not use private cookies, passwords, bearer tokens, or exported sessions."
       },
       {
-        "question": "Does this version search tweets?",
-        "answer": "No. The tool name is reserved for the broader marketplace benchmark, but version 0.1 only returns public profile metadata. Tweet search, latest posts, replies, and timeline pagination remain future validated slices."
+        "question": "Does it return a user's latest chronological timeline?",
+        "answer": "It returns posts visible on the logged-out public profile, which X may rank rather than expose chronologically. It does not claim private or exhaustive timeline access."
       },
       {
         "question": "Why can fields be missing?",
@@ -54,7 +54,7 @@
     "rank": 11,
     "score": 65000
   },
-  "creditsEstimate": 1,
+  "creditsEstimate": 2,
   "maxEngineCalls": 3,
   "inputSchema": {
     "type": "object",
@@ -67,13 +67,21 @@
         "type": "string",
         "format": "uri",
         "description": "Public X/Twitter profile URL. Use handle or profile_url."
-      }
+      },
+      "mode": { "type": "string", "enum": ["profile", "user_posts", "post", "community", "community_posts", "transcript"], "description": "Public profile, visible profile posts, one post, Community details, Community posts, or a public post-video transcript. Inferred as post when post_url is supplied." },
+      "post_url": { "type": "string", "format": "uri", "description": "Public x.com or twitter.com post URL for post or transcript mode." },
+      "community_url": { "type": "string", "format": "uri", "description": "Public x.com or twitter.com Community URL." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10, "description": "Maximum visible profile posts to return." },
+      "language": { "type": "string", "pattern": "^[A-Za-z]{2,8}$", "description": "Optional spoken-language hint for transcript mode; omit for detection." }
     },
     "additionalProperties": false
   },
   "outputSchema": {
     "type": "object",
     "properties": {
+      "mode": { "type": "string", "description": "Resolved operation mode" },
+      "source_url": { "type": "string", "description": "Public X page fetched" },
+      "count": { "type": "integer", "description": "Number of profiles or posts returned" },
       "profile_url": {
         "type": "string",
         "description": "Fetched public X/Twitter profile URL"
@@ -125,12 +133,103 @@
       "protected_account": {
         "type": "boolean",
         "description": "Whether X marks the account as protected when visible"
+      },
+      "tweets": {
+        "type": "array",
+        "description": "Visible public posts from an X profile page",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "X post id" },
+            "url": { "type": "string", "description": "Canonical public post URL" },
+            "text": { "type": "string", "description": "Visible post text" },
+            "created_at": { "type": "string", "description": "ISO post creation timestamp" },
+            "author_id": { "type": "string", "description": "Author numeric user id" },
+            "author_handle": { "type": "string", "description": "Author handle" },
+            "author_name": { "type": "string", "description": "Author display name" },
+            "author_avatar": { "type": "string", "description": "Author avatar URL" },
+            "reply_count": { "type": "integer", "description": "Reply count" },
+            "retweet_count": { "type": "integer", "description": "Repost count" },
+            "quote_count": { "type": "integer", "description": "Quote count" },
+            "like_count": { "type": "integer", "description": "Like count" },
+            "view_count": { "type": "integer", "description": "View count when visible" },
+            "media_urls": { "type": "string", "description": "Newline-separated public media URLs" }
+          },
+          "required": ["id", "url", "text"],
+          "additionalProperties": false
+        }
+      },
+      "tweet": {
+        "type": "object",
+        "description": "One normalized public X post",
+        "properties": {
+          "id": { "type": "string", "description": "X post id" },
+          "url": { "type": "string", "description": "Canonical public post URL" },
+          "text": { "type": "string", "description": "Visible post text" },
+          "created_at": { "type": "string", "description": "ISO post creation timestamp" },
+          "author_id": { "type": "string", "description": "Author numeric user id" },
+          "author_handle": { "type": "string", "description": "Author handle" },
+          "author_name": { "type": "string", "description": "Author display name" },
+          "author_avatar": { "type": "string", "description": "Author avatar URL" },
+          "reply_count": { "type": "integer", "description": "Reply count" },
+          "retweet_count": { "type": "integer", "description": "Repost count" },
+          "quote_count": { "type": "integer", "description": "Quote count" },
+          "like_count": { "type": "integer", "description": "Like count" },
+          "view_count": { "type": "integer", "description": "View count when visible" },
+          "media_urls": { "type": "string", "description": "Newline-separated public media URLs" }
+        },
+        "required": ["id", "url", "text"],
+        "additionalProperties": false
+      },
+      "community": {
+        "type": "object",
+        "description": "Normalized public X Community details",
+        "properties": {
+          "id": { "type": "string", "description": "Community id" },
+          "url": { "type": "string", "description": "Canonical public Community URL" },
+          "name": { "type": "string", "description": "Community name" },
+          "description": { "type": "string", "description": "Community description" },
+          "member_count": { "type": "integer", "description": "Visible member count" },
+          "post_count": { "type": "integer", "description": "Visible discussion count when exposed" },
+          "creator_handle": { "type": "string", "description": "Community creator handle" },
+          "join_policy": { "type": "string", "description": "Public join policy" },
+          "banner_image": { "type": "string", "description": "Community banner image URL" },
+          "created_at": { "type": "string", "description": "Community creation timestamp" }
+        },
+        "required": ["id", "url"],
+        "additionalProperties": false
+      },
+      "transcript": {
+        "type": "object",
+        "description": "Speech transcript generated from the highest-quality public MP4 rendition.",
+        "properties": {
+          "text": { "type": "string", "description": "Normalized spoken text." },
+          "language": { "type": "string", "description": "Detected or requested language code." },
+          "language_probability": { "type": "number", "description": "Language-detection confidence when available." },
+          "duration_seconds": { "type": "number", "description": "Media duration in seconds." }
+        },
+        "required": ["text"],
+        "additionalProperties": false
+      },
+      "transcript_segments": {
+        "type": "array",
+        "description": "Timed transcript segments.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start": { "type": "number" },
+            "end": { "type": "number" },
+            "text": { "type": "string" }
+          },
+          "required": ["start", "end", "text"],
+          "additionalProperties": false
+        }
       }
     },
     "required": [
-      "profile_url",
-      "handle",
-      "display_name"
+      "mode",
+      "source_url",
+      "count"
     ],
     "additionalProperties": false
   },
@@ -146,6 +245,31 @@
           "display_name": "OpenAI"
         }
       }
+    },
+    {
+      "name": "visible-profile-posts",
+      "input": { "mode": "user_posts", "handle": "levelsio", "max_results": 10 },
+      "expect": { "outputMatches": { "mode": "user_posts", "tweets": { "minLength": 1 } } }
+    },
+    {
+      "name": "public-post",
+      "input": { "mode": "post", "post_url": "https://x.com/jack/status/20" },
+      "expect": { "outputMatches": { "mode": "post", "count": 1 } }
+    },
+    {
+      "name": "public-community",
+      "input": { "mode": "community", "community_url": "https://x.com/i/communities/1926186499399139650" },
+      "expect": { "outputMatches": { "mode": "community", "count": 1 } }
+    },
+    {
+      "name": "public-community-posts",
+      "input": { "mode": "community_posts", "community_url": "https://x.com/i/communities/1926186499399139650", "max_results": 10 },
+      "expect": { "outputMatches": { "mode": "community_posts", "tweets": { "minLength": 1 } } }
+    },
+    {
+      "name": "public-video-transcript",
+      "input": { "mode": "transcript", "post_url": "https://x.com/WarnerBrosUK/status/1768322581868744740", "language": "en" },
+      "expect": { "outputMatches": { "mode": "transcript", "count": 1 } }
     }
   ],
   "entry": "src/index.ts"

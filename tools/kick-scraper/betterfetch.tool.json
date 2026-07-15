@@ -1,0 +1,99 @@
+{
+  "name": "kick_scraper",
+  "version": "0.1.0",
+  "title": "Kick Clip Scraper",
+  "description": "Retrieve public Kick clip metadata, playback, engagement, category, creator, and channel details from a clip URL.",
+  "category": "social",
+  "logo": {
+    "label": "Kick logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"12\" fill=\"#53fc18\"/><path d=\"M13 14h12v12h5V14h21v14h-7v8h7v14H30V38h-5v12H13z\" fill=\"#0b0b0b\"/></svg>",
+    "sourceUrl": "https://kick.com/"
+  },
+  "seo": {
+    "title": "Kick Clip Scraper API",
+    "description": "Extract public Kick clip metadata, video URL, thumbnail, views, likes, category, creator, and channel data.",
+    "intro": "Kick Clip Scraper resolves a public clip URL through Better Fetch's resilient retrieval path and returns normalized playback, engagement, category, creator, and channel metadata for agents, monitoring systems, research pipelines, and creator-analysis workflows.",
+    "useCases": [
+      { "title": "Clip monitoring", "description": "Capture durable clip identifiers, titles, engagement, and timestamps." },
+      { "title": "Media workflows", "description": "Resolve the public playback and thumbnail URLs for downstream processing." },
+      { "title": "Creator research", "description": "Connect a clip to its creator, channel, and content category." }
+    ],
+    "faqs": [
+      { "question": "Does it need a Kick login?", "answer": "No. It retrieves only metadata Kick exposes publicly for the requested clip." },
+      { "question": "Can I pass a clip id?", "answer": "Yes. Pass either the full public Kick clip URL or its clip_ identifier." },
+      { "question": "Does it download the video?", "answer": "No. It returns the public playback URL and metadata." }
+    ],
+    "keywords": ["Kick clip scraper", "Kick API", "Kick video metadata", "Kick creator data"]
+  },
+  "creditsEstimate": 2,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": { "type": "string", "description": "Full public Kick clip URL or clip_ identifier." }
+    },
+    "required": ["url"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "string", "description": "Kick clip id" },
+      "url": { "type": "string", "description": "Input clip URL" },
+      "title": { "type": "string", "description": "Clip title" },
+      "video_url": { "type": "string", "description": "Public clip playback URL" },
+      "thumbnail_url": { "type": "string", "description": "Clip thumbnail URL" },
+      "view_count": { "type": "number", "description": "Public view count" },
+      "likes_count": { "type": "number", "description": "Public likes count" },
+      "duration": { "type": "number", "description": "Clip duration in seconds" },
+      "privacy": { "type": "string", "description": "Kick privacy status" },
+      "is_mature": { "type": "boolean", "description": "Whether Kick marks the clip mature" },
+      "started_at": { "type": "string", "description": "Source stream timestamp" },
+      "created_at": { "type": "string", "description": "Clip creation timestamp" },
+      "category": {
+        "type": "object",
+        "description": "Kick content category",
+        "properties": {
+          "id": { "type": "number", "description": "Category id" },
+          "name": { "type": "string", "description": "Category name" },
+          "slug": { "type": "string", "description": "Category slug" },
+          "banner": { "type": "string", "description": "Category banner URL" },
+          "parent_category": { "type": "string", "description": "Parent category" }
+        },
+        "additionalProperties": false
+      },
+      "creator": {
+        "type": "object",
+        "description": "Clip creator",
+        "properties": {
+          "id": { "type": "number", "description": "Creator id" },
+          "username": { "type": "string", "description": "Creator username" },
+          "slug": { "type": "string", "description": "Creator slug" },
+          "profile_picture": { "type": "string", "description": "Creator profile picture URL" }
+        },
+        "additionalProperties": false
+      },
+      "channel": {
+        "type": "object",
+        "description": "Source channel",
+        "properties": {
+          "id": { "type": "number", "description": "Channel id" },
+          "username": { "type": "string", "description": "Channel username" },
+          "slug": { "type": "string", "description": "Channel slug" },
+          "profile_picture": { "type": "string", "description": "Channel profile picture URL" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": ["id", "url"],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "public-clip",
+      "input": { "url": "https://kick.com/xqc/clips/clip_01JGJHB6CEVFCQRYTVPM8DW892" },
+      "expect": { "outputMatches": { "id": "clip_01JGJHB6CEVFCQRYTVPM8DW892", "title": "MonkaW", "video_url": "https://clips.kick.com/clips/7a/clip_01JGJHB6CEVFCQRYTVPM8DW892/playlist.m3u8" } }
+    }
+  ],
+  "entry": "src/index.ts"
+}

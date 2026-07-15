@@ -1,8 +1,8 @@
 {
   "name": "instagram_scraper",
-  "version": "0.1.1",
+  "version": "0.7.3",
   "title": "Instagram Scraper",
-  "description": "Extract public Instagram profile metadata and recent visible media cards from a username or profile URL, including bio, links, avatar, public counts, verification, privacy, captions, likes, and comments.",
+  "description": "Extract public Instagram profiles, posts, reels, comments, story highlights, highlight media, and speech transcripts, or raw public profile embed HTML.",
   "category": "social",
   "logo": {
     "label": "Instagram logo",
@@ -25,6 +25,10 @@
       {
         "title": "Profile monitoring",
         "description": "Track account metadata, bios, links, follower counts, and visible media counts over time without using private Instagram credentials."
+      },
+      {
+        "title": "Story highlight research",
+        "description": "List a public profile's named highlights, then extract the images, videos, timestamps, dimensions, captions, and links embedded in one highlight."
       }
     ],
     "faqs": [
@@ -54,7 +58,7 @@
     "rank": 2,
     "score": 316000
   },
-  "creditsEstimate": 1,
+  "creditsEstimate": 2,
   "maxEngineCalls": 3,
   "inputSchema": {
     "type": "object",
@@ -74,13 +78,55 @@
         "maximum": 12,
         "default": 6,
         "description": "Maximum recent visible media cards to return"
-      }
+      },
+      "mode": { "type": "string", "enum": ["profile_posts", "user_reels", "audio_reels", "story_highlights", "highlight_detail", "embed", "post", "post_comments", "transcript"], "description": "Profile metadata and posts, reels, audio reels, story highlights, highlight media, one post, comments, a public video transcript, or profile embed HTML." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 100, "default": 12, "description": "Maximum visible reels, comments, highlights, or highlight items to return in the selected mode." },
+      "post_url": { "type": "string", "format": "uri", "description": "Public Instagram post or reel URL for post, comments, or transcript mode." },
+      "audio_id": { "type": "string", "description": "Numeric id from an instagram.com/reels/audio/{audio_id}/ page for audio_reels mode." },
+      "highlight_id": { "type": "string", "description": "Numeric Instagram highlight id or full highlight URL for highlight_detail mode." },
+      "language": { "type": "string", "pattern": "^[A-Za-z]{2,8}$", "description": "Optional spoken-language hint for transcript mode; omit for detection." }
     },
     "additionalProperties": false
   },
   "outputSchema": {
     "type": "object",
     "properties": {
+      "mode": { "type": "string", "description": "Resolved operation mode" },
+      "count": { "type": "integer", "description": "Number of public comments returned" },
+      "next_cursor": { "type": "string", "description": "Cursor for another public comment page when exposed" },
+      "has_more": { "type": "boolean", "description": "Whether Instagram reports another public comment page" },
+      "transcript": {
+        "type": "object",
+        "description": "Speech transcript generated from the public video rendition.",
+        "properties": {
+          "text": { "type": "string", "description": "Normalized spoken text." },
+          "language": { "type": "string", "description": "Detected or requested language code." },
+          "language_probability": { "type": "number", "description": "Language-detection confidence when available." },
+          "duration_seconds": { "type": "number", "description": "Media duration in seconds." }
+        },
+        "required": ["text"],
+        "additionalProperties": false
+      },
+      "transcript_segments": {
+        "type": "array",
+        "description": "Timed transcript segments.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start": { "type": "number" },
+            "end": { "type": "number" },
+            "text": { "type": "string" }
+          },
+          "required": ["start", "end", "text"],
+          "additionalProperties": false
+        }
+      },
+      "audio_id": { "type": "string", "description": "Instagram audio id" },
+      "audio_title": { "type": "string", "description": "Visible audio title" },
+      "audio_artist": { "type": "string", "description": "Visible audio artist" },
+      "audio_reel_count_text": { "type": "string", "description": "Instagram's visible total reel count for the audio" },
+      "highlight_id": { "type": "string", "description": "Instagram story highlight id" },
+      "highlight_title": { "type": "string", "description": "Visible story highlight title" },
       "source_url": {
         "type": "string",
         "description": "Public Instagram profile URL"
@@ -170,12 +216,127 @@
           ],
           "additionalProperties": false
         }
+      },
+      "reels": {
+        "type": "array",
+        "description": "Visible public reel cards from the profile reels tab",
+        "items": {
+          "type": "object",
+          "properties": {
+            "shortcode": { "type": "string", "description": "Instagram reel shortcode" },
+            "url": { "type": "string", "description": "Canonical public reel URL" },
+            "thumbnail": { "type": "string", "description": "Visible reel thumbnail URL" },
+            "video_url": { "type": "string", "description": "Public reel video URL when Instagram exposes it" },
+            "caption": { "type": "string", "description": "Visible reel caption" },
+            "taken_at": { "type": "string", "description": "ISO publication timestamp" },
+            "view_count": { "type": "integer", "description": "Visible abbreviated view count expanded to an integer" },
+            "like_count": { "type": "integer", "description": "Visible abbreviated like count expanded to an integer" },
+            "comment_count": { "type": "integer", "description": "Visible abbreviated comment count expanded to an integer" },
+            "author_id": { "type": "string", "description": "Reel author id" },
+            "author_username": { "type": "string", "description": "Reel author username" },
+            "author_name": { "type": "string", "description": "Reel author display name" },
+            "author_verified": { "type": "boolean", "description": "Whether the reel author is verified" }
+          },
+          "required": ["shortcode", "url"],
+          "additionalProperties": false
+        }
+      },
+      "embed_html": { "type": "string", "description": "Raw public Instagram profile embed HTML" },
+      "post": {
+        "type": "object",
+        "description": "One normalized public Instagram post or reel",
+        "properties": {
+          "id": { "type": "string", "description": "Instagram media id" },
+          "shortcode": { "type": "string", "description": "Instagram media shortcode" },
+          "url": { "type": "string", "description": "Canonical public media URL" },
+          "type": { "type": "string", "description": "Instagram media or product type" },
+          "caption": { "type": "string", "description": "Visible caption text" },
+          "accessibility_caption": { "type": "string", "description": "Instagram accessibility description" },
+          "thumbnail": { "type": "string", "description": "Display image URL" },
+          "video_url": { "type": "string", "description": "Public video URL when exposed" },
+          "video_duration": { "type": "number", "description": "Video duration in seconds" },
+          "has_audio": { "type": "boolean", "description": "Whether the video has audio" },
+          "view_count": { "type": "integer", "description": "Visible video view count" },
+          "play_count": { "type": "integer", "description": "Visible video play count" },
+          "like_count": { "type": "integer", "description": "Visible like count" },
+          "comment_count": { "type": "integer", "description": "Visible comment count" },
+          "taken_at": { "type": "string", "description": "ISO media publication timestamp" },
+          "author_id": { "type": "string", "description": "Author account id" },
+          "author_username": { "type": "string", "description": "Author username" },
+          "author_name": { "type": "string", "description": "Author display name" },
+          "author_avatar": { "type": "string", "description": "Author profile image URL" }
+        },
+        "required": ["id", "shortcode", "url"],
+        "additionalProperties": false
+      },
+      "comments": {
+        "type": "array",
+        "description": "Public comments embedded in the logged-out post page",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Instagram comment id" },
+            "text": { "type": "string", "description": "Comment text" },
+            "created_at": { "type": "string", "description": "ISO comment creation timestamp" },
+            "like_count": { "type": "integer", "description": "Visible comment like count" },
+            "reply_count": { "type": "integer", "description": "Visible child comment count" },
+            "author_id": { "type": "string", "description": "Comment author id" },
+            "author_username": { "type": "string", "description": "Comment author username" },
+            "author_avatar": { "type": "string", "description": "Comment author profile image URL" },
+            "author_verified": { "type": "boolean", "description": "Whether the comment author is verified" }
+          },
+          "required": ["id", "text"],
+          "additionalProperties": false
+        }
+      },
+      "highlights": {
+        "type": "array",
+        "description": "Public story highlights visible on the profile",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Instagram highlight id" },
+            "title": { "type": "string", "description": "Visible highlight title" },
+            "url": { "type": "string", "description": "Canonical public highlight URL" },
+            "cover_url": { "type": "string", "description": "Visible highlight cover image URL" }
+          },
+          "required": ["id", "title", "url"],
+          "additionalProperties": false
+        }
+      },
+      "highlight_items": {
+        "type": "array",
+        "description": "Public media items embedded in one story highlight",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Instagram media id" },
+            "code": { "type": "string", "description": "Instagram media code when exposed" },
+            "media_type": { "type": "integer", "description": "Instagram media type number" },
+            "media_type_name": { "type": "string", "description": "Normalized image, video, or carousel label" },
+            "taken_at": { "type": "string", "description": "ISO publication timestamp" },
+            "expires_at": { "type": "string", "description": "ISO source expiration timestamp when exposed" },
+            "image_url": { "type": "string", "description": "Highest-priority public image or poster URL" },
+            "video_url": { "type": "string", "description": "Public video rendition URL when exposed" },
+            "width": { "type": "integer", "description": "Original media width" },
+            "height": { "type": "integer", "description": "Original media height" },
+            "duration": { "type": "number", "description": "Video duration in seconds" },
+            "has_audio": { "type": "boolean", "description": "Whether the video has audio" },
+            "accessibility_caption": { "type": "string", "description": "Instagram accessibility description" },
+            "caption": { "type": "string", "description": "Visible item caption" },
+            "owner_id": { "type": "string", "description": "Highlight owner id" },
+            "owner_username": { "type": "string", "description": "Highlight owner username" },
+            "owner_name": { "type": "string", "description": "Highlight owner display name" },
+            "cta_url": { "type": "string", "description": "Public call-to-action link when exposed" }
+          },
+          "required": ["id"],
+          "additionalProperties": false
+        }
       }
     },
     "required": [
-      "source_url",
-      "username",
-      "full_name"
+      "mode",
+      "source_url"
     ],
     "additionalProperties": false
   },
@@ -192,6 +353,46 @@
           "full_name": "OpenAI"
         }
       }
+    },
+    {
+      "name": "openai-reels",
+      "input": { "mode": "user_reels", "username": "openai", "max_results": 10 },
+      "expect": { "outputMatches": { "mode": "user_reels", "username": "openai", "reels": { "minLength": 1 } } }
+    },
+    {
+      "name": "public-audio-reels",
+      "input": { "mode": "audio_reels", "audio_id": "1392969992841787", "max_results": 12 },
+      "expect": { "outputMatches": { "mode": "audio_reels", "audio_id": "1392969992841787", "reels": { "minLength": 1 } } }
+    },
+    {
+      "name": "nasa-story-highlights",
+      "input": { "mode": "story_highlights", "username": "nasa", "max_results": 10 },
+      "expect": { "outputMatches": { "mode": "story_highlights", "username": "nasa", "highlights": { "minLength": 1 } } }
+    },
+    {
+      "name": "nasa-highlight-detail",
+      "input": { "mode": "highlight_detail", "highlight_id": "18201653992314974", "max_results": 50 },
+      "expect": { "outputMatches": { "mode": "highlight_detail", "highlight_id": "18201653992314974", "highlight_items": { "minLength": 1 } } }
+    },
+    {
+      "name": "openai-embed",
+      "input": { "mode": "embed", "username": "openai" },
+      "expect": { "outputMatches": { "mode": "embed", "username": "openai" } }
+    },
+    {
+      "name": "openai-public-reel",
+      "input": { "mode": "post", "post_url": "https://www.instagram.com/openai/reel/DawRXxVMil6/" },
+      "expect": { "outputMatches": { "mode": "post", "username": "openai" } }
+    },
+    {
+      "name": "openai-public-comments",
+      "input": { "mode": "post_comments", "post_url": "https://www.instagram.com/openai/reel/DawRXxVMil6/", "max_results": 20 },
+      "expect": { "outputMatches": { "mode": "post_comments", "comments": { "minLength": 1 } } }
+    },
+    {
+      "name": "openai-public-reel-transcript",
+      "input": { "mode": "transcript", "post_url": "https://www.instagram.com/openai/reel/DawRXxVMil6/", "language": "en" },
+      "expect": { "outputMatches": { "mode": "transcript" } }
     }
   ],
   "entry": "src/index.ts"

@@ -1,0 +1,137 @@
+{
+  "name": "truth_social_scraper",
+  "version": "0.2.0",
+  "title": "Truth Social Scraper",
+  "description": "Retrieve public Truth Social profiles, indexed user posts, or one post through public search and Mastodon-compatible status data.",
+  "category": "social",
+  "logo": {
+    "label": "Truth Social logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#5448ee\"/><path fill=\"#fff\" d=\"M13 15h38v9H37v25H27V24H13z\"/></svg>",
+    "sourceUrl": "https://truthsocial.com/"
+  },
+  "seo": {
+    "title": "Truth Social Profile and Post Scraper API",
+    "description": "Scrape public Truth Social profiles, indexed timelines, and posts with author, engagement, and media data.",
+    "intro": "Truth Social Scraper combines Google-indexed public post discovery with the platform's Mastodon-compatible status surface. This supports prominent public profiles and visible timelines even when logged-out account APIs are blocked, while keeping the index-backed coverage limitation explicit.",
+    "useCases": [
+      { "title": "Public-figure monitoring", "description": "Inspect public Truth Social posts without maintaining a browser session." },
+      { "title": "Profile and timeline research", "description": "Recover profile metadata and visible posts for prominent public accounts through indexed status URLs." },
+      { "title": "Post analysis", "description": "Turn one public post into clean text, author, engagement, and media fields." },
+      { "title": "Agent context", "description": "Give agents normalized public Truth Social data instead of raw HTML and platform-specific payloads." }
+    ],
+    "faqs": [
+      { "question": "Does this require a Truth Social login?", "answer": "No. It only reads a public post surface and does not use private cookies or credentials." },
+      { "question": "Can it fetch profile timelines?", "answer": "Yes, for accounts with publicly indexed status URLs. Coverage is best-effort because Google does not index every post." },
+      { "question": "Does it include media and engagement?", "answer": "Yes. Public post results include reply, retruth, like, and visible media fields when the platform returns them." }
+    ],
+    "keywords": ["Truth Social scraper", "Truth Social API", "Truth Social posts", "social listening", "public figure monitoring"]
+  },
+  "creditsEstimate": 6,
+  "maxEngineCalls": 22,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["profile", "posts", "post"], "description": "Retrieve a profile, indexed user posts, or one public post." },
+      "handle": { "type": "string", "description": "Truth Social handle or public profile URL for profile and posts modes." },
+      "user_id": { "type": "string", "description": "Optional numeric account id for direct timeline lookup." },
+      "post_url": { "type": "string", "description": "Public Truth Social post URL or numeric post id." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 10, "default": 5, "description": "Maximum indexed user posts to enrich." },
+      "next_max_id": { "type": "string", "description": "Optional direct timeline cursor when using user_id." }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation mode" },
+      "source_url": { "type": "string", "description": "Public Truth Social API endpoint fetched" },
+      "count": { "type": "integer", "description": "Number of profiles or posts returned" },
+      "next_max_id": { "type": "string", "description": "Cursor for the next page of posts" },
+      "profile": {
+        "type": "object",
+        "description": "Normalized public Truth Social profile",
+        "properties": {
+          "id": { "type": "string", "description": "Truth Social account id" },
+          "username": { "type": "string", "description": "Truth Social username" },
+          "display_name": { "type": "string", "description": "Visible display name" },
+          "url": { "type": "string", "description": "Public profile URL" },
+          "bio": { "type": "string", "description": "Plain-text profile bio" },
+          "avatar": { "type": "string", "description": "Public avatar URL" },
+          "header": { "type": "string", "description": "Public header image URL" },
+          "followers_count": { "type": "integer", "description": "Visible follower count" },
+          "following_count": { "type": "integer", "description": "Visible following count" },
+          "statuses_count": { "type": "integer", "description": "Visible post count" },
+          "created_at": { "type": "string", "description": "Account creation timestamp" },
+          "last_status_at": { "type": "string", "description": "Date of most recent visible post" },
+          "verified": { "type": "boolean", "description": "Whether the account is verified" },
+          "website": { "type": "string", "description": "Visible website field" },
+          "locked": { "type": "boolean", "description": "Whether the account is locked" },
+          "bot": { "type": "boolean", "description": "Whether the account is marked as automated" }
+        },
+        "required": ["id", "username"],
+        "additionalProperties": false
+      },
+      "posts": {
+        "type": "array",
+        "description": "Normalized public Truth Social posts",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Truth Social post id" },
+            "url": { "type": "string", "description": "Public post URL" },
+            "text": { "type": "string", "description": "Plain-text post body" },
+            "content_html": { "type": "string", "description": "Original public post HTML" },
+            "created_at": { "type": "string", "description": "Post creation timestamp" },
+            "language": { "type": "string", "description": "Post language code" },
+            "visibility": { "type": "string", "description": "Post visibility" },
+            "sensitive": { "type": "boolean", "description": "Whether the post is marked sensitive" },
+            "replies_count": { "type": "integer", "description": "Reply count" },
+            "reblogs_count": { "type": "integer", "description": "Retruth count" },
+            "favourites_count": { "type": "integer", "description": "Like count" },
+            "author_id": { "type": "string", "description": "Author account id" },
+            "author_username": { "type": "string", "description": "Author username" },
+            "author_name": { "type": "string", "description": "Author display name" },
+            "author_avatar": { "type": "string", "description": "Author avatar URL" },
+            "media_urls": { "type": "string", "description": "Newline-separated public media URLs" },
+            "media_types": { "type": "string", "description": "Comma-separated media types" }
+          },
+          "required": ["id"],
+          "additionalProperties": false
+        }
+      },
+      "post": {
+        "type": "object",
+        "description": "One normalized public Truth Social post",
+        "properties": {
+          "id": { "type": "string", "description": "Truth Social post id" },
+          "url": { "type": "string", "description": "Public post URL" },
+          "text": { "type": "string", "description": "Plain-text post body" },
+          "content_html": { "type": "string", "description": "Original public post HTML" },
+          "created_at": { "type": "string", "description": "Post creation timestamp" },
+          "language": { "type": "string", "description": "Post language code" },
+          "visibility": { "type": "string", "description": "Post visibility" },
+          "sensitive": { "type": "boolean", "description": "Whether the post is marked sensitive" },
+          "replies_count": { "type": "integer", "description": "Reply count" },
+          "reblogs_count": { "type": "integer", "description": "Retruth count" },
+          "favourites_count": { "type": "integer", "description": "Like count" },
+          "author_id": { "type": "string", "description": "Author account id" },
+          "author_username": { "type": "string", "description": "Author username" },
+          "author_name": { "type": "string", "description": "Author display name" },
+          "author_avatar": { "type": "string", "description": "Author avatar URL" },
+          "media_urls": { "type": "string", "description": "Newline-separated public media URLs" },
+          "media_types": { "type": "string", "description": "Comma-separated media types" }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["mode", "source_url", "count"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "truth-social-profile", "input": { "mode": "profile", "handle": "realDonaldTrump" }, "expect": { "outputMatches": { "mode": "profile", "count": 1 } } },
+    { "name": "truth-social-posts", "input": { "mode": "posts", "handle": "realDonaldTrump", "max_results": 3 }, "expect": { "outputMatches": { "mode": "posts", "posts": { "minLength": 1 } } } },
+    { "name": "truth-social-post", "input": { "mode": "post", "post_url": "https://truthsocial.com/@realDonaldTrump/114315219437063160" }, "expect": { "outputMatches": { "mode": "post", "count": 1 } } }
+  ],
+  "entry": "src/index.ts"
+}

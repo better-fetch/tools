@@ -7,6 +7,7 @@ type Input = {
   max_links?: number;
   max_images?: number;
   wait_ms?: number;
+  country?: string;
 };
 
 type Heading = {
@@ -57,6 +58,7 @@ type Block = {
 type ParsedUrl = {
   origin: string;
   path: string;
+  query: string;
   href: string;
 };
 
@@ -98,11 +100,12 @@ function attr(tag: string, name: string): string | undefined {
 }
 
 function parseUrl(raw: string): ParsedUrl | null {
-  const match = raw.trim().match(/^(https?:\/\/[^/?#]+)([^?#]*)?(?:[?#].*)?$/i);
+  const match = raw.trim().match(/^(https?:\/\/[^/?#]+)([^?#]*)?(\?[^#]*)?(?:#.*)?$/i);
   if (!match) return null;
   const origin = match[1].replace(/\/$/, "");
   const path = match[2]?.startsWith("/") ? match[2] : "/";
-  return { origin, path, href: `${origin}${path}` };
+  const query = match[3] ?? "";
+  return { origin, path, query, href: `${origin}${path}${query}` };
 }
 
 function absoluteUrl(value: string | undefined, base: ParsedUrl): string | undefined {
@@ -337,6 +340,7 @@ export default defineTool<Input, Output>(async (input, bf) => {
     wait_until: "domcontentloaded",
     wait_ms: waitMs,
     proxy: "auto",
+    ...(input.country ? { country: input.country.toUpperCase(), geoip: true } : {}),
   });
 
   const finalParsed = parseUrl(page.final_url ?? parsed.href) ?? parsed;

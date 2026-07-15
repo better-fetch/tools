@@ -1,8 +1,8 @@
 {
   "name": "tiktok_scraper",
-  "version": "0.1.1",
+  "version": "0.16.4",
   "title": "TikTok Scraper",
-  "description": "Extract public TikTok profile metadata from a username or profile URL, including display name, bio, avatar, verification, follower count, following count, likes, video count, and bio link.",
+  "description": "Extract public TikTok profiles, follower/following lists, explicitly self-declared audience-country samples, videos, indexed search results, transcripts, comments, or replies.",
   "category": "social",
   "logo": {
     "label": "TikTok logo",
@@ -33,8 +33,8 @@
         "answer": "No. It reads public profile pages visible to Better Fetch and does not use private TikTok cookies, passwords, API tokens, or logged-in sessions."
       },
       {
-        "question": "Does this version scrape every TikTok video or hashtag result?",
-        "answer": "No. Version 0.1 focuses on public profile metadata. Video, hashtag, and search result extraction should be added as separate validated capability slices."
+        "question": "Can it search TikTok videos by keyword or hashtag?",
+        "answer": "Yes. Keyword and hashtag modes return real public TikTok video URLs from public search indexes. Coverage is best-effort and the tool never fabricates results when TikTok or an index withholds them."
       },
       {
         "question": "Why are some fields omitted for certain profiles?",
@@ -54,11 +54,16 @@
     "rank": 3,
     "score": 209000
   },
-  "creditsEstimate": 1,
-  "maxEngineCalls": 3,
+  "creditsEstimate": 2,
+  "maxEngineCalls": 45,
   "inputSchema": {
     "type": "object",
     "properties": {
+      "mode": {
+        "type": "string",
+        "enum": ["profile", "profile_region", "profile_videos", "following", "followers", "audience_demographics", "video", "video_transcript", "video_comments", "comment_replies", "search_suggestions", "search_users", "search_hashtag", "search_keyword", "search_top", "user_live", "live_details", "song", "song_videos", "popular_creators", "popular_hashtags", "trending_feed"],
+        "description": "Public profile, relationship list, profile videos, one video, comments, or discovery operation. Inferred from video_url when omitted."
+      },
       "username": {
         "type": "string",
         "description": "TikTok username, with or without the @ prefix. Use username or profile_url."
@@ -66,8 +71,56 @@
       "profile_url": {
         "type": "string",
         "format": "uri",
-        "description": "Public TikTok profile URL. Use username or profile_url."
-      }
+        "description": "Public TikTok profile URL. Use username or profile_url in profile mode."
+      },
+      "video_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "Public TikTok video URL. Required in video mode."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 50,
+        "default": 12,
+        "description": "Maximum video cards or comments to return."
+      },
+      "comment_id": {
+        "type": "string",
+        "description": "Parent TikTok comment id for comment_replies mode."
+      },
+      "cursor": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "TikTok comment cursor or relationship min-time cursor from a previous response."
+      },
+      "min_time": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "TikTok relationship-list min-time cursor from a previous following or followers response."
+      },
+      "query": {
+        "type": "string",
+        "description": "Query for search_suggestions, search_users, or search_keyword mode."
+      },
+      "hashtag": {
+        "type": "string",
+        "description": "Hashtag with or without # for search_hashtag mode."
+      },
+      "region": {
+        "type": "string",
+        "description": "Two-letter region for localized search or search_suggestions mode."
+      },
+      "date_posted": { "type": "string", "enum": ["yesterday", "this-week", "this-month", "last-3-months", "last-6-months", "all-time"], "description": "Optional Google recency window for search_keyword." },
+      "sort_by": { "type": "string", "enum": ["relevance", "most-liked", "date-posted"], "description": "Requested indexed search ordering; date-posted maps to Google's date sort." },
+      "language": { "type": "string", "description": "Preferred caption language code for video_transcript mode. Defaults to en." },
+      "clip_id": { "type": "string", "description": "TikTok music id for song and song_videos modes." },
+      "music_url": { "type": "string", "description": "Public TikTok music URL for song and song_videos modes." }
+      ,
+      "room_id": { "type": "string", "description": "Optional numeric live room id to verify in live_details mode; the current room is discovered from username/profile_url when omitted." },
+      "user_id": { "type": "string", "description": "Optional numeric owner id to verify in live_details mode." }
+      ,
+      "sample_size": { "type": "integer", "minimum": 10, "maximum": 100, "default": 50, "description": "Maximum sampled public followers for audience_demographics mode." }
     },
     "additionalProperties": false
   },
@@ -77,6 +130,18 @@
       "profile_url": {
         "type": "string",
         "description": "Fetched public TikTok profile URL"
+      },
+      "mode": {
+        "type": "string",
+        "description": "Resolved operation mode"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Public TikTok page, oEmbed endpoint, or public search-index page fetched"
+      },
+      "title": {
+        "type": "string",
+        "description": "Search query when relevant"
       },
       "username": {
         "type": "string",
@@ -149,12 +214,238 @@
       "share_description": {
         "type": "string",
         "description": "TikTok share description"
+      },
+      "video_url": {
+        "type": "string",
+        "description": "Canonical public TikTok video URL"
+      },
+      "video_id": {
+        "type": "string",
+        "description": "TikTok video id"
+      },
+      "caption": {
+        "type": "string",
+        "description": "Public video caption"
+      },
+      "author_url": {
+        "type": "string",
+        "description": "Public creator profile URL"
+      },
+      "author_name": {
+        "type": "string",
+        "description": "Visible creator display name"
+      },
+      "thumbnail_url": {
+        "type": "string",
+        "description": "Signed public video thumbnail URL"
+      },
+      "thumbnail_width": {
+        "type": "integer",
+        "description": "Thumbnail width in pixels"
+      },
+      "thumbnail_height": {
+        "type": "integer",
+        "description": "Thumbnail height in pixels"
+      },
+      "embed_html": {
+        "type": "string",
+        "description": "TikTok's public embed markup"
+      },
+      "hashtags": {
+        "type": "array",
+        "description": "Hashtags linked from the public embed",
+        "items": { "type": "string" }
+      },
+      "music_title": {
+        "type": "string",
+        "description": "Linked music or sound title"
+      },
+      "music_url": {
+        "type": "string",
+        "description": "Linked public music or sound URL"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of public video cards returned"
+      },
+      "videos": {
+        "type": "array",
+        "description": "Public TikTok profile video cards",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "url": { "type": "string" },
+            "caption": { "type": "string" },
+            "thumbnail_url": { "type": "string" },
+            "username": { "type": "string" },
+            "author_name": { "type": "string" },
+            "like_count": { "type": "integer" },
+            "music_title": { "type": "string" }
+          },
+          "required": ["id", "url"],
+          "additionalProperties": false
+        }
+      },
+      "comments": {
+        "type": "array",
+        "description": "Normalized public TikTok comments or replies",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "video_id": { "type": "string" },
+            "text": { "type": "string" },
+            "created_at": { "type": "string" },
+            "like_count": { "type": "integer" },
+            "reply_count": { "type": "integer" },
+            "is_pinned": { "type": "boolean" },
+            "liked_by_creator": { "type": "boolean" },
+            "username": { "type": "string" },
+            "display_name": { "type": "string" },
+            "user_id": { "type": "string" },
+            "sec_uid": { "type": "string" },
+            "avatar_url": { "type": "string" }
+          },
+          "required": ["id", "video_id", "text"],
+          "additionalProperties": false
+        }
+      },
+      "next_cursor": { "type": "integer", "description": "Next public comment or relationship-list cursor" },
+      "has_more": { "type": "boolean", "description": "Whether TikTok reports another result page" },
+      "total": { "type": "integer", "description": "Total comments or relationships when TikTok reports it" },
+      "room_id": { "type": "string", "description": "Public live room id when the creator is live" },
+      "is_live": { "type": "boolean", "description": "Whether the public profile exposes an active room" },
+      "status": { "type": "string", "description": "Normalized live-room status: live, ended, offline, or unknown" },
+      "status_code": { "type": "integer", "description": "TikTok's public numeric live-room status" },
+      "viewer_count": { "type": "integer", "description": "Current public live viewer count when exposed" },
+      "comment_count": { "type": "integer", "description": "Current public live comment count when exposed" },
+      "share_count": { "type": "integer", "description": "Current public live share count when exposed" },
+      "cover_url": { "type": "string", "description": "Public live-room cover image" },
+      "started_at": { "type": "string", "description": "ISO room start time" },
+      "ended_at": { "type": "string", "description": "ISO room finish time for ended rooms" },
+      "owner": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "username": { "type": "string" },
+          "display_name": { "type": "string" }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "language": { "type": "string", "description": "Visible profile or suggestion language" },
+      "region": { "type": "string", "description": "Two-letter region exposed on the creator's public video metadata" },
+      "suggestions": {
+        "type": "array",
+        "description": "Public TikTok search suggestions",
+        "items": {
+          "type": "object",
+          "properties": {
+            "content": { "type": "string" },
+            "language": { "type": "string" },
+            "score": { "type": "number" },
+            "username": { "type": "string" },
+            "display_name": { "type": "string" },
+            "user_id": { "type": "string" },
+            "sec_uid": { "type": "string" },
+            "avatar_url": { "type": "string" },
+            "verified": { "type": "boolean" }
+          },
+          "required": ["content"],
+          "additionalProperties": false
+        }
+      },
+      "users": {
+        "type": "array",
+        "description": "Normalized public TikTok user-search or relationship-list results",
+        "items": {
+          "type": "object",
+          "properties": {
+            "username": { "type": "string" },
+            "display_name": { "type": "string" },
+            "profile_url": { "type": "string" },
+            "user_id": { "type": "string" },
+            "sec_uid": { "type": "string" },
+            "bio": { "type": "string" },
+            "avatar_url": { "type": "string" },
+            "verified": { "type": "boolean" },
+            "private_account": { "type": "boolean" },
+            "follower_count": { "type": "integer" },
+            "following_count": { "type": "integer" },
+            "like_count": { "type": "integer" },
+            "video_count": { "type": "integer" }
+          },
+          "required": ["username", "display_name", "profile_url"],
+          "additionalProperties": false
+        }
+      },
+      "creators": {
+        "type": "array",
+        "description": "Creators sampled from TikTok's current public Explore feed, ranked by visible likes in the sample.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "username": { "type": "string" },
+            "profile_url": { "type": "string" },
+            "display_name": { "type": "string" },
+            "sampled_video_count": { "type": "integer" },
+            "sampled_like_count": { "type": "integer" },
+            "top_video_url": { "type": "string" }
+          },
+          "required": ["username", "profile_url", "sampled_video_count", "sampled_like_count"],
+          "additionalProperties": false
+        }
+      },
+      "popular_hashtags": {
+        "type": "array",
+        "description": "Hashtags sampled from TikTok's current public Explore feed, ranked by visible likes in the sample.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "hashtag": { "type": "string" },
+            "sampled_video_count": { "type": "integer" },
+            "sampled_like_count": { "type": "integer" },
+            "sample_video_url": { "type": "string" }
+          },
+          "required": ["hashtag", "sampled_video_count", "sampled_like_count"],
+          "additionalProperties": false
+        }
+      },
+      "transcript": { "type": "string", "description": "Raw public WEBVTT transcript" },
+      "transcript_not_available": { "type": "boolean", "description": "True when TikTok exposes no caption track for the requested video" },
+      "subtitle_source": { "type": "string", "description": "Resolved public subtitle URL" },
+      "is_auto_generated": { "type": "boolean", "description": "True when TikTok labels the subtitle as auto-generated" },
+      "music_id": { "type": "string", "description": "TikTok music identifier" },
+      "music_author": { "type": "string", "description": "Visible music author" },
+      "music_cover_url": { "type": "string", "description": "Public song cover image URL" },
+      "music_play_url": { "type": "string", "description": "Public song preview URL" },
+      "music_video_count": { "type": "integer", "description": "Visible number of videos using the song" },
+      "duration": { "type": "integer", "description": "Song duration in seconds" },
+      "sample_size": { "type": "integer", "description": "Number of unique public followers sampled" },
+      "located_sample_size": { "type": "integer", "description": "Followers whose bio explicitly names a supported country or contains its flag" },
+      "unlocated_sample_size": { "type": "integer", "description": "Sampled followers with no explicit supported country signal" },
+      "representative": { "type": "boolean", "description": "Always false for the public self-declared-location sample" },
+      "methodology": { "type": "string", "description": "Transparent source and inference limitations" },
+      "audience_countries": {
+        "type": "array",
+        "description": "Countries explicitly self-declared in sampled public follower bios, not TikTok private audience analytics",
+        "items": {
+          "type": "object",
+          "properties": {
+            "country_code": { "type": "string" },
+            "country_name": { "type": "string" },
+            "count": { "type": "integer" },
+            "percentage_of_located_sample": { "type": "number" }
+          },
+          "required": ["country_code", "country_name", "count", "percentage_of_located_sample"],
+          "additionalProperties": false
+        }
       }
     },
     "required": [
-      "profile_url",
-      "username",
-      "display_name"
+      "mode",
+      "source_url"
     ],
     "additionalProperties": false
   },
@@ -166,10 +457,279 @@
       },
       "expect": {
         "outputMatches": {
+          "mode": "profile",
           "username": "openai",
           "display_name": "OpenAI"
         }
       }
+    },
+    {
+      "name": "profile-region",
+      "input": {
+        "mode": "profile_region",
+        "username": "stoolpresidente"
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "profile_region",
+          "username": "stoolpresidente",
+          "region": "US"
+        }
+      }
+    },
+    {
+      "name": "profile-videos",
+      "input": {
+        "mode": "profile_videos",
+        "username": "stoolpresidente",
+        "max_results": 6
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "profile_videos",
+          "username": "stoolpresidente"
+        }
+      }
+    },
+    {
+      "name": "following",
+      "input": {
+        "mode": "following",
+        "username": "openai",
+        "max_results": 10
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "following",
+          "username": "openai",
+          "users": { "minLength": 1 }
+        }
+      }
+    },
+    {
+      "name": "followers",
+      "input": {
+        "mode": "followers",
+        "username": "openai",
+        "max_results": 10
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "followers",
+          "username": "openai",
+          "users": { "minLength": 1 }
+        }
+      }
+    },
+    {
+      "name": "audience-demographics-public-sample",
+      "input": {
+        "mode": "audience_demographics",
+        "username": "openai",
+        "sample_size": 50
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "audience_demographics",
+          "representative": false
+        }
+      }
+    },
+    {
+      "name": "video-comments",
+      "input": {
+        "mode": "video_comments",
+        "video_url": "https://www.tiktok.com/@scout2015/video/6718335390845095173",
+        "max_results": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "video_comments",
+          "video_id": "6718335390845095173"
+        }
+      }
+    },
+    {
+      "name": "comment-replies",
+      "input": {
+        "mode": "comment_replies",
+        "video_url": "https://www.tiktok.com/@scout2015/video/6718335390845095173",
+        "comment_id": "6718336105873702917",
+        "max_results": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "comment_replies",
+          "video_id": "6718335390845095173"
+        }
+      }
+    },
+    {
+      "name": "search-suggestions",
+      "input": {
+        "mode": "search_suggestions",
+        "query": "openai",
+        "region": "US"
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "search_suggestions",
+          "title": "openai"
+        }
+      }
+    },
+    {
+      "name": "search-users",
+      "input": {
+        "mode": "search_users",
+        "query": "openai",
+        "max_results": 10
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "search_users",
+          "title": "openai"
+        }
+      }
+    },
+    {
+      "name": "search-hashtag",
+      "input": {
+        "mode": "search_hashtag",
+        "hashtag": "funnydogs",
+        "max_results": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "search_hashtag",
+          "videos": { "minLength": 1 }
+        }
+      }
+    },
+    {
+      "name": "search-keyword",
+      "input": {
+        "mode": "search_keyword",
+        "query": "funny dogs",
+        "max_results": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "search_keyword",
+          "videos": { "minLength": 1 }
+        }
+      }
+    },
+    {
+      "name": "top-search",
+      "input": {
+        "mode": "search_top",
+        "query": "funny dogs",
+        "max_results": 5
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "search_top",
+          "videos": { "minLength": 1 }
+        }
+      }
+    },
+    {
+      "name": "user-live-status",
+      "input": {
+        "mode": "user_live",
+        "username": "thejustalex"
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "user_live",
+          "username": "thejustalex"
+        }
+      }
+    },
+    {
+      "name": "live-room-details",
+      "input": {
+        "mode": "live_details",
+        "username": "weathernewslive"
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "live_details",
+          "owner.username": "weathernewslive"
+        }
+      }
+    },
+    {
+      "name": "public-video",
+      "input": {
+        "mode": "video",
+        "video_url": "https://www.tiktok.com/@scout2015/video/6718335390845095173"
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "video",
+          "video_id": "6718335390845095173",
+          "username": "scout2015"
+        }
+      }
+    },
+    {
+      "name": "video-transcript",
+      "input": {
+        "mode": "video_transcript",
+        "video_url": "https://www.tiktok.com/@stoolpresidente/video/7499229683859426602",
+        "language": "en"
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "video_transcript",
+          "video_id": "7499229683859426602",
+          "transcript_not_available": false
+        }
+      }
+    },
+    {
+      "name": "song-details",
+      "input": {
+        "mode": "song",
+        "clip_id": "6689804660171082501"
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "song",
+          "music_id": "6689804660171082501"
+        }
+      }
+    },
+    {
+      "name": "song-videos",
+      "input": {
+        "mode": "song_videos",
+        "clip_id": "6689804660171082501",
+        "max_results": 6
+      },
+      "expect": {
+        "outputMatches": {
+          "mode": "song_videos",
+          "videos": { "minLength": 1 }
+        }
+      }
+    },
+    {
+      "name": "trending-feed",
+      "input": { "mode": "trending_feed", "max_results": 6 },
+      "expect": { "outputMatches": { "mode": "trending_feed", "videos": { "minLength": 1 } } }
+    },
+    {
+      "name": "popular-creators",
+      "input": { "mode": "popular_creators", "max_results": 6 },
+      "expect": { "outputMatches": { "mode": "popular_creators", "creators": { "minLength": 1 } } }
+    },
+    {
+      "name": "popular-hashtags",
+      "input": { "mode": "popular_hashtags", "max_results": 10 },
+      "expect": { "outputMatches": { "mode": "popular_hashtags", "popular_hashtags": { "minLength": 1 } } }
     }
   ],
   "entry": "src/index.ts"

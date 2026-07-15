@@ -1,0 +1,95 @@
+{
+  "name": "threads_scraper",
+  "version": "0.2.1",
+  "title": "Threads Scraper",
+  "description": "Retrieve public Threads profiles, creator posts, individual posts, keyword results, and indexed user matches without login.",
+  "category": "social",
+  "logo": {
+    "label": "Threads logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#000\"/><path fill=\"#fff\" d=\"M32 12c-12 0-20 8-20 20s8 20 20 20c10 0 17-5 19-13 2-9-3-15-10-17-2-7-8-10-15-9-6 1-10 5-11 11l7 1c1-4 3-6 7-6 3 0 5 1 6 4-12 1-17 5-17 12 0 7 6 11 13 11 6 0 10-3 12-8 0 5-4 8-11 8-8 0-13-5-13-14s5-14 13-14c7 0 11 4 13 10l7-2c-2-9-9-14-19-14Zm0 28c-4 0-7-2-7-5 0-4 4-6 11-6 0 7-1 11-4 11Z\"/></svg>",
+    "sourceUrl": "https://www.threads.com/"
+  },
+  "seo": {
+    "title": "Threads Scraper API for Profiles, Posts, and Search",
+    "description": "Retrieve public Threads profiles, creator timelines, individual posts, and keyword search results for agents.",
+    "intro": "Threads Scraper combines server-rendered public metadata with Better Fetch browser rendering to cover profiles, creator posts, individual posts, and keyword discovery without a logged-in account.",
+    "useCases": [
+      { "title": "Creator research", "description": "Resolve public Threads profiles to their bio, follower label, thread count, and avatar." },
+      { "title": "Timeline monitoring", "description": "List the public post URLs, timestamps, and visible text from a creator profile." },
+      { "title": "Conversation discovery", "description": "Search public Threads posts by keyword and pass normalized results into an agent workflow." },
+      { "title": "Account discovery", "description": "Find public profile handles exposed in Google's index when native account search requires login." }
+    ],
+    "faqs": [
+      { "question": "Does this require Threads login?", "answer": "No. The implemented modes use pages visible to logged-out visitors." },
+      { "question": "Does it support private profiles?", "answer": "No. Only public profile and post surfaces are supported." },
+      { "question": "Why does timeline search use a browser?", "answer": "Threads renders public result cards after page load; Better Fetch captures that rendered state." },
+      { "question": "How does user search work?", "answer": "It transparently searches Google's public index because native Threads account search requires login." }
+    ],
+    "keywords": ["Threads scraper", "Threads API", "Threads profile", "Threads posts", "Threads search"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["profile", "user_posts", "post", "search", "search_users"] },
+      "username": { "type": "string", "description": "Public Threads username or profile URL for profile and user_posts modes." },
+      "post_url": { "type": "string", "description": "Public Threads post URL for post mode." },
+      "query": { "type": "string", "description": "Keyword query for search or indexed username query for search_users mode." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 25, "default": 10 }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string" }, "source_url": { "type": "string" }, "count": { "type": "integer" },
+      "profile": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" }, "display_name": { "type": "string" }, "url": { "type": "string" },
+          "bio": { "type": "string" }, "followers_text": { "type": "string" }, "thread_count": { "type": "number" }, "avatar": { "type": "string" }
+        },
+        "required": ["username", "display_name", "url"],
+        "additionalProperties": false
+      },
+      "posts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" }, "username": { "type": "string" }, "url": { "type": "string" },
+            "text": { "type": "string" }, "published_at": { "type": "string" }, "image": { "type": "string" }
+          },
+          "required": ["code", "username", "url"],
+          "additionalProperties": false
+        }
+      },
+      "users": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "username": { "type": "string" },
+            "full_name": { "type": "string" },
+            "profile_url": { "type": "string" },
+            "matched_from": { "type": "string" }
+          },
+          "required": ["username", "profile_url", "matched_from"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["mode", "source_url", "count", "posts"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "openai-profile", "input": { "mode": "profile", "username": "openai" }, "expect": { "outputMatches": { "count": 1 } } },
+    { "name": "openai-posts", "input": { "mode": "user_posts", "username": "openai", "max_results": 5 }, "expect": { "outputMatches": { "posts": { "minLength": 1 } } } },
+    { "name": "openai-post", "input": { "mode": "post", "post_url": "https://www.threads.com/@openai/post/DawRu9_CH6X" }, "expect": { "outputMatches": { "count": 1 } } },
+    { "name": "search-openai", "input": { "mode": "search", "query": "openai", "max_results": 5 }, "expect": { "outputMatches": { "posts": { "minLength": 1 } } } },
+    { "name": "search-users", "input": { "mode": "search_users", "query": "shams", "max_results": 10 }, "expect": { "outputMatches": { "users": { "minLength": 1 } } } }
+  ],
+  "entry": "src/index.ts"
+}

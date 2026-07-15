@@ -1,0 +1,94 @@
+{
+  "name": "snapchat_scraper",
+  "version": "0.1.0",
+  "title": "Snapchat Scraper",
+  "description": "Retrieve public Snapchat profiles, Spotlight metadata, and Spotlight comments from server-rendered Snapchat pages.",
+  "category": "social",
+  "logo": {
+    "label": "Snapchat logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#fffc00\"/><path fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\" d=\"M32 12c-8 0-12 6-12 14 0 3-1 5-4 6-2 1-3 2-2 4 1 1 3 1 5 2 1 4 5 5 8 6 2 1 2 4 5 4s3-3 5-4c3-1 7-2 8-6 2-1 4-1 5-2 1-2 0-3-2-4-3-1-4-3-4-6 0-8-4-14-12-14Z\"/></svg>",
+    "sourceUrl": "https://www.snapchat.com/"
+  },
+  "seo": {
+    "title": "Snapchat Scraper API for Profiles, Spotlight, and Comments",
+    "description": "Retrieve structured public Snapchat creator profiles, Spotlight metadata, media URLs, engagement, transcripts, and comments.",
+    "intro": "Snapchat Scraper reads Snapchat's server-rendered public page data instead of relying on brittle screen text. It normalizes creator profiles, individual Spotlight posts, engagement counts, media and transcript URLs, and public Spotlight comments.",
+    "useCases": [
+      { "title": "Creator research", "description": "Resolve public Snapchat creators to subscriber counts, profile links, bio, website, images, and verification state." },
+      { "title": "Spotlight intelligence", "description": "Enrich a public Spotlight URL with creator, media, engagement, AI-generated description, and transcript metadata." },
+      { "title": "Audience research", "description": "Collect public Spotlight comments with authors, reactions, timestamps, and reply counts." }
+    ],
+    "faqs": [
+      { "question": "Does this require Snapchat login?", "answer": "No. These operations use data exposed on Snapchat's public profile and Spotlight pages." },
+      { "question": "Does it return media?", "answer": "It returns public media, thumbnail, and transcript URLs when Snapchat exposes them; it does not download or rehost media." },
+      { "question": "Are private stories supported?", "answer": "No. The tool only handles public profiles and public Spotlight pages." }
+    ],
+    "keywords": ["Snapchat scraper", "Snapchat API", "Snapchat Spotlight", "Spotlight comments", "Snapchat profile"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["profile", "spotlight", "spotlight_comments"] },
+      "username": { "type": "string", "description": "Public Snapchat username or profile URL for profile mode." },
+      "spotlight_url": { "type": "string", "description": "Public Snapchat Spotlight URL or id for Spotlight modes." },
+      "max_comments": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string" },
+      "source_url": { "type": "string" },
+      "count": { "type": "integer" },
+      "profile": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" }, "display_name": { "type": "string" }, "url": { "type": "string" },
+          "bio": { "type": "string" }, "subscriber_count": { "type": "number" }, "website_url": { "type": "string" },
+          "profile_picture_url": { "type": "string" }, "hero_image_url": { "type": "string" }, "snapcode_image_url": { "type": "string" },
+          "verified": { "type": "boolean" }, "has_story": { "type": "boolean" }, "has_spotlight_highlights": { "type": "boolean" },
+          "business_profile_id": { "type": "string" }
+        },
+        "required": ["username", "display_name", "url"],
+        "additionalProperties": false
+      },
+      "spotlight": {
+        "type": "object",
+        "properties": {
+          "spotlight_id": { "type": "string" }, "url": { "type": "string" }, "title": { "type": "string" }, "description": { "type": "string" },
+          "creator_username": { "type": "string" }, "creator_name": { "type": "string" }, "creator_url": { "type": "string" },
+          "uploaded_at": { "type": "string" }, "duration_ms": { "type": "number" }, "view_count": { "type": "number" },
+          "share_count": { "type": "number" }, "comment_count": { "type": "number" }, "boost_count": { "type": "number" },
+          "recommend_count": { "type": "number" }, "thumbnail_url": { "type": "string" }, "media_url": { "type": "string" },
+          "transcript_url": { "type": "string" }, "width": { "type": "number" }, "height": { "type": "number" }
+        },
+        "required": ["spotlight_id", "url", "title"],
+        "additionalProperties": false
+      },
+      "comments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "comment_id": { "type": "string" }, "text": { "type": "string" }, "author_name": { "type": "string" },
+            "author_avatar": { "type": "string" }, "created_at": { "type": "string" }, "reaction_count": { "type": "number" }, "reply_count": { "type": "number" }
+          },
+          "required": ["comment_id", "text"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["mode", "source_url", "count", "comments"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "nasa-profile", "input": { "mode": "profile", "username": "nasa" }, "expect": { "outputMatches": { "count": 1 } } },
+    { "name": "nasa-spotlight", "input": { "mode": "spotlight", "spotlight_url": "https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYeG9xcGd0ZWd3AZ14BVv0AZ14BQkrAAAAAQ" }, "expect": { "outputMatches": { "count": 1 } } },
+    { "name": "nasa-spotlight-comments", "input": { "mode": "spotlight_comments", "spotlight_url": "https://www.snapchat.com/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYeG9xcGd0ZWd3AZ14BVv0AZ14BQkrAAAAAQ", "max_comments": 10 }, "expect": { "outputMatches": { "comments": { "minLength": 1 } } } }
+  ],
+  "entry": "src/index.ts"
+}

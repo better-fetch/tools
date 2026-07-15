@@ -1,8 +1,8 @@
 {
   "name": "facebook_posts_scraper",
-  "version": "0.1.1",
+  "version": "0.3.0",
   "title": "Facebook Posts Scraper",
-  "description": "Extract public Facebook Page Plugin timeline posts from a page URL or slug, including visible post text, post URLs, timestamps, reactions, comments, shares, media, and outbound links.",
+  "description": "Extract public Facebook Page timeline posts or the three visible posts from a public Facebook group without login.",
   "category": "social",
   "logo": {
     "label": "Facebook logo",
@@ -56,8 +56,8 @@
     "rank": 10,
     "score": 84000
   },
-  "creditsEstimate": 1,
-  "maxEngineCalls": 1,
+  "creditsEstimate": 2,
+  "maxEngineCalls": 2,
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -68,6 +68,10 @@
       "page_slug": {
         "type": "string",
         "description": "Facebook Page slug, numeric page ID, or page path, e.g. NASA. Use page_slug or page_url."
+      },
+      "group_url": {
+        "type": "string",
+        "description": "Public Facebook group URL or numeric group ID. Returns at most the three posts Facebook exposes publicly."
       },
       "max_results": {
         "type": "integer",
@@ -104,6 +108,18 @@
       "followers": {
         "type": "integer",
         "description": "Visible follower count when available"
+      },
+      "group_id": {
+        "type": "string",
+        "description": "Public Facebook group ID for a group request"
+      },
+      "group_name": {
+        "type": "string",
+        "description": "Visible public group name"
+      },
+      "members": {
+        "type": "integer",
+        "description": "Visible public group member count"
       },
       "count": {
         "type": "integer",
@@ -158,6 +174,10 @@
             "external_links": {
               "type": "string",
               "description": "Comma-separated outbound links visible in the post text"
+            },
+            "group_id": {
+              "type": "string",
+              "description": "Facebook group ID for group posts"
             }
           },
           "required": [
@@ -185,7 +205,21 @@
       },
       "expect": {
         "outputMatches": {
-          "page_url": "https://www.facebook.com/NASA"
+          "page_url": "https://www.facebook.com/NASA",
+          "posts": { "minLength": 1 }
+        }
+      }
+    },
+    {
+      "name": "public-group-posts",
+      "input": {
+        "group_url": "https://www.facebook.com/groups/742354120555345/",
+        "max_results": 3
+      },
+      "expect": {
+        "outputMatches": {
+          "group_id": "742354120555345",
+          "posts": { "minLength": 1 }
         }
       }
     }

@@ -1,0 +1,121 @@
+{
+  "name": "twitch_scraper",
+  "version": "0.1.0",
+  "title": "Twitch Scraper",
+  "description": "Retrieve public Twitch profiles, channel videos, schedules, and clips from Twitch's rendered pages and anonymous page data.",
+  "category": "social",
+  "logo": {
+    "label": "Twitch logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#9146ff\"/><path fill=\"#fff\" d=\"M16 12 10 20v30h12v8l8-8h10l14-14V12H16Zm32 21-8 8H28l-7 7V20h27v13ZM38 24h5v12h-5V24Zm-10 0h5v12h-5V24Z\"/></svg>",
+    "sourceUrl": "https://www.twitch.tv/"
+  },
+  "seo": {
+    "title": "Twitch Scraper API for Profiles, Videos, Schedules, and Clips",
+    "description": "Retrieve structured public Twitch creator profiles, channel videos, schedules, and clip metadata for agents and data workflows.",
+    "intro": "Twitch Scraper opens Twitch's public pages in Better Fetch's browser and normalizes the anonymous data Twitch sends to those pages. It supports creator profiles, public videos, schedules, and individual clips without requiring a private Twitch account.",
+    "useCases": [
+      { "title": "Creator research", "description": "Resolve a public channel to its display name, description, avatar, follower label, and live status when exposed." },
+      { "title": "Video monitoring", "description": "Collect recent public broadcasts, highlights, and uploads from a creator page." },
+      { "title": "Streaming intelligence", "description": "Inspect scheduled streams and enrich public clip URLs with normalized metadata." }
+    ],
+    "faqs": [
+      { "question": "Does this require Twitch login?", "answer": "No. The implemented operations use data available to an anonymous visitor on Twitch's public web pages." },
+      { "question": "Does it download streams or videos?", "answer": "No. It returns public metadata and canonical URLs, not media files." },
+      { "question": "Why use a browser?", "answer": "Twitch loads most structured channel data after the initial HTML response, so the tool captures the public requests made by Twitch's own page." }
+    ],
+    "keywords": ["Twitch scraper", "Twitch API", "Twitch clips", "Twitch channel videos", "Twitch schedule"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["profile", "user_videos", "user_schedule", "clip"] },
+      "handle": { "type": "string", "description": "Public Twitch username or channel URL for profile, user_videos, and user_schedule modes." },
+      "clip_url": { "type": "string", "description": "Public Twitch clip URL or clip slug for clip mode." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 25, "default": 10 }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string" },
+      "source_url": { "type": "string" },
+      "count": { "type": "integer" },
+      "profile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "login": { "type": "string" },
+          "display_name": { "type": "string" },
+          "url": { "type": "string" },
+          "description": { "type": "string" },
+          "avatar": { "type": "string" },
+          "followers_text": { "type": "string" },
+          "is_live": { "type": "boolean" }
+        },
+        "required": ["login", "display_name", "url"],
+        "additionalProperties": false
+      },
+      "videos": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "video_id": { "type": "string" },
+            "title": { "type": "string" },
+            "url": { "type": "string" },
+            "published_at": { "type": "string" },
+            "duration_seconds": { "type": "number" },
+            "views": { "type": "number" },
+            "thumbnail": { "type": "string" }
+          },
+          "required": ["video_id", "title", "url"],
+          "additionalProperties": false
+        }
+      },
+      "schedule": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "starts_at": { "type": "string" },
+            "ends_at": { "type": "string" },
+            "category": { "type": "string" }
+          },
+          "required": ["title", "starts_at"],
+          "additionalProperties": false
+        }
+      },
+      "clip": {
+        "type": "object",
+        "properties": {
+          "slug": { "type": "string" },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "broadcaster": { "type": "string" },
+          "creator": { "type": "string" },
+          "created_at": { "type": "string" },
+          "duration_seconds": { "type": "number" },
+          "views": { "type": "number" },
+          "thumbnail": { "type": "string" }
+        },
+        "required": ["slug", "title", "url"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["mode", "source_url", "count", "videos", "schedule"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "profile-openai", "input": { "mode": "profile", "handle": "openai" }, "expect": { "outputMatches": { "count": 1 } } },
+    { "name": "openai-videos", "input": { "mode": "user_videos", "handle": "openai", "max_results": 5 }, "expect": { "outputMatches": { "videos": { "minLength": 1 } } } },
+    { "name": "cohhcarnage-schedule", "input": { "mode": "user_schedule", "handle": "cohhcarnage", "max_results": 5 }, "expect": { "outputMatches": { "schedule": { "minLength": 1 } } } },
+    { "name": "public-clip", "input": { "mode": "clip", "clip_url": "https://www.twitch.tv/openai/clip/BlatantTubularLatteSeemsGood" }, "expect": { "outputMatches": { "count": 1 } } }
+  ],
+  "entry": "src/index.ts"
+}

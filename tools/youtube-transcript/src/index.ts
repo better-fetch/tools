@@ -281,7 +281,7 @@ export default defineTool<Input, Output>(async (input, bf) => {
     url: watchUrl,
     strategy: "browser",
     json_mode: false,
-    wait_until: "networkidle",
+    wait_until: "domcontentloaded",
     wait_ms: 8000,
     timeout_ms: 60000,
     return_response_text: true,

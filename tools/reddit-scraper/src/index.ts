@@ -1,6 +1,6 @@
 import { defineTool } from "@better-fetch/tools";
 
-type Mode = "posts" | "search" | "comments";
+type Mode = "subreddit_details" | "posts" | "search" | "comments" | "transcript";
 
 type Input = {
   mode?: Mode;
@@ -11,6 +11,7 @@ type Input = {
   post_url?: string;
   max_results?: number;
   max_comments?: number;
+  language?: string;
 };
 
 type Post = {
@@ -42,15 +43,39 @@ type Comment = {
   permalink?: string;
 };
 
+type SubredditDetails = {
+  id?: string;
+  name: string;
+  title?: string;
+  description?: string;
+  public_description?: string;
+  subscribers?: number;
+  active_users?: number;
+  created_utc?: number;
+  over_18?: boolean;
+  url?: string;
+  icon?: string;
+  banner?: string;
+  language?: string;
+};
+
 type Output = {
   mode: Mode;
   subreddit?: string;
   query?: string;
   source_url: string;
   count: number;
+  details?: SubredditDetails;
   posts?: Post[];
   post?: Post;
   comments?: Comment[];
+  post_id?: string;
+  video_id?: string;
+  caption_url?: string;
+  language?: string;
+  raw_vtt?: string;
+  transcript?: string;
+  transcript_not_available?: boolean;
 };
 
 const BASE = "https://www.reddit.com";
@@ -114,6 +139,10 @@ function postsUrl(sub: string, sort: string, time: string | undefined, limit: nu
   let url = `${BASE}/r/${encodeURIComponent(sub)}/${s}.json?limit=${limit}&raw_json=1`;
   if (s === "top" && time && TIMES.has(time)) url += `&t=${time}`;
   return url;
+}
+
+function detailsUrl(sub: string): string {
+  return `${BASE}/r/${encodeURIComponent(sub)}/about.json?raw_json=1`;
 }
 
 function searchUrl(
@@ -201,6 +230,28 @@ function listingChildren(listing: unknown): unknown[] {
   return arr(rec(rec(listing)?.data)?.children);
 }
 
+function normSubredditDetails(json: unknown, fallbackName: string): SubredditDetails {
+  const data = rec(rec(json)?.data);
+  if (!data) throw new Error("Reddit did not return subreddit details");
+  const name = asStr(data.display_name) ?? fallbackName;
+  const url = asStr(data.url);
+  return compact({
+    id: asStr(data.id),
+    name,
+    title: asStr(data.title),
+    description: truncate(asStr(data.description), 5000),
+    public_description: truncate(asStr(data.public_description), 2000),
+    subscribers: asNum(data.subscribers),
+    active_users: asNum(data.accounts_active),
+    created_utc: asNum(data.created_utc),
+    over_18: asBool(data.over18),
+    url: url ? `${BASE}${url}` : `${BASE}/r/${name}/`,
+    icon: asStr(data.community_icon) ?? asStr(data.icon_img),
+    banner: asStr(data.banner_background_image) ?? asStr(data.banner_img),
+    language: asStr(data.lang),
+  }) as SubredditDetails;
+}
+
 function flattenComments(listing: unknown, max: number): Comment[] {
   const out: Comment[] = [];
   const walk = (children: unknown[], depth: number): void => {
@@ -234,9 +285,51 @@ function flattenComments(listing: unknown, max: number): Comment[] {
   return out;
 }
 
+function vttTranscript(vtt: string): string {
+  const cues = vtt.replace(/^WEBVTT[^\n]*\n/i, "").split(/\n\s*\n/).flatMap((block) => {
+    const lines = block.split(/\r?\n/).filter((line) => line.trim());
+    const timing = lines.findIndex((line) => /-->/.test(line));
+    if (timing < 0) return [];
+    const value = decodeEntities(lines.slice(timing + 1).join(" ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
+    return value ? [value] : [];
+  });
+  const words: string[] = [];
+  for (const cue of cues) {
+    const incoming = cue.split(/\s+/).filter(Boolean);
+    let overlap = Math.min(words.length, incoming.length);
+    while (overlap > 0) {
+      const tail = words.slice(-overlap).join(" ").toLowerCase();
+      const head = incoming.slice(0, overlap).join(" ").toLowerCase();
+      if (tail === head) break;
+      overlap--;
+    }
+    words.push(...incoming.slice(overlap));
+  }
+  return words.join(" ").trim();
+}
+
+function postId(raw: string): string | undefined {
+  return raw.match(/\/comments\/([A-Za-z0-9]+)/i)?.[1]
+    ?? (!/[/.]/.test(raw.trim()) && /^[A-Za-z0-9]+$/.test(raw.trim()) ? raw.trim() : undefined);
+}
+
 export default defineTool<Input, Output>(async (input, bf) => {
   const mode: Mode =
     input.mode ?? (input.post_url ? "comments" : input.query ? "search" : "posts");
+
+  if (mode === "subreddit_details") {
+    const sub = input.subreddit ? cleanSubreddit(input.subreddit) : undefined;
+    if (!sub) throw new Error("subreddit is required for subreddit_details mode");
+    const url = detailsUrl(sub);
+    const json = await getJson(bf, url);
+    return {
+      mode,
+      subreddit: sub,
+      source_url: url,
+      count: 1,
+      details: normSubredditDetails(json, sub),
+    };
+  }
 
   if (mode === "comments") {
     if (!input.post_url?.trim()) throw new Error("post_url is required for comments mode");
@@ -253,6 +346,55 @@ export default defineTool<Input, Output>(async (input, bf) => {
       post: post ?? undefined,
       comments,
     }) as Output;
+  }
+
+  if (mode === "transcript") {
+    const raw = input.post_url?.trim();
+    if (!raw) throw new Error("post_url is required for transcript mode");
+    const language = input.language?.trim().toLowerCase() || "en";
+    if (!/^[a-z]{2,3}(?:-[a-z]{2})?$/.test(language)) throw new Error("language must be a 2 or 3 letter language code");
+    let videoId = raw.match(/v\.redd\.it\/([A-Za-z0-9]+)/i)?.[1];
+    const id = postId(raw);
+    let sourceUrl = raw;
+    if (!videoId) {
+      const url = commentsUrl(raw, 1);
+      const json = await getJson(bf, url);
+      const data = rec(rec(listingChildren(arr(json)[0])[0])?.data);
+      const media = rec(data?.secure_media) ?? rec(data?.media);
+      const redditVideo = rec(media?.reddit_video);
+      const fallback = asStr(redditVideo?.fallback_url) ?? asStr(redditVideo?.hls_url) ?? asStr(data?.url);
+      videoId = fallback?.match(/v\.redd\.it\/([A-Za-z0-9]+)/i)?.[1];
+      sourceUrl = asStr(data?.permalink) ? `${BASE}${asStr(data?.permalink)}` : raw;
+    }
+    if (!videoId) {
+      return { mode, source_url: sourceUrl, count: 0, post_id: id, language, transcript_not_available: true };
+    }
+    const captionUrl = `https://v.redd.it/${videoId}/wh_ben_${encodeURIComponent(language)}.vtt`;
+    const response = await bf.fetch({
+      url: captionUrl,
+      strategy: "http",
+      return_response_text: true,
+      include_html: false,
+      proxy: "auto",
+      extra_headers: { accept: "text/vtt,text/plain", referer: `${BASE}/` },
+    });
+    const rawVtt = response.body_text?.trim();
+    if (!rawVtt || !/^WEBVTT/i.test(rawVtt)) {
+      return { mode, source_url: sourceUrl, count: 0, post_id: id, video_id: videoId, caption_url: captionUrl, language, transcript_not_available: true };
+    }
+    const transcript = vttTranscript(rawVtt);
+    return {
+      mode,
+      source_url: sourceUrl,
+      count: transcript ? 1 : 0,
+      post_id: id,
+      video_id: videoId,
+      caption_url: captionUrl,
+      language,
+      raw_vtt: rawVtt,
+      transcript,
+      transcript_not_available: !transcript,
+    };
   }
 
   const sub = input.subreddit ? cleanSubreddit(input.subreddit) : undefined;

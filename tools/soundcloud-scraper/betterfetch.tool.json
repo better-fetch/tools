@@ -1,0 +1,95 @@
+{
+  "name": "soundcloud_scraper",
+  "version": "0.2.0",
+  "title": "SoundCloud Scraper",
+  "description": "Retrieve public SoundCloud artist or track metadata, or list an artist's public tracks, without a private developer token.",
+  "category": "media",
+  "logo": {
+    "label": "SoundCloud logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#ff5500\"/><path fill=\"#fff\" d=\"M8 39.5h2V28.8H8v10.7Zm4 0h2.4V24.6H12v14.9Zm4.5 0H19V22h-2.5v17.5Zm4.6 0h2.7V20.6h-2.7v18.9Zm4.8 0h3V19h-3v20.5Zm5.2 0h19.7a7.2 7.2 0 0 0 .7-14.4 10.8 10.8 0 0 0-20.4-2.3v16.7Z\"/></svg>",
+    "sourceUrl": "https://soundcloud.com/"
+  },
+  "seo": {
+    "title": "SoundCloud Scraper API for Artists and Tracks",
+    "description": "Retrieve public SoundCloud artist and track metadata, artist track listings, thumbnails, creators, and official embed markup as normalized JSON.",
+    "intro": "SoundCloud Scraper converts a public artist or track URL into normalized public oEmbed metadata and can list public artist tracks through the anonymous client contract exposed by SoundCloud's page. It returns creator, artwork, engagement, timing, and embed data without a SoundCloud account or private API token.",
+    "useCases": [
+      { "title": "Audio catalogue enrichment", "description": "Resolve SoundCloud links into clean creator, title, description, and artwork fields." },
+      { "title": "Public embeds", "description": "Collect SoundCloud's official player markup for a creator or track." },
+      { "title": "Agent link inspection", "description": "Let an agent identify and summarize a pasted public SoundCloud URL." }
+    ],
+    "faqs": [
+      { "question": "Does this need a SoundCloud API key?", "answer": "No private key. Embed modes use public oEmbed; artist_tracks uses the anonymous client id SoundCloud publishes in its public profile page." },
+      { "question": "How is artist mode detected?", "answer": "A profile-root URL resolves to artist mode; a URL with a second path segment resolves to track mode." },
+      { "question": "Does it access private tracks?", "answer": "No. Only metadata that SoundCloud exposes through its public embed endpoint is returned." }
+    ],
+    "keywords": ["SoundCloud scraper", "SoundCloud oEmbed", "SoundCloud track metadata", "SoundCloud artist API"]
+  },
+  "creditsEstimate": 3,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["artist", "artist_tracks", "track"], "description": "Entity type. Inferred from url when omitted, except artist_tracks must be explicit." },
+      "url": { "type": "string", "format": "uri", "description": "Public SoundCloud artist or track URL." },
+      "handle": { "type": "string", "description": "Artist handle when url is omitted." },
+      "cursor": { "type": "string", "description": "Opaque SoundCloud artist-track cursor from a previous response." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved SoundCloud entity type" },
+      "source_url": { "type": "string", "description": "SoundCloud oEmbed endpoint fetched" },
+      "soundcloud_url": { "type": "string", "description": "Canonical public SoundCloud URL" },
+      "title": { "type": "string", "description": "Public entity title" },
+      "description": { "type": "string", "description": "Public description" },
+      "author_name": { "type": "string", "description": "Creator name" },
+      "author_url": { "type": "string", "description": "Creator profile URL" },
+      "thumbnail_url": { "type": "string", "description": "Public artwork URL" },
+      "embed_html": { "type": "string", "description": "Official SoundCloud embed markup" },
+      "embed_type": { "type": "string", "description": "SoundCloud oEmbed response type" },
+      "width": { "type": "integer", "description": "Recommended embed width" },
+      "height": { "type": "integer", "description": "Recommended embed height" },
+      "artist_id": { "type": "integer", "description": "Public SoundCloud artist id" },
+      "next_cursor": { "type": "string", "description": "Cursor for the next public track listing page" },
+      "count": { "type": "integer", "description": "Number of tracks returned" },
+      "tracks": {
+        "type": "array",
+        "description": "Normalized public SoundCloud tracks",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "title": { "type": "string" },
+            "url": { "type": "string" },
+            "artwork_url": { "type": "string" },
+            "description": { "type": "string" },
+            "genre": { "type": "string" },
+            "duration_ms": { "type": "integer" },
+            "created_at": { "type": "string" },
+            "release_date": { "type": "string" },
+            "playback_count": { "type": "integer" },
+            "likes_count": { "type": "integer" },
+            "comment_count": { "type": "integer" },
+            "reposts_count": { "type": "integer" },
+            "is_explicit": { "type": "boolean" },
+            "is_streamable": { "type": "boolean" }
+          },
+          "required": ["id", "title", "url"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["mode", "source_url", "soundcloud_url", "title"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "soundcloud-artist", "input": { "url": "https://soundcloud.com/forss" }, "expect": { "outputMatches": { "mode": "artist", "title": "Forss" } } },
+    { "name": "soundcloud-track", "input": { "url": "https://soundcloud.com/forss/flickermood" }, "expect": { "outputMatches": { "mode": "track" } } },
+    { "name": "soundcloud-artist-tracks", "input": { "mode": "artist_tracks", "handle": "kehlanimusic", "max_results": 5 }, "expect": { "outputMatches": { "mode": "artist_tracks", "title": "Kehlani" } } }
+  ],
+  "entry": "src/index.ts"
+}

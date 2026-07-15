@@ -1,6 +1,6 @@
 {
   "name": "webpage_links_extractor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "title": "Webpage Links Extractor",
   "description": "Retrieve a rendered page and normalize internal or external links with anchor text, relationship labels, and domains.",
   "category": "content",
@@ -81,6 +81,18 @@
         "type": "string",
         "description": "Fetched source URL"
       },
+      "title": {
+        "type": "string",
+        "description": "Resolved page or Open Graph title"
+      },
+      "description": {
+        "type": "string",
+        "description": "Open Graph or standard page description"
+      },
+      "image": {
+        "type": "string",
+        "description": "Open Graph image URL when exposed"
+      },
       "count": {
         "type": "integer",
         "description": "Number of records returned"
@@ -129,6 +141,51 @@
       "input": {
         "url": "https://example.com",
         "scope": "all",
+        "limit": 10
+      },
+      "expect": {
+        "outputMatches": {
+          "links": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "linktree-profile",
+      "input": {
+        "url": "https://linktr.ee/selenagomez",
+        "scope": "external",
+        "limit": 10
+      },
+      "expect": {
+        "outputMatches": {
+          "links": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "linkbio-profile",
+      "input": {
+        "url": "https://lnk.bio/msjennafischer",
+        "scope": "external",
+        "limit": 10
+      },
+      "expect": {
+        "outputMatches": {
+          "links": {
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "linkme-profile",
+      "input": {
+        "url": "https://link.me/danucd",
+        "scope": "external",
         "limit": 10
       },
       "expect": {

@@ -1,0 +1,113 @@
+{
+  "name": "linkedin_discovery_scraper",
+  "version": "0.3.0",
+  "title": "LinkedIn Public Discovery",
+  "description": "Find Google-indexed public LinkedIn profiles, posts, articles, or keyword results with transparent best-effort semantics.",
+  "category": "social",
+  "logo": {
+    "label": "LinkedIn logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"10\" fill=\"#0a66c2\"/><path fill=\"#fff\" d=\"M14 25h8v25h-8zm4-12a4.7 4.7 0 1 1 0 9.4A4.7 4.7 0 0 1 18 13zm9 12h7.7v3.4h.1c1.1-2 3.7-4.2 7.6-4.2 8.1 0 9.6 5.3 9.6 12.3V50h-8V38c0-2.9-.1-6.6-4-6.6-4 0-4.7 3.1-4.7 6.4V50H27z\"/></svg>",
+    "sourceUrl": "https://www.linkedin.com/"
+  },
+  "seo": {
+    "title": "LinkedIn Profile, Post, and Search API",
+    "description": "Resolve indexed public LinkedIn profiles and posts, or search posts by keyword, recency, country, and page.",
+    "intro": "LinkedIn Public Discovery resolves profiles, individual posts, and keyword results through Google's public index, then normalizes the visible names, headlines, descriptions, URLs, author slugs, activity ids, and audience labels. It is transparent best-effort discovery rather than a claim of complete LinkedIn-native data coverage.",
+    "useCases": [
+      { "title": "Topic monitoring", "description": "Find indexed LinkedIn conversations around a market, product, or emerging keyword." },
+      { "title": "Creator research", "description": "Identify public authors and post URLs before deeper review or enrichment." },
+      { "title": "Recent-post discovery", "description": "Apply Google's recency filters to focus monitoring on a useful time window." }
+    ],
+    "faqs": [
+      { "question": "Is this LinkedIn-native search?", "answer": "No. It explicitly searches Google's public index and returns the LinkedIn posts Google exposes." },
+      { "question": "Does it need a LinkedIn login?", "answer": "No. It uses public search results and public LinkedIn URLs without an authenticated account." },
+      { "question": "Is every public LinkedIn post included?", "answer": "No. Coverage depends on Google's indexing, so the result set is useful but best-effort." }
+    ],
+    "keywords": ["LinkedIn post search", "LinkedIn scraper", "LinkedIn creator discovery", "LinkedIn monitoring"]
+  },
+  "creditsEstimate": 2,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["search_posts", "profile", "post", "transcript"], "description": "Search posts, resolve one profile or post, or extract a public LinkedIn video transcript." },
+      "query": { "type": "string", "description": "Keyword or phrase to search in indexed LinkedIn posts." },
+      "url": { "type": "string", "description": "Public LinkedIn profile, post, or article URL for profile and post modes." },
+      "date_posted": { "type": "string", "enum": ["last-hour", "last-day", "last-week", "last-month", "last-year"], "description": "Optional Google recency filter." },
+      "cursor": { "type": "string", "description": "Next Google results page number from a previous response." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10, "description": "Maximum indexed posts to return." },
+      "country": { "type": "string", "minLength": 2, "maxLength": 2, "description": "Optional two-letter country for localized Google results." }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved discovery mode" },
+      "query": { "type": "string", "description": "Requested keyword phrase" },
+      "source_url": { "type": "string", "description": "Rendered Google results URL" },
+      "count": { "type": "integer", "description": "Number of indexed results returned" },
+      "date_posted": { "type": "string", "description": "Requested recency filter" },
+      "next_cursor": { "type": "string", "description": "Next Google results page number" },
+      "profile": {
+        "type": "object",
+        "description": "Indexed public LinkedIn profile metadata",
+        "properties": {
+          "url": { "type": "string", "description": "Canonical profile URL" },
+          "slug": { "type": "string", "description": "LinkedIn profile slug" },
+          "name": { "type": "string", "description": "Indexed profile name" },
+          "headline": { "type": "string", "description": "Indexed headline or current organization" },
+          "summary": { "type": "string", "description": "Google-indexed profile summary" },
+          "followers": { "type": "integer", "description": "Indexed follower count" },
+          "connections": { "type": "string", "description": "Indexed connection label" }
+        },
+        "required": ["url", "slug", "name"],
+        "additionalProperties": false
+      },
+      "post": {
+        "type": "object",
+        "description": "One indexed public LinkedIn post or article",
+        "properties": {
+          "title": { "type": "string", "description": "Google result title" },
+          "url": { "type": "string", "description": "Canonical public LinkedIn URL" },
+          "description": { "type": "string", "description": "Google result snippet" },
+          "author_slug": { "type": "string", "description": "Author slug inferred from the URL" },
+          "activity_id": { "type": "string", "description": "LinkedIn activity id when present" },
+          "result_type": { "type": "string", "description": "Post or article" }
+        },
+        "required": ["title", "url", "result_type"],
+        "additionalProperties": false
+      },
+      "transcript": { "type": "string", "description": "Public LinkedIn video transcript normalized to plain text" },
+      "transcript_not_available": { "type": "boolean", "description": "True when LinkedIn exposes no public transcript or caption track" },
+      "caption_url": { "type": "string", "description": "LinkedIn public SRT/VTT caption URL when exposed" },
+      "posts": {
+        "type": "array",
+        "description": "Indexed public LinkedIn posts and articles",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string", "description": "Google result title" },
+            "url": { "type": "string", "description": "Canonical public LinkedIn URL" },
+            "description": { "type": "string", "description": "Google result snippet" },
+            "author_slug": { "type": "string", "description": "Author slug inferred from the URL" },
+            "activity_id": { "type": "string", "description": "LinkedIn activity id when present" },
+            "result_type": { "type": "string", "description": "Post or article" }
+          },
+          "required": ["title", "url", "result_type"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["mode", "source_url", "posts", "count"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "ai-agent-posts", "input": { "mode": "search_posts", "query": "ai agents", "max_results": 5 }, "expect": { "outputMatches": { "mode": "search_posts", "query": "ai agents", "posts": { "minLength": 1 } } } },
+    { "name": "sam-parr-profile", "input": { "mode": "profile", "url": "https://www.linkedin.com/in/parrsam/" }, "expect": { "outputMatches": { "mode": "profile", "count": 1 } } },
+    { "name": "public-post", "input": { "mode": "post", "url": "https://www.linkedin.com/posts/aagupta_what-you-need-to-know-ai-agents-activity-7354600338621906944-RvXR" }, "expect": { "outputMatches": { "mode": "post", "count": 1 } } },
+    { "name": "public-post-transcript", "input": { "mode": "transcript", "url": "https://www.linkedin.com/posts/gemini-35-flash-is-a-step-forward-for-google-ugcPost-7465082215316525056-MHBd/" }, "expect": { "outputMatches": { "mode": "transcript", "count": 1, "transcript_not_available": false } } }
+  ],
+  "entry": "src/index.ts"
+}

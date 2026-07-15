@@ -1,0 +1,100 @@
+{
+  "name": "age_gender_detector",
+  "version": "0.1.0",
+  "title": "Age & Gender Appearance Detector",
+  "description": "Estimate a coarse age range and binary gender presentation from one public, face-focused image using bounded local ONNX inference.",
+  "category": "social",
+  "logo": {
+    "label": "Face analysis outline",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect width=\"48\" height=\"48\" rx=\"12\" fill=\"#111827\"/><path d=\"M16 14h-3v7m22-7h-3v7M16 34h-3v-7m22 7h-3v-7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><circle cx=\"24\" cy=\"22\" r=\"6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.5\"/><path d=\"M15.5 34c1.6-5 4.4-7.5 8.5-7.5S31 29 32.5 34\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.5\" stroke-linecap=\"round\"/></svg>",
+    "sourceUrl": "https://betterfetch.co/security"
+  },
+  "seo": {
+    "title": "Age & Gender Appearance Detection API",
+    "description": "Run a bounded local age-range and gender-presentation estimate on one public face image with explicit confidence and limitations.",
+    "intro": "Age & Gender Appearance Detector keeps inference inside Better Fetch's production image. It returns a coarse Adience age bucket, a binary model presentation label, confidence values, image dimensions, model provenance, and a limitation notice. It is designed for low-stakes aggregate creator research—not identity, exact age, self-described gender, or eligibility decisions.",
+    "useCases": [
+      {
+        "title": "Low-stakes creator research",
+        "description": "Add a clearly labeled visual estimate to a manually reviewed public creator-research workflow."
+      },
+      {
+        "title": "Model evaluation",
+        "description": "Measure confidence and failure modes of a reproducible local appearance classifier on consented test images."
+      },
+      {
+        "title": "Dataset quality checks",
+        "description": "Flag low-confidence, off-center, or unsuitable face imagery for human review without treating predictions as facts."
+      }
+    ],
+    "keywords": [
+      "age estimation API",
+      "gender presentation classifier",
+      "local ONNX vision",
+      "face image analysis",
+      "creator research API"
+    ],
+    "faqs": [
+      {
+        "question": "Does this determine someone's real age or gender?",
+        "answer": "No. It returns a fallible appearance estimate from a binary classifier and coarse age buckets. It is not identity, self-described gender, exact age, or age verification."
+      },
+      {
+        "question": "Is the image sent to an external AI provider?",
+        "answer": "No. Better Fetch downloads the bounded public image and runs the baked ONNX models locally."
+      },
+      {
+        "question": "Can I use this for eligibility or another high-stakes decision?",
+        "answer": "No. Do not use it for employment, housing, credit, insurance, law enforcement, access, age verification, or any other high-stakes decision."
+      }
+    ]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "image_url": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048,
+        "description": "Public, face-focused image URL. The https:// prefix is optional."
+      }
+    },
+    "required": ["image_url"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "image_url": { "type": "string", "description": "Final validated public image URL" },
+      "age_range": { "type": "string", "description": "Coarse model age bucket" },
+      "age_midpoint": { "type": "integer", "description": "Representative midpoint for the bucket" },
+      "age_confidence": { "type": "number", "description": "Model confidence for the selected age bucket" },
+      "gender_presentation": { "type": "string", "description": "Binary appearance label emitted by the model" },
+      "gender_confidence": { "type": "number", "description": "Model confidence for the presentation label" },
+      "image_width": { "type": "integer", "description": "Decoded image width" },
+      "image_height": { "type": "integer", "description": "Decoded image height" },
+      "model": { "type": "string", "description": "Model provenance" },
+      "limitations": { "type": "string", "description": "Required interpretation and high-stakes-use warning" }
+    },
+    "required": ["image_url", "age_range", "age_midpoint", "age_confidence", "gender_presentation", "gender_confidence", "image_width", "image_height", "model", "limitations"],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "face-focused-public-image",
+      "input": {
+        "image_url": "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?w=720"
+      },
+      "expect": {
+        "outputMatches": {
+          "age_range": { "minLength": 1 },
+          "gender_presentation": { "minLength": 1 },
+          "limitations": { "minLength": 1 }
+        }
+      }
+    }
+  ],
+  "entry": "src/index.ts"
+}

@@ -1,0 +1,55 @@
+{
+  "name": "amazon_shop_scraper",
+  "version": "0.1.0",
+  "title": "Amazon Creator Shop Scraper",
+  "description": "Retrieve public Amazon creator storefront profiles, social accounts, Idea Lists, and trending products.",
+  "category": "social",
+  "logo": {
+    "label": "Amazon storefront icon",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#131921\"/><path fill=\"#fff\" d=\"M20 23c0-7 6-11 14-11 6 0 11 2 13 6l-7 4c-1-2-3-3-6-3-4 0-6 2-6 5v2c2-1 5-2 8-2 8 0 13 4 13 11v13h-8v-3c-3 3-6 4-10 4-7 0-12-4-12-10 0-7 6-11 16-11h6v-1c0-3-2-5-6-5-4 0-6 1-8 4l-7-3Zm21 11h-5c-6 0-9 1-9 4 0 2 2 4 5 4 5 0 9-3 9-7v-1Z\"/><path fill=\"#ff9900\" d=\"M15 51c12 6 26 6 36-1 2-1 3 1 1 3-9 9-27 9-38 1-2-1-1-4 1-3Z\"/></svg>",
+    "sourceUrl": "https://www.amazon.com/shop/"
+  },
+  "seo": {
+    "title": "Amazon Creator Storefront Scraper API",
+    "description": "Retrieve public Amazon influencer storefront identity, social accounts, Idea Lists, and trending product metadata for agents.",
+    "intro": "Amazon Creator Shop Scraper renders a public /shop storefront and normalizes the creator profile, external social accounts, Idea Lists, item counts, list imagery, and currently visible trending product ASINs, prices, badges, and images.",
+    "useCases": [
+      { "title": "Creator commerce research", "description": "Resolve an Amazon storefront to the creator's public identity, bio, avatar, and external social accounts." },
+      { "title": "Collection monitoring", "description": "Track a creator's visible Idea Lists, list IDs, item counts, imagery, and canonical URLs." },
+      { "title": "Product trend discovery", "description": "Capture the ASINs, prices, badges, and images Amazon currently surfaces as trending for that storefront." }
+    ],
+    "faqs": [
+      { "question": "Does this require an Amazon login?", "answer": "No. It reads public creator storefront pages." },
+      { "question": "Does it purchase products or add items to cart?", "answer": "No. It only returns public storefront metadata." },
+      { "question": "Why does the tool use a browser strategy?", "answer": "Amazon's storefront response is compressed and progressively enhanced; browser rendering yields the complete public creator and collection surface reliably." }
+    ],
+    "keywords": ["Amazon shop scraper", "Amazon influencer storefront API", "Amazon creator scraper", "Idea List scraper", "Amazon trending products"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": { "type": "string", "description": "Public Amazon /shop/{handle} URL. Scheme is optional." },
+      "max_collections": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 },
+      "max_trending": { "type": "integer", "minimum": 1, "maximum": 30, "default": 16 }
+    },
+    "required": ["url"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "source_url": { "type": "string" }, "handle": { "type": "string" }, "name": { "type": "string" }, "description": { "type": "string" }, "avatar": { "type": "string" }, "count": { "type": "integer" },
+      "socials": { "type": "array", "items": { "type": "object", "properties": { "platform": { "type": "string" }, "url": { "type": "string" } }, "required": ["platform", "url"], "additionalProperties": false } },
+      "collections": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" }, "url": { "type": "string" }, "item_count": { "type": "integer" }, "image": { "type": "string" } }, "required": ["id", "title", "url"], "additionalProperties": false } },
+      "trending_products": { "type": "array", "items": { "type": "object", "properties": { "asin": { "type": "string" }, "url": { "type": "string" }, "image": { "type": "string" }, "price": { "type": "number" }, "currency": { "type": "string" }, "badge": { "type": "string" } }, "required": ["asin", "url"], "additionalProperties": false } }
+    },
+    "required": ["source_url", "handle", "name", "socials", "collections", "trending_products", "count"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "storefront", "input": { "url": "amazon.com/shop/sydneydelrey", "max_collections": 10, "max_trending": 8 }, "expect": { "outputMatches": { "handle": "sydneydelrey", "collections": { "minLength": 1 }, "trending_products": { "minLength": 1 } } } }
+  ],
+  "entry": "src/index.ts"
+}

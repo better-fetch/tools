@@ -1,0 +1,123 @@
+{
+  "name": "google_ad_library_scraper",
+  "version": "0.1.0",
+  "title": "Google Ads Transparency Scraper",
+  "description": "Search advertisers, list company ads, and inspect public creatives from Google's Ads Transparency Center without sign-in.",
+  "category": "social",
+  "logo": {
+    "label": "Google Ads logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\"><path fill=\"#4285F4\" d=\"M93 25a32 32 0 0 1 44 12l83 144a32 32 0 1 1-55 32L82 69a32 32 0 0 1 11-44z\"/><path fill=\"#34A853\" d=\"M81 69 24 168a32 32 0 1 0 55 32l58-100z\"/><circle cx=\"52\" cy=\"184\" r=\"32\" fill=\"#FBBC04\"/></svg>",
+    "sourceUrl": "https://ads.google.com/"
+  },
+  "seo": {
+    "title": "Google Ads Transparency API for Advertisers and Creatives",
+    "description": "Search Google Ads Transparency advertisers, list public company ads, and inspect creative details through Better Fetch.",
+    "intro": "Google Ads Transparency Scraper reads the public rendered transparency pages that Google exposes without sign-in. It returns source-linked advertiser IDs, creative IDs, public preview assets, legal identity fields, region context, and visible ad details.",
+    "useCases": [
+      { "title": "Competitor ad monitoring", "description": "List stable creative URLs and preview assets for a company domain or advertiser ID." },
+      { "title": "Advertiser verification", "description": "Resolve a brand query to Google's advertiser identity, legal name, home region, and advertiser ID." },
+      { "title": "Creative inspection", "description": "Inspect a known public Google creative with its format, last-shown date, funding label, and region." }
+    ],
+    "faqs": [
+      { "question": "Does this require Google sign-in?", "answer": "No. It only returns information exposed by Google's public Ads Transparency Center without sign-in." },
+      { "question": "Does it return every ad?", "answer": "No. Google can withhold age-restricted or otherwise gated ads, and this tool reports only public rendered results." },
+      { "question": "Can I use a domain or advertiser ID?", "answer": "Yes. Company ads accepts either a public company domain or a Google advertiser ID beginning with AR." }
+    ],
+    "keywords": ["Google Ads Transparency API", "Google ad library scraper", "company ads", "advertiser search", "ad creative details"]
+  },
+  "creditsEstimate": 3,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["advertiser_search", "company_ads", "ad"], "description": "Search advertisers, list company ads, or inspect one creative." },
+      "query": { "type": "string", "description": "Advertiser name or domain for advertiser_search mode." },
+      "domain": { "type": "string", "description": "Company domain for company_ads mode." },
+      "advertiser_id": { "type": "string", "pattern": "^AR[0-9]+$", "description": "Google advertiser ID." },
+      "creative_id": { "type": "string", "pattern": "^CR[0-9]+$", "description": "Google creative ID." },
+      "url": { "type": "string", "description": "Public Google Ads Transparency creative URL." },
+      "region": { "type": "string", "pattern": "^[A-Za-z]{2}$", "default": "US", "description": "Two-letter country code." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 40, "default": 10, "description": "Maximum records to return." }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation." },
+      "source_url": { "type": "string", "description": "Fetched public source URL." },
+      "count": { "type": "integer", "description": "Number of primary records returned." },
+      "query": { "type": "string", "description": "Resolved advertiser query." },
+      "region": { "type": "string", "description": "Google transparency region." },
+      "websites": {
+        "type": "array",
+        "description": "Resolved company domains.",
+        "items": { "type": "object", "properties": { "domain": { "type": "string", "description": "Public company domain." } }, "required": ["domain"], "additionalProperties": false }
+      },
+      "advertisers": {
+        "type": "array",
+        "description": "Matching Google advertiser identities.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string", "description": "Visible advertiser name." },
+            "advertiser_id": { "type": "string", "description": "Stable Google advertiser ID." },
+            "region": { "type": "string", "description": "Requested region." },
+            "legal_name": { "type": "string", "description": "Google-disclosed legal name." },
+            "based_in": { "type": "string", "description": "Google-disclosed advertiser location." },
+            "number_of_ads_estimate": { "type": "integer", "description": "Visible approximate ad count." },
+            "url": { "type": "string", "description": "Public advertiser page." }
+          },
+          "required": ["name", "advertiser_id", "url"],
+          "additionalProperties": false
+        }
+      },
+      "ads": {
+        "type": "array",
+        "description": "Public Google ad creatives.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "advertiser_id": { "type": "string", "description": "Google advertiser ID." },
+            "creative_id": { "type": "string", "description": "Google creative ID." },
+            "ad_url": { "type": "string", "description": "Public creative URL." },
+            "advertiser_name": { "type": "string", "description": "Visible advertiser name." },
+            "format": { "type": "string", "description": "Visible or inferred creative format." },
+            "image_url": { "type": "string", "description": "Public creative preview image." },
+            "last_shown": { "type": "string", "description": "Visible last-shown date label." },
+            "shown_in": { "type": "string", "description": "Visible region label." },
+            "funded_by": { "type": "string", "description": "Visible funding entity." }
+          },
+          "required": ["advertiser_id", "creative_id", "ad_url"],
+          "additionalProperties": false
+        }
+      },
+      "ad": {
+        "type": "object",
+        "description": "Resolved individual creative.",
+        "properties": {
+          "advertiser_id": { "type": "string", "description": "Google advertiser ID." },
+          "creative_id": { "type": "string", "description": "Google creative ID." },
+          "ad_url": { "type": "string", "description": "Public creative URL." },
+          "advertiser_name": { "type": "string", "description": "Visible advertiser name." },
+          "format": { "type": "string", "description": "Visible creative format." },
+          "image_url": { "type": "string", "description": "Public creative preview image." },
+          "last_shown": { "type": "string", "description": "Visible last-shown date label." },
+          "shown_in": { "type": "string", "description": "Visible region label." },
+          "funded_by": { "type": "string", "description": "Visible funding entity." }
+        },
+        "required": ["advertiser_id", "creative_id", "ad_url"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["mode", "source_url", "count", "websites", "advertisers", "ads"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "advertiser-search", "input": { "mode": "advertiser_search", "query": "nike.com", "region": "AU", "max_results": 5 }, "expect": { "outputMatches": { "mode": "advertiser_search", "advertisers": { "minLength": 1 } } } },
+    { "name": "company-ads", "input": { "mode": "company_ads", "advertiser_id": "AR09595561223982678017", "region": "AU", "max_results": 5 }, "expect": { "outputMatches": { "mode": "company_ads", "ads": { "minLength": 1 } } } },
+    { "name": "ad-details", "input": { "mode": "ad", "url": "https://adstransparency.google.com/advertiser/AR09595561223982678017/creative/CR17026385065933799425", "region": "AU" }, "expect": { "outputMatches": { "mode": "ad", "count": 1 } } }
+  ],
+  "entry": "src/index.ts"
+}

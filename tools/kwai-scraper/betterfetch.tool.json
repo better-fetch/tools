@@ -1,0 +1,78 @@
+{
+  "name": "kwai_scraper",
+  "version": "0.1.0",
+  "title": "Kwai Scraper",
+  "description": "Retrieve public Kwai creator profiles, creator posts, and individual post metadata without login.",
+  "category": "social",
+  "logo": {
+    "label": "Kwai logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#ff4b23\"/><path fill=\"#fff\" d=\"M20 14a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 6a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm24-6a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 6a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM18 35h28c4 0 7 3 7 7v8H11v-8c0-4 3-7 7-7Zm1 6c-1 0-2 1-2 2v1h30v-1c0-1-1-2-2-2H19Z\"/></svg>",
+    "sourceUrl": "https://www.kwai.com/"
+  },
+  "seo": {
+    "title": "Kwai Scraper API for Profiles and Videos",
+    "description": "Retrieve structured public Kwai creator profiles, creator video listings, and individual post metadata for agents.",
+    "intro": "Kwai Scraper reads Kwai's public server-rendered creator and video pages. It normalizes profile stats, bios, post identifiers, captions, views, thumbnails, engagement, and public media URLs without requiring account credentials.",
+    "useCases": [
+      { "title": "Creator research", "description": "Resolve a public Kwai creator to follower, following, and like labels plus bio, avatar, and verification state." },
+      { "title": "Video monitoring", "description": "List a creator's recent public video IDs, captions, view labels, thumbnails, and canonical URLs." },
+      { "title": "Post enrichment", "description": "Turn a Kwai video URL into normalized caption, engagement, publication, thumbnail, and media metadata." }
+    ],
+    "faqs": [
+      { "question": "Does this require Kwai login?", "answer": "No. The implemented modes use public Kwai creator and video pages." },
+      { "question": "Does it download videos?", "answer": "No. It returns public metadata and the media URL when Kwai exposes one." },
+      { "question": "Are private creators supported?", "answer": "No. Only publicly accessible creator and post pages are supported." }
+    ],
+    "keywords": ["Kwai scraper", "Kwai API", "Kwai profile", "Kwai videos", "Kwai post"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["profile", "user_posts", "post"] },
+      "username": { "type": "string", "description": "Public Kwai username or profile URL for profile and user_posts modes." },
+      "post_url": { "type": "string", "description": "Public Kwai /@creator/video/{id} URL for post mode." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 25, "default": 10 }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string" }, "source_url": { "type": "string" }, "count": { "type": "integer" },
+      "profile": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" }, "display_name": { "type": "string" }, "url": { "type": "string" },
+          "bio": { "type": "string" }, "avatar": { "type": "string" }, "followers_text": { "type": "string" },
+          "following_text": { "type": "string" }, "likes_text": { "type": "string" }, "verified": { "type": "boolean" }
+        },
+        "required": ["username", "display_name", "url"],
+        "additionalProperties": false
+      },
+      "posts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "post_id": { "type": "string" }, "username": { "type": "string" }, "url": { "type": "string" }, "caption": { "type": "string" },
+            "published_at": { "type": "string" }, "likes": { "type": "number" }, "comments": { "type": "number" },
+            "views_text": { "type": "string" }, "thumbnail": { "type": "string" }, "media_url": { "type": "string" }
+          },
+          "required": ["post_id", "username", "url", "caption"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["mode", "source_url", "count", "posts"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "profile", "input": { "mode": "profile", "username": "gilliardimachado" }, "expect": { "outputMatches": { "count": 1 } } },
+    { "name": "user-posts", "input": { "mode": "user_posts", "username": "gilliardimachado", "max_results": 5 }, "expect": { "outputMatches": { "posts": { "minLength": 1 } } } },
+    { "name": "post", "input": { "mode": "post", "post_url": "https://www.kwai.com/@gilliardimachado/video/5240369753202289203" }, "expect": { "outputMatches": { "count": 1 } } }
+  ],
+  "entry": "src/index.ts"
+}

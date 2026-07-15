@@ -1,0 +1,226 @@
+{
+  "name": "tiktok_shop_scraper",
+  "version": "0.1.0",
+  "title": "TikTok Shop Scraper",
+  "description": "Discover public TikTok Shop products and extract product details, prices, seller information, ratings, and visible verified reviews.",
+  "category": "social",
+  "logo": {
+    "label": "TikTok Shop logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect width=\"48\" height=\"48\" rx=\"12\" fill=\"#111\"/><path d=\"M30 12c.8 4.7 3.4 7.5 7 8.4v6.1c-2.5-.1-4.8-.8-7-2v9.2c0 6-4.7 10.3-10.5 10.3S9 39.6 9 33.8c0-6.4 5.8-11.2 12.3-10v6.3c-2.7-.8-5.7.8-5.7 3.8 0 2.1 1.7 3.8 3.9 3.8 2.3 0 4-1.7 4-4.5V12H30Z\" fill=\"#00F2EA\"/><path d=\"M32 12c.8 3.8 2.6 6.4 6 7.7v5.9c-2.7-.2-5.2-1.1-7.3-2.8v10.4c0 6.4-5 10.8-10.7 10.8-3.2 0-6-1.3-8-3.4 1.9 1.4 4.2 2.2 6.7 2.2 5.8 0 10.5-4.4 10.5-10.6V12H32Z\" fill=\"#FF0050\"/><path d=\"M29.2 12c.8 4.8 3.4 7.7 7 8.5v4.1c-2.5-.4-4.8-1.5-7-3.3v11c0 6.2-4.7 10.6-10.5 10.6-2.6 0-5-.9-6.8-2.4a10.5 10.5 0 0 1-2.9-7.2c0-6.2 5.5-10.9 12.3-9.5v5.1c-3.2-.8-6.2 1-6.2 4.3 0 2.4 1.9 4.3 4.3 4.3 2.5 0 4.3-1.9 4.3-5V12h5.5Z\" fill=\"#fff\"/></svg>",
+    "sourceUrl": "https://icon-sets.iconify.design/logos/tiktok-icon/"
+  },
+  "seo": {
+    "title": "TikTok Shop Scraper API",
+    "description": "Search TikTok Shop products and extract public PDP details and reviews with Better Fetch.",
+    "intro": "TikTok Shop Scraper works from public US product pages and public web-index results. Every response identifies whether its source is a product page or public index so discovery coverage is not mistaken for a private or complete seller catalog.",
+    "useCases": [
+      {
+        "title": "Product research",
+        "description": "Discover public TikTok Shop product pages for a keyword and collect canonical product IDs and URLs."
+      },
+      {
+        "title": "Commerce monitoring",
+        "description": "Track public price, rating, sold-count, seller, and product-description changes."
+      },
+      {
+        "title": "Review intelligence",
+        "description": "Collect the public review summary and visible verified-purchase reviews from a product page."
+      }
+    ],
+    "keywords": [
+      "TikTok Shop scraper",
+      "TikTok product API",
+      "TikTok Shop reviews",
+      "social commerce data",
+      "TikTok Shop search"
+    ],
+    "faqs": [
+      {
+        "question": "Does this use private seller data?",
+        "answer": "No. It reads public product pages and public web-index results and reports the source type in every response."
+      },
+      {
+        "question": "Which region is supported?",
+        "answer": "The current public-page implementation is intentionally limited to US TikTok Shop pages."
+      }
+    ]
+  },
+  "creditsEstimate": 2,
+  "maxEngineCalls": 8,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": ["search", "products", "product", "product_reviews"],
+        "description": "search = keyword discovery; products = public-index discovery for a shop URL; product = one public PDP; product_reviews = visible PDP reviews."
+      },
+      "query": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200,
+        "description": "Keyword required for search mode."
+      },
+      "url": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 2048,
+        "description": "TikTok Shop product URL for product/review modes, or store URL for products mode. The https:// prefix is optional."
+      },
+      "product_id": {
+        "type": "string",
+        "pattern": "^[0-9]{15,24}$",
+        "description": "Product ID alternative to url for product and product_reviews modes."
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "description": "Requested result/review page. Public PDP review output currently reflects the visible page."
+      },
+      "max_results": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 20,
+        "description": "Maximum public-index products to return."
+      },
+      "region": {
+        "type": "string",
+        "enum": ["US", "us"],
+        "description": "TikTok Shop region. Current public-page support is US only."
+      },
+      "sort_by": {
+        "type": "string",
+        "enum": ["top", "new_releases"],
+        "description": "Requested store discovery order. Public-index provenance remains explicit."
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Executed mode" },
+      "source_url": { "type": "string", "description": "Public page or index URL actually used" },
+      "source_type": { "type": "string", "description": "public_index or public_product_page" },
+      "region": { "type": "string", "description": "TikTok Shop region" },
+      "query": { "type": "string", "description": "Search query" },
+      "page": { "type": "integer", "description": "Requested page" },
+      "count": { "type": "integer", "description": "Number of returned products or reviews" },
+      "total": { "type": "integer", "description": "Public total review count when exposed" },
+      "has_more": { "type": "boolean", "description": "Whether the public total exceeds returned visible reviews" },
+      "next_page": { "type": "integer", "description": "Next page hint when more reviews exist" },
+      "sort_by": { "type": "string", "description": "Requested store sort" },
+      "shop": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "url": { "type": "string" },
+          "seller_id": { "type": "string" }
+        },
+        "required": ["name", "url"],
+        "additionalProperties": false
+      },
+      "products": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "product_id": { "type": "string" },
+            "title": { "type": "string" },
+            "url": { "type": "string" },
+            "description": { "type": "string" },
+            "price": { "type": "string" },
+            "original_price": { "type": "string" },
+            "currency": { "type": "string" },
+            "discount": { "type": "string" },
+            "rating": { "type": "number" },
+            "review_count": { "type": "integer" },
+            "sold_count": { "type": "integer" },
+            "seller_name": { "type": "string" },
+            "images_csv": { "type": "string", "description": "Comma-separated public product image URLs." },
+            "categories_csv": { "type": "string", "description": "Comma-separated public category names." }
+          },
+          "required": ["product_id", "title", "url"],
+          "additionalProperties": false
+        },
+        "description": "Public product summaries"
+      },
+      "product": {
+        "type": "object",
+        "properties": {
+          "product_id": { "type": "string" },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "string" },
+          "original_price": { "type": "string" },
+          "currency": { "type": "string" },
+          "discount": { "type": "string" },
+          "rating": { "type": "number" },
+          "review_count": { "type": "integer" },
+          "sold_count": { "type": "integer" },
+          "seller_name": { "type": "string" },
+          "images_csv": { "type": "string", "description": "Comma-separated public product image URLs." },
+          "categories_csv": { "type": "string", "description": "Comma-separated public category names." }
+        },
+        "required": ["product_id", "title", "url"],
+        "additionalProperties": false
+      },
+      "reviews": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "reviewer_name": { "type": "string" },
+            "country": { "type": "string" },
+            "text": { "type": "string" },
+            "sku": { "type": "string" },
+            "date": { "type": "string" },
+            "verified_purchase": { "type": "boolean" }
+          },
+          "required": ["reviewer_name", "text", "verified_purchase"],
+          "additionalProperties": false
+        },
+        "description": "Visible public verified-purchase reviews"
+      },
+      "rating_distribution": {
+        "type": "object",
+        "properties": {
+          "1": { "type": "integer" },
+          "2": { "type": "integer" },
+          "3": { "type": "integer" },
+          "4": { "type": "integer" },
+          "5": { "type": "integer" }
+        },
+        "additionalProperties": false,
+        "description": "Public rating counts keyed by 1 through 5"
+      }
+    },
+    "required": ["mode", "source_url", "source_type", "region", "count"],
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "name": "shop-search",
+      "input": { "mode": "search", "query": "shoes", "max_results": 5, "region": "US" },
+      "expect": { "outputMatches": { "mode": "search", "source_type": "public_index", "products": { "minLength": 1 } } }
+    },
+    {
+      "name": "shop-products",
+      "input": { "mode": "products", "url": "tiktok.com/shop/store/goli-nutrition/7495794203056835079", "max_results": 5, "region": "US" },
+      "expect": { "outputMatches": { "mode": "products", "source_type": "public_index", "products": { "minLength": 1 } } }
+    },
+    {
+      "name": "product-details",
+      "input": { "mode": "product", "url": "tiktok.com/shop/pdp/goli-ashwagandha-gummies-with-vitamin-d-ksm-66-vegan-non-gmo/1729587769570529799", "region": "US" },
+      "expect": { "outputMatches": { "mode": "product", "source_type": "public_product_page", "product.product_id": "1729587769570529799" } }
+    },
+    {
+      "name": "product-reviews",
+      "input": { "mode": "product_reviews", "product_id": "1729587769570529799", "region": "US" },
+      "expect": { "outputMatches": { "mode": "product_reviews", "reviews": { "minLength": 1 } } }
+    }
+  ],
+  "entry": "src/index.ts"
+}

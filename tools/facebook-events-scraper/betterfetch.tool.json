@@ -1,0 +1,93 @@
+{
+  "name": "facebook_events_scraper",
+  "version": "0.1.0",
+  "title": "Facebook Events Scraper",
+  "description": "Search indexed public Facebook events, resolve an events URL, or inspect one public event without a Facebook login.",
+  "category": "social",
+  "logo": { "label": "Facebook logo", "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\"><circle cx=\"128\" cy=\"128\" r=\"128\" fill=\"#1877F2\"/><path fill=\"#fff\" d=\"M148 254v-89h30l5-37h-35v-24c0-11 5-20 21-20h16V52s-15-2-29-2c-29 0-48 18-48 50v28H76v37h32v89z\"/></svg>", "sourceUrl": "https://www.facebook.com/" },
+  "seo": {
+    "title": "Facebook Events Search and Details API",
+    "description": "Find indexed public Facebook events and resolve public event metadata through Better Fetch.",
+    "intro": "Facebook Events Scraper combines transparent search-index discovery with direct public event-page metadata. It returns source URLs, stable event IDs, titles, visible descriptions, location, organizer, date labels, and event images when Facebook exposes them.",
+    "useCases": [
+      { "title": "Local event discovery", "description": "Find public Facebook events by city, theme, venue, or date phrase." },
+      { "title": "Event verification", "description": "Resolve a known event URL or numeric ID to its current public title, description, and image." },
+      { "title": "Community monitoring", "description": "Track source-linked public event listings without storing Facebook credentials." }
+    ],
+    "faqs": [
+      { "question": "Does this require Facebook login?", "answer": "No. Search uses Google's public index and details use Facebook's public Open Graph metadata." },
+      { "question": "Is event search complete?", "answer": "No. Search coverage depends on public indexing and is explicitly best-effort." },
+      { "question": "Can it read private events?", "answer": "No. It only returns event data exposed on public Facebook and search-index surfaces." }
+    ],
+    "keywords": ["Facebook events scraper", "Facebook event search", "event details API", "public events", "local event discovery"]
+  },
+  "creditsEstimate": 2,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["search", "events_url", "details"], "description": "Search by phrase, resolve an events URL, or inspect one event." },
+      "query": { "type": "string", "description": "Event search phrase." },
+      "url": { "type": "string", "description": "Facebook events search/Page URL or individual event URL." },
+      "id": { "type": "string", "description": "Numeric Facebook event id for details mode." },
+      "time": { "type": "string", "description": "Optional time phrase retained for competitor-compatible inputs." },
+      "cursor": { "type": "string", "description": "Google result offset from a previous response." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10, "description": "Maximum events to return." }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation." },
+      "source_url": { "type": "string", "description": "Fetched source URL." },
+      "query": { "type": "string", "description": "Resolved event search phrase." },
+      "count": { "type": "integer", "description": "Number of event records." },
+      "next_cursor": { "type": "string", "description": "Next search offset." },
+      "events": {
+        "type": "array",
+        "description": "Public Facebook event records.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Facebook event id." },
+            "url": { "type": "string", "description": "Canonical public event URL." },
+            "title": { "type": "string", "description": "Visible event title." },
+            "description": { "type": "string", "description": "Visible indexed or Open Graph description." },
+            "location": { "type": "string", "description": "Visible event location." },
+            "organizer": { "type": "string", "description": "Visible event organizer." },
+            "start_time_label": { "type": "string", "description": "Visible event date/time label." },
+            "image_url": { "type": "string", "description": "Public event image URL." }
+          },
+          "required": ["id", "url", "title"],
+          "additionalProperties": false
+        }
+      },
+      "event": {
+        "type": "object",
+        "description": "Resolved individual event.",
+        "properties": {
+          "id": { "type": "string", "description": "Facebook event id." },
+          "url": { "type": "string", "description": "Canonical public event URL." },
+          "title": { "type": "string", "description": "Visible event title." },
+          "description": { "type": "string", "description": "Visible Open Graph description." },
+          "location": { "type": "string", "description": "Visible event location." },
+          "organizer": { "type": "string", "description": "Visible event organizer." },
+          "start_time_label": { "type": "string", "description": "Visible event date/time label." },
+          "image_url": { "type": "string", "description": "Public event image URL." }
+        },
+        "required": ["id", "url", "title"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["mode", "source_url", "count", "events"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "brisbane-events", "input": { "mode": "search", "query": "Brisbane technology 2026", "max_results": 5 }, "expect": { "outputMatches": { "mode": "search", "events": { "minLength": 1 } } } },
+    { "name": "events-url", "input": { "mode": "events_url", "url": "https://www.facebook.com/IICA/events", "max_results": 5 }, "expect": { "outputMatches": { "mode": "events_url", "events": { "minLength": 1 } } } },
+    { "name": "event-details", "input": { "mode": "details", "id": "1050688114286614" }, "expect": { "outputMatches": { "mode": "details", "count": 1 } } }
+  ],
+  "entry": "src/index.ts"
+}

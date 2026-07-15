@@ -8,9 +8,11 @@ returns normalized profile fields such as handle, display name, bio, user id,
 joined date, avatar, banner image, follower count, following count, post count,
 and public profile URL.
 
-Version 0.1 intentionally covers profile metadata only. Tweet search, latest
-posts, replies, and timeline pagination should be added as separately validated
-slices before this tool is marked as full production search coverage.
+The tool also reads visible profile posts, individual posts, public Community
+metadata and Community posts. `transcript` resolves X's public syndication
+payload, selects the best MP4 rendition expected to fit Better Fetch's media
+ceiling, and returns locally generated speech text plus timed segments. Posts
+without a public MP4 fail explicitly.
 
 ## Develop
 

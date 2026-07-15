@@ -1,0 +1,94 @@
+{
+  "name": "facebook_marketplace_scraper",
+  "version": "0.1.0",
+  "title": "Facebook Marketplace Scraper",
+  "description": "Search indexed public Marketplace listings, resolve exact items, and geocode Marketplace locations with explicit source semantics.",
+  "category": "shopping",
+  "logo": { "label": "Facebook Marketplace", "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"12\" fill=\"#1877F2\"/><path fill=\"#fff\" d=\"M13 24h38l-4-11H17zM16 29h32v22H16zm8 6v10h16V35z\"/></svg>", "sourceUrl": "https://www.facebook.com/marketplace/" },
+  "seo": {
+    "title": "Facebook Marketplace Search and Item API",
+    "description": "Find indexed public Facebook Marketplace listings, exact items, prices, locations, and listing metadata.",
+    "intro": "Facebook Marketplace Scraper uses public search-index coverage for listings that Facebook exposes publicly, plus a clearly identified OpenStreetMap geocoder for location coordinates. It returns source-linked item IDs, canonical URLs, titles, descriptions, visible prices, locations, listing-age labels, condition, and availability without claiming authenticated Marketplace coverage.",
+    "useCases": [
+      { "title": "Local resale research", "description": "Find public indexed listings for products and categories in a city or region." },
+      { "title": "Listing verification", "description": "Resolve a known Marketplace item ID to its current indexed title and visible metadata." },
+      { "title": "Search setup", "description": "Convert a place name into latitude and longitude before running a localized listing workflow." }
+    ],
+    "faqs": [
+      { "question": "Does this need Facebook login?", "answer": "No. Listing discovery uses public search-index results rather than an authenticated Facebook session." },
+      { "question": "Where do location coordinates come from?", "answer": "Location lookup explicitly uses OpenStreetMap Nominatim; it does not claim a private Facebook location identifier." },
+      { "question": "Is Marketplace coverage complete?", "answer": "No. Results are best-effort and limited to public listings exposed in the search index." }
+    ],
+    "keywords": ["Facebook Marketplace scraper", "Marketplace search API", "Facebook listing scraper", "used goods search", "local marketplace"]
+  },
+  "creditsEstimate": 2,
+  "maxEngineCalls": 2,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["location_search", "search", "item"], "description": "Geocode a location, search listings, or resolve one item." },
+      "query": { "type": "string", "description": "Location or listing search phrase." },
+      "id": { "type": "string", "description": "Numeric Marketplace item id." },
+      "url": { "type": "string", "description": "Public Marketplace item URL." },
+      "lat": { "type": "number", "description": "Optional search latitude." },
+      "lng": { "type": "number", "description": "Optional search longitude." },
+      "radius_km": { "type": "number", "description": "Optional radius recorded with the result." },
+      "min_price": { "type": "number", "description": "Optional minimum visible price filter." },
+      "max_price": { "type": "number", "description": "Optional maximum visible price filter." },
+      "count": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10, "description": "Maximum listing results." },
+      "sort_by": { "type": "string", "description": "Requested sort recorded transparently in applied_filters." },
+      "delivery_method": { "type": "string", "description": "Requested delivery filter recorded in applied_filters." },
+      "condition": { "type": "string", "description": "Requested condition filter recorded in applied_filters." },
+      "date_listed": { "type": "string", "description": "Requested listing-age filter recorded in applied_filters." },
+      "availability": { "type": "string", "description": "Requested availability filter recorded in applied_filters." },
+      "cursor": { "type": "string", "description": "Google result offset from a previous response." }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation." },
+      "source_url": { "type": "string", "description": "Fetched public source URL." },
+      "query": { "type": "string", "description": "Requested location or listing phrase." },
+      "count": { "type": "integer", "description": "Number of records." },
+      "next_cursor": { "type": "string", "description": "Next search offset." },
+      "applied_filters": {
+        "type": "object",
+        "description": "Requested search filters recorded for transparency.",
+        "properties": {
+          "lat": { "type": "number" }, "lng": { "type": "number" }, "radius_km": { "type": "number" },
+          "min_price": { "type": "number" }, "max_price": { "type": "number" }, "sort_by": { "type": "string" },
+          "delivery_method": { "type": "string" }, "condition": { "type": "string" }, "date_listed": { "type": "string" }, "availability": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "locations": {
+        "type": "array", "description": "OpenStreetMap location matches.",
+        "items": { "type": "object", "properties": {
+          "name": { "type": "string" }, "display_name": { "type": "string" }, "latitude": { "type": "number" }, "longitude": { "type": "number" }, "type": { "type": "string" }, "country_code": { "type": "string" }
+        }, "required": ["name", "display_name", "latitude", "longitude"], "additionalProperties": false }
+      },
+      "listings": {
+        "type": "array", "description": "Indexed public Marketplace listings.",
+        "items": { "type": "object", "properties": {
+          "id": { "type": "string" }, "url": { "type": "string" }, "title": { "type": "string" }, "description": { "type": "string" }, "price_label": { "type": "string" }, "location": { "type": "string" }, "listed_at_label": { "type": "string" }, "condition": { "type": "string" }, "availability": { "type": "string" }
+        }, "required": ["id", "url", "title"], "additionalProperties": false }
+      },
+      "item": {
+        "type": "object", "description": "Resolved exact Marketplace item.",
+        "properties": { "id": { "type": "string" }, "url": { "type": "string" }, "title": { "type": "string" }, "description": { "type": "string" }, "price_label": { "type": "string" }, "location": { "type": "string" }, "listed_at_label": { "type": "string" }, "condition": { "type": "string" }, "availability": { "type": "string" } },
+        "required": ["id", "url", "title"], "additionalProperties": false
+      }
+    },
+    "required": ["mode", "source_url", "count", "locations", "listings"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "brisbane-location", "input": { "mode": "location_search", "query": "Brisbane, Queensland, Australia" }, "expect": { "outputMatches": { "mode": "location_search", "locations": { "minLength": 1 } } } },
+    { "name": "bike-search", "input": { "mode": "search", "query": "Brisbane bicycle", "count": 5 }, "expect": { "outputMatches": { "mode": "search", "listings": { "minLength": 1 } } } },
+    { "name": "marketplace-item", "input": { "mode": "item", "id": "2018408122382767" }, "expect": { "outputMatches": { "mode": "item", "count": 1 } } }
+  ],
+  "entry": "src/index.ts"
+}

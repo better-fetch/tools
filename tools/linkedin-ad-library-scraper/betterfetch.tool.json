@@ -1,0 +1,108 @@
+{
+  "name": "linkedin_ad_library_scraper",
+  "version": "0.1.0",
+  "title": "LinkedIn Ad Library Scraper",
+  "description": "Search LinkedIn's public Ad Library and inspect advertiser, creative, payer, date, impression, and targeting details without sign-in.",
+  "category": "social",
+  "logo": { "label": "LinkedIn logo", "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\"><rect width=\"256\" height=\"256\" rx=\"28\" fill=\"#0A66C2\"/><path fill=\"#fff\" d=\"M55 96h31v100H55zm15-50a18 18 0 1 1 0 36 18 18 0 0 1 0-36zm36 50h30v14h1c4-8 15-18 31-18 33 0 39 22 39 50v54h-31v-48c0-12 0-27-17-27s-20 13-20 26v49h-31z\"/></svg>", "sourceUrl": "https://www.linkedin.com/" },
+  "seo": {
+    "title": "LinkedIn Ad Library Search and Details API",
+    "description": "Search public LinkedIn ads and inspect creative, payer, date, impression, and targeting details through Better Fetch.",
+    "intro": "LinkedIn Ad Library Scraper uses LinkedIn's official public Ad Library pages. Search results include stable ad IDs, advertiser names, formats, copy, headlines, logos, and creative images. Detail mode adds payer, run dates, impression ranges, targeting labels, and variant state when publicly available.",
+    "useCases": [
+      { "title": "B2B competitor research", "description": "Track current public ad copy and formats by company or advertiser name." },
+      { "title": "Creative intelligence", "description": "Collect source-linked headlines, descriptions, images, formats, and advertiser identity." },
+      { "title": "Transparency analysis", "description": "Inspect disclosed payer, run dates, impression ranges, and targeting parameters." }
+    ],
+    "faqs": [
+      { "question": "Does this require LinkedIn sign-in?", "answer": "No. It reads LinkedIn's official public Ad Library." },
+      { "question": "How long are ads available?", "answer": "LinkedIn says ads remain in its Ad Library for one year after their last impression." },
+      { "question": "Why are some fields absent?", "answer": "LinkedIn withholds some fields for restricted ads and exposes extra impression or targeting data only where applicable." }
+    ],
+    "keywords": ["LinkedIn Ad Library API", "LinkedIn ads scraper", "B2B ad intelligence", "LinkedIn creative search"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["search", "ad"], "description": "Search ads or inspect one ad." },
+      "company": { "type": "string", "description": "Company or advertiser name." },
+      "keyword": { "type": "string", "description": "Keyword or phrase." },
+      "companyId": { "type": "string", "description": "LinkedIn company ID." },
+      "countries": { "type": "string", "description": "Comma-separated country codes." },
+      "startDate": { "type": "string", "description": "Start date in YYYY-MM-DD format." },
+      "endDate": { "type": "string", "description": "End date in YYYY-MM-DD format." },
+      "paginationToken": { "type": "string", "description": "LinkedIn results pagination token." },
+      "id": { "type": "string", "pattern": "^[0-9]{6,20}$", "description": "LinkedIn Ad Library ad ID." },
+      "url": { "type": "string", "description": "Public LinkedIn Ad Library detail URL." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 24, "default": 10, "description": "Maximum ads to return." }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation." },
+      "source_url": { "type": "string", "description": "Fetched LinkedIn Ad Library URL." },
+      "count": { "type": "integer", "description": "Number of ads returned." },
+      "total_matches": { "type": "integer", "description": "Visible total matching-ad count." },
+      "pagination_token": { "type": "string", "description": "Next LinkedIn pagination token when present." },
+      "ads": {
+        "type": "array",
+        "description": "Public LinkedIn ads.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "LinkedIn Ad Library ID." },
+            "url": { "type": "string", "description": "Public detail URL." },
+            "advertiser": { "type": "string", "description": "Advertiser name." },
+            "format": { "type": "string", "description": "Ad format." },
+            "description": { "type": "string", "description": "Visible ad copy." },
+            "headline": { "type": "string", "description": "Visible creative headline." },
+            "image_url": { "type": "string", "description": "Public creative image." },
+            "logo_url": { "type": "string", "description": "Public advertiser logo." },
+            "paid_for_by": { "type": "string", "description": "Disclosed payer." },
+            "ran_from": { "type": "string", "description": "Visible run start date." },
+            "ran_to": { "type": "string", "description": "Visible run end date." },
+            "total_impressions": { "type": "string", "description": "Visible impression range." },
+            "targeting": { "type": "string", "description": "Visible targeting statements separated by semicolons." },
+            "has_multiple_variants": { "type": "boolean", "description": "Whether LinkedIn reports multiple variants." }
+          },
+          "required": ["id", "url"],
+          "additionalProperties": false
+        }
+      },
+      "ad": {
+        "type": "object",
+        "description": "Resolved individual ad.",
+        "properties": {
+          "id": { "type": "string", "description": "LinkedIn Ad Library ID." },
+          "url": { "type": "string", "description": "Public detail URL." },
+          "advertiser": { "type": "string", "description": "Advertiser name." },
+          "format": { "type": "string", "description": "Ad format." },
+          "description": { "type": "string", "description": "Visible ad copy." },
+          "headline": { "type": "string", "description": "Visible creative headline." },
+          "image_url": { "type": "string", "description": "Public creative image." },
+          "logo_url": { "type": "string", "description": "Public advertiser logo." },
+          "paid_for_by": { "type": "string", "description": "Disclosed payer." },
+          "ran_from": { "type": "string", "description": "Visible run start date." },
+          "ran_to": { "type": "string", "description": "Visible run end date." },
+          "total_impressions": { "type": "string", "description": "Visible impression range." },
+          "targeting": { "type": "string", "description": "Visible targeting statements separated by semicolons." },
+          "has_multiple_variants": { "type": "boolean", "description": "Whether LinkedIn reports multiple variants." }
+        },
+        "required": ["id", "url"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["mode", "source_url", "count", "ads"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "search-ads", "input": { "mode": "search", "company": "Microsoft", "max_results": 5 }, "expect": { "outputMatches": { "mode": "search", "ads": { "minLength": 1 } } } },
+    { "name": "ad-details", "input": { "mode": "ad", "id": "1465155164" }, "expect": { "outputMatches": { "mode": "ad", "count": 1 } } }
+  ],
+  "entry": "src/index.ts"
+}

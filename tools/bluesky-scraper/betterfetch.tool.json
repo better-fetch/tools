@@ -1,0 +1,109 @@
+{
+  "name": "bluesky_scraper",
+  "version": "0.1.0",
+  "title": "Bluesky Scraper",
+  "description": "Retrieve public Bluesky profile metadata, author posts, or one post through Bluesky's unauthenticated AT Protocol AppView API and return normalized JSON.",
+  "category": "social",
+  "logo": {
+    "label": "Bluesky logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#1185FE\"/><path fill=\"#fff\" d=\"M31.9 29.2C29.4 24.3 22.5 15.1 16 10.6 9.8 6.4 7.4 7.1 5.8 8c-1.8 1-2.1 4.3-2.1 6.2 0 1.9 1 15.6 1.6 17.8 2.1 7 9.7 9.4 16.4 8.2-11.8 2-14.9 8.5-8.4 15 12.4 12.8 18-2.7 18.6-5.6.6 2.9 5.5 18.2 18.4 5.6 6.4-6.3 3.4-12.9-8.4-15 6.7 1.2 14.3-1.2 16.4-8.2.7-2.2 1.6-15.9 1.6-17.8 0-1.9-.3-5.2-2.1-6.2-1.6-.9-4-1.6-10.2 2.6-6.5 4.5-13.4 13.7-15.9 18.6Z\"/></svg>",
+    "sourceUrl": "https://bsky.app/"
+  },
+  "seo": {
+    "title": "Bluesky Scraper API for Profiles and Posts",
+    "description": "Scrape public Bluesky profiles, author feeds, and posts as normalized JSON for agents, social listening, and research.",
+    "intro": "Bluesky Scraper reads the public AT Protocol AppView API without a Bluesky login. It normalizes account metadata, public author feeds, engagement counts, post text, languages, and images into stable fields for agent workflows.",
+    "useCases": [
+      { "title": "Social listening", "description": "Monitor public Bluesky accounts and posts for product, brand, and topic mentions." },
+      { "title": "Creator research", "description": "Inspect public profile and engagement metadata for creator discovery and analysis." },
+      { "title": "Agent context", "description": "Give an agent clean Bluesky posts without teaching it AT Protocol response shapes." }
+    ],
+    "faqs": [
+      { "question": "Does this require a Bluesky login?", "answer": "No. The tool uses Bluesky's public unauthenticated AppView endpoints and only returns public data." },
+      { "question": "Can it read a single post URL?", "answer": "Yes. Pass a public bsky.app post URL or an at:// post URI in post mode." },
+      { "question": "Are replies included in author feeds?", "answer": "No. Author-feed mode defaults to original posts and excludes replies so monitoring results stay focused." }
+    ],
+    "keywords": ["Bluesky scraper", "AT Protocol API", "Bluesky posts", "Bluesky profile", "social listening"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 1,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["profile", "posts", "post"], "description": "Operation to run. Inferred as post when post_url is supplied; otherwise profile." },
+      "actor": { "type": "string", "description": "Bluesky handle, DID, or public profile URL for profile and posts modes." },
+      "post_url": { "type": "string", "description": "Public bsky.app post URL or at:// post URI for post mode." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10, "description": "Maximum author posts to return." }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation mode" },
+      "source_url": { "type": "string", "description": "Public Bluesky AppView endpoint fetched" },
+      "count": { "type": "integer", "description": "Number of profiles or posts returned" },
+      "profile": { "type": "object", "description": "Normalized public profile", "properties": {
+        "did": { "type": "string", "description": "Decentralized identifier" },
+        "handle": { "type": "string", "description": "Bluesky handle" },
+        "display_name": { "type": "string", "description": "Visible display name" },
+        "description": { "type": "string", "description": "Profile bio" },
+        "avatar": { "type": "string", "description": "Avatar URL" },
+        "banner": { "type": "string", "description": "Banner URL" },
+        "followers_count": { "type": "integer", "description": "Follower count" },
+        "follows_count": { "type": "integer", "description": "Following count" },
+        "posts_count": { "type": "integer", "description": "Post count" },
+        "created_at": { "type": "string", "description": "Account creation timestamp" },
+        "indexed_at": { "type": "string", "description": "Last indexed timestamp" }
+      }, "required": ["did", "handle"], "additionalProperties": false },
+      "posts": { "type": "array", "description": "Normalized author posts", "items": { "type": "object", "properties": {
+        "uri": { "type": "string", "description": "AT Protocol post URI" },
+        "cid": { "type": "string", "description": "AT Protocol content id" },
+        "url": { "type": "string", "description": "Public bsky.app post URL" },
+        "text": { "type": "string", "description": "Post text" },
+        "created_at": { "type": "string", "description": "Post creation timestamp" },
+        "indexed_at": { "type": "string", "description": "AppView indexed timestamp" },
+        "author_did": { "type": "string", "description": "Author decentralized identifier" },
+        "author_handle": { "type": "string", "description": "Author handle" },
+        "author_name": { "type": "string", "description": "Author display name" },
+        "author_avatar": { "type": "string", "description": "Author avatar URL" },
+        "reply_count": { "type": "integer", "description": "Reply count" },
+        "repost_count": { "type": "integer", "description": "Repost count" },
+        "like_count": { "type": "integer", "description": "Like count" },
+        "quote_count": { "type": "integer", "description": "Quote count" },
+        "languages": { "type": "string", "description": "Comma-separated language codes" },
+        "image_url": { "type": "string", "description": "First full-size image URL" },
+        "image_alt": { "type": "string", "description": "First image alternative text" },
+        "image_thumbnail": { "type": "string", "description": "First image thumbnail URL" }
+      }, "required": ["uri", "text", "author_did", "author_handle"], "additionalProperties": false } },
+      "post": { "type": "object", "description": "Normalized individual post", "properties": {
+        "uri": { "type": "string", "description": "AT Protocol post URI" },
+        "cid": { "type": "string", "description": "AT Protocol content id" },
+        "url": { "type": "string", "description": "Public bsky.app post URL" },
+        "text": { "type": "string", "description": "Post text" },
+        "created_at": { "type": "string", "description": "Post creation timestamp" },
+        "indexed_at": { "type": "string", "description": "AppView indexed timestamp" },
+        "author_did": { "type": "string", "description": "Author decentralized identifier" },
+        "author_handle": { "type": "string", "description": "Author handle" },
+        "author_name": { "type": "string", "description": "Author display name" },
+        "author_avatar": { "type": "string", "description": "Author avatar URL" },
+        "reply_count": { "type": "integer", "description": "Reply count" },
+        "repost_count": { "type": "integer", "description": "Repost count" },
+        "like_count": { "type": "integer", "description": "Like count" },
+        "quote_count": { "type": "integer", "description": "Quote count" },
+        "languages": { "type": "string", "description": "Comma-separated language codes" },
+        "image_url": { "type": "string", "description": "First full-size image URL" },
+        "image_alt": { "type": "string", "description": "First image alternative text" },
+        "image_thumbnail": { "type": "string", "description": "First image thumbnail URL" }
+      }, "required": ["uri", "text", "author_did", "author_handle"], "additionalProperties": false }
+    },
+    "required": ["mode", "source_url", "count"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "bluesky-profile", "input": { "mode": "profile", "actor": "bsky.app" }, "expect": { "outputMatches": { "mode": "profile", "count": 1 } } },
+    { "name": "bluesky-posts", "input": { "mode": "posts", "actor": "bsky.app", "max_results": 3 }, "expect": { "outputMatches": { "mode": "posts", "posts": { "minLength": 1 } } } },
+    { "name": "bluesky-post", "input": { "mode": "post", "post_url": "https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l" }, "expect": { "outputMatches": { "mode": "post", "count": 1 } } }
+  ],
+  "entry": "src/index.ts"
+}

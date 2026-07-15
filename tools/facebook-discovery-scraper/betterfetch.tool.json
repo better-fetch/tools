@@ -1,0 +1,190 @@
+{
+  "name": "facebook_discovery_scraper",
+  "version": "0.5.2",
+  "title": "Facebook Public Discovery",
+  "description": "Resolve public Facebook Page photos, owner-verified reels, individual posts, reel captions, and structured logged-out post comments with transparent best-effort semantics.",
+  "category": "social",
+  "logo": {
+    "label": "Facebook logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\"><path fill=\"#1877F2\" d=\"M256 128C256 57.3 198.7 0 128 0S0 57.3 0 128c0 63.9 46.8 116.8 108 126.4V165H75.5v-37H108V99.8C108 67.7 127.1 50 156.3 50 170.4 50 185 52.5 185 52.5V84h-16.1C153 84 148 93.9 148 104v24h35.5l-5.7 37H148v89.4c61.2-9.6 108-62.5 108-126.4\"/><path fill=\"#fff\" d=\"m177.8 165 5.7-37H148v-24c0-10.1 5-20 20.9-20H185V52.5S170.4 50 156.3 50C127.1 50 108 67.7 108 99.8V128H75.5v37H108v89.4a129 129 0 0 0 40 0V165z\"/></svg>",
+    "sourceUrl": "https://icon-sets.iconify.design/logos/facebook/"
+  },
+  "seo": {
+      "title": "Facebook Photo, Post, and Comment API",
+      "description": "Resolve public Facebook Page photos, individual posts, reel transcripts, and structured logged-out comments through Better Fetch.",
+      "intro": "Facebook Public Discovery gives agents a no-login, source-linked view of Page-owned photos, individual posts, and comments that Facebook exposes to logged-out visitors. It is intentionally best-effort and never claims private, authenticated, or complete Facebook coverage.",
+    "useCases": [
+      { "title": "Campaign asset discovery", "description": "Find public Page photo URLs and indexed descriptions for campaign and brand research." },
+      { "title": "Post verification", "description": "Resolve a known Page post URL to its indexed title and visible text before citing it." },
+      { "title": "Comment research", "description": "Collect structured public comment text, authors, timestamps, reactions, reply totals, and pagination evidence." },
+      { "title": "Reel transcripts", "description": "Read a public reel's Facebook-published SRT caption track and return clean timestamped segments without external speech-to-text." },
+      { "title": "Public social research", "description": "Build source-linked research workflows without storing Facebook credentials or cookies." }
+    ],
+    "faqs": [
+      { "question": "Does this need a Facebook login?", "answer": "No. It resolves public indexed URLs and structured comments exposed to logged-out visitors." },
+      { "question": "Is coverage complete?", "answer": "No. Photo and post coverage depends on public indexing, while comments depend on Facebook's logged-out response." },
+      { "question": "Can it access private posts or photos?", "answer": "No. It only returns public indexed URLs." }
+    ],
+    "keywords": ["Facebook photo scraper", "Facebook post API", "Facebook comments API", "Facebook public data", "Facebook Page photos", "social research"]
+  },
+  "creditsEstimate": 6,
+  "maxEngineCalls": 14,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["profile_photos", "profile_reels", "post", "post_comments", "comment_replies", "post_transcript"], "description": "Discover Page photos or reels, resolve one Page post/reel, fetch public comments or replies, or read a reel's public captions." },
+      "page_url": { "type": "string", "description": "Public Facebook Page URL for profile modes." },
+      "page_slug": { "type": "string", "description": "Public Facebook Page slug for profile modes." },
+      "post_url": { "type": "string", "description": "Public Facebook Page post or reel URL for post, post_comments, and post_transcript modes." },
+      "comment_id": { "type": "string", "pattern": "^[0-9]{5,30}$", "description": "Numeric parent comment ID required for comment_replies mode." },
+      "language": { "type": "string", "description": "Preferred 2 or 3 letter caption language for post_transcript mode. Defaults to English." },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10, "description": "Maximum photos, reels, or comments to return." }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "description": "Resolved operation." },
+      "source_url": { "type": "string", "description": "Rendered Google results URL." },
+      "page_url": { "type": "string", "description": "Canonical Facebook Page URL." },
+      "count": { "type": "integer", "description": "Number of records returned." },
+      "photos": {
+        "type": "array",
+        "description": "Indexed public Page photo records.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "photo_url": { "type": "string", "description": "Canonical public Facebook photo URL." },
+            "title": { "type": "string", "description": "Indexed result title." },
+            "description": { "type": "string", "description": "Indexed result snippet." },
+            "photo_id": { "type": "string", "description": "Photo identifier inferred from the URL." }
+          },
+          "required": ["photo_url", "title"],
+          "additionalProperties": false
+        }
+      },
+      "posts": {
+        "type": "array",
+        "description": "Resolved public Page post records.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "post_url": { "type": "string", "description": "Canonical Page post URL." },
+            "title": { "type": "string", "description": "Indexed result title." },
+            "text": { "type": "string", "description": "Indexed visible post text." },
+            "page_slug": { "type": "string", "description": "Page slug inferred from the URL." },
+            "post_id": { "type": "string", "description": "Post identifier inferred from the URL." },
+            "media_type": { "type": "string", "description": "Post or reel." },
+            "owner_name": { "type": "string", "description": "Public reel owner name." },
+            "thumbnail_url": { "type": "string", "description": "Public reel thumbnail URL." },
+            "view_count": { "type": "integer", "description": "Visible reel view count." },
+            "reaction_count": { "type": "integer", "description": "Visible reel reaction count." }
+          },
+          "required": ["post_url", "title"],
+          "additionalProperties": false
+        }
+      },
+      "reels": {
+        "type": "array",
+        "description": "Owner-verified public Facebook Page reels.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "post_url": { "type": "string", "description": "Canonical public reel URL." },
+            "title": { "type": "string", "description": "Facebook Open Graph title." },
+            "text": { "type": "string", "description": "Visible reel description." },
+            "page_slug": { "type": "string", "description": "Owner slug from Facebook's canonical URL." },
+            "post_id": { "type": "string", "description": "Reel identifier." },
+            "media_type": { "type": "string", "description": "Reel record type." },
+            "owner_name": { "type": "string", "description": "Public reel owner name." },
+            "thumbnail_url": { "type": "string", "description": "Public reel thumbnail URL." },
+            "view_count": { "type": "integer", "description": "Visible reel view count." },
+            "reaction_count": { "type": "integer", "description": "Visible reel reaction count." }
+          },
+          "required": ["post_url", "title"],
+          "additionalProperties": false
+        }
+      },
+      "post": {
+        "type": "object",
+        "description": "Resolved individual Page post.",
+        "properties": {
+          "post_url": { "type": "string", "description": "Canonical Page post URL." },
+          "title": { "type": "string", "description": "Indexed result title." },
+          "text": { "type": "string", "description": "Indexed visible post text." },
+          "page_slug": { "type": "string", "description": "Page slug inferred from the URL." },
+          "post_id": { "type": "string", "description": "Post identifier inferred from the URL." },
+          "media_type": { "type": "string", "description": "Post or reel." },
+          "owner_name": { "type": "string", "description": "Public reel owner name." },
+          "thumbnail_url": { "type": "string", "description": "Public reel thumbnail URL." },
+          "view_count": { "type": "integer", "description": "Visible reel view count." },
+          "reaction_count": { "type": "integer", "description": "Visible reel reaction count." }
+        },
+        "required": ["post_url", "title"],
+        "additionalProperties": false
+      },
+      "comments": {
+        "type": "array",
+        "description": "Structured comments Facebook exposes to logged-out visitors.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Facebook comment identifier." },
+            "text": { "type": "string", "description": "Visible comment text." },
+            "created_at": { "type": "string", "description": "Comment creation time in ISO 8601 format." },
+            "reply_count": { "type": "integer", "description": "Visible reply total." },
+            "reaction_count": { "type": "integer", "description": "Visible reaction total." },
+            "feedback_id": { "type": "string", "description": "Facebook feedback identifier for this comment." },
+            "expansion_token": { "type": "string", "description": "Public reply expansion token returned by Facebook." },
+            "url": { "type": "string", "description": "Public comment permalink." },
+            "author_id": { "type": "string", "description": "Public author identifier." },
+            "author_name": { "type": "string", "description": "Public author name." },
+            "author_gender": { "type": "string", "description": "Gender value exposed by Facebook." },
+            "author_profile_picture": { "type": "string", "description": "Public profile picture URL." },
+            "author_profile_url": { "type": "string", "description": "Public profile URL." }
+          },
+          "required": ["id", "text", "reply_count", "reaction_count", "author_name"],
+          "additionalProperties": false
+        }
+      },
+      "cursor": { "type": "string", "description": "Facebook cursor when the captured public response exposes another page." },
+      "has_next_page": { "type": "boolean", "description": "Whether Facebook reports another public comment page." },
+      "total_count": { "type": "integer", "description": "Total public comment count reported by Facebook." },
+      "parent_comment_id": { "type": "string", "description": "Requested parent comment identifier for comment_replies mode." },
+      "post_id": { "type": "string", "description": "Facebook reel id used by post_transcript mode." },
+      "language": { "type": "string", "description": "Caption locale selected for the transcript." },
+      "transcript": { "type": "string", "description": "Clean transcript assembled from Facebook's public SRT caption track." },
+      "transcript_not_available": { "type": "boolean", "description": "True when Facebook exposes no usable public caption track for the reel." },
+      "subtitle_source": { "type": "string", "description": "Public Facebook CDN caption URL fetched for this result." },
+      "is_auto_generated": { "type": "boolean", "description": "Whether Facebook labels the selected caption track as auto-generated." },
+      "segments": {
+        "type": "array",
+        "description": "Timestamped public SRT caption segments.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start": { "type": "string" },
+            "end": { "type": "string" },
+            "text": { "type": "string" }
+          },
+          "required": ["start", "end", "text"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["mode", "source_url", "count", "photos", "posts", "reels"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "nasa-photos", "input": { "mode": "profile_photos", "page_slug": "NASA", "max_results": 5 }, "expect": { "outputMatches": { "mode": "profile_photos", "photos": { "minLength": 1 } } } },
+    { "name": "public-reel-post", "input": { "mode": "post", "post_url": "https://www.facebook.com/reel/757964209457316/" }, "expect": { "outputMatches": { "mode": "post", "count": 1 } } },
+    { "name": "nasa-post-comments", "input": { "mode": "post_comments", "post_url": "https://www.facebook.com/NASA/posts/1532461158249255/", "max_results": 10 }, "expect": { "outputMatches": { "mode": "post_comments", "comments": { "minLength": 1 } } } },
+    { "name": "nasa-comment-replies", "input": { "mode": "comment_replies", "post_url": "https://www.facebook.com/NASA/posts/10158616987496772/", "comment_id": "10158619660096772", "max_results": 10 }, "expect": { "outputMatches": { "mode": "comment_replies", "parent_comment_id": "10158619660096772", "comments": { "minLength": 1 } } } },
+    { "name": "mrbeast-reels", "input": { "mode": "profile_reels", "page_slug": "mrbeast", "max_results": 3 }, "expect": { "outputMatches": { "mode": "profile_reels", "reels": { "minLength": 1 } } } },
+    { "name": "mrbeast-reel", "input": { "mode": "post", "post_url": "https://www.facebook.com/reel/757964209457316/" }, "expect": { "outputMatches": { "mode": "post", "post.media_type": "reel", "post.page_slug": "mrbeast" } } },
+    { "name": "mrbeast-reel-transcript", "input": { "mode": "post_transcript", "post_url": "https://www.facebook.com/reel/599915296536318/", "language": "en" }, "expect": { "outputMatches": { "mode": "post_transcript", "transcript_not_available": false, "segments": { "minLength": 1 } } } }
+  ],
+  "entry": "src/index.ts"
+}

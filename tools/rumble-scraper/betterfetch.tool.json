@@ -1,0 +1,137 @@
+{
+  "name": "rumble_scraper",
+  "version": "0.2.0",
+  "title": "Rumble Scraper",
+  "description": "Search Rumble, list channel videos, retrieve video metadata, download public caption transcripts, or normalize public top-level comments.",
+  "category": "social",
+  "logo": {
+    "label": "Rumble logo",
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#85c742\"/><path d=\"M21 13.5c-3 1.7-4.8 4.8-4.8 8.2v20.6c0 3.4 1.8 6.5 4.8 8.2a9.3 9.3 0 0 0 9.4 0l17.8-10.3a9.4 9.4 0 0 0 0-16.4L30.4 13.5a9.3 9.3 0 0 0-9.4 0Z\" fill=\"#fff\"/></svg>",
+    "sourceUrl": "https://rumble.com/"
+  },
+  "seo": {
+    "title": "Rumble Video Scraper API",
+    "description": "Search Rumble, list public channel videos, and retrieve normalized public video metadata through one agent-ready tool.",
+    "intro": "Rumble Scraper covers three separately validated public surfaces: search results, channel video listings, and official video oEmbed metadata. Each response includes the source URL and normalized creator, thumbnail, engagement, or embed fields available from that surface.",
+    "useCases": [
+      { "title": "Creator research", "description": "List recent public videos from a Rumble channel with titles, dates, views, tags, and engagement counts." },
+      { "title": "Video discovery", "description": "Search Rumble's public video catalogue and return normalized result records." },
+      { "title": "Video enrichment", "description": "Resolve a public Rumble video URL to official title, creator, thumbnail, duration, dimensions, and embed markup." }
+    ],
+    "faqs": [
+      { "question": "Does this require a Rumble account?", "answer": "No. The implemented modes use public Rumble pages and the public Rumble oEmbed endpoint." },
+      { "question": "Does it return transcripts and comments?", "answer": "Yes. Transcript mode returns Rumble's public WEBVTT caption track when available, and comments mode returns public server-rendered top-level comments." },
+      { "question": "Can I paginate listings?", "answer": "Yes. Search and channel modes accept a one-based page value and return the next public page URL when Rumble provides one." }
+    ],
+    "keywords": ["Rumble scraper", "Rumble API", "Rumble video search", "Rumble channel videos", "Rumble oEmbed"]
+  },
+  "creditsEstimate": 1,
+  "maxEngineCalls": 3,
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string", "enum": ["search", "channel_videos", "video", "transcript", "comments"] },
+      "query": { "type": "string", "description": "Search query for search mode." },
+      "handle": { "type": "string", "description": "Rumble channel handle for channel_videos mode." },
+      "url": { "type": "string", "format": "uri", "description": "Public channel URL for channel_videos mode, or video URL for video mode." },
+      "page": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 },
+      "max_results": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+    },
+    "required": ["mode"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": { "type": "string" },
+      "source_url": { "type": "string" },
+      "query": { "type": "string" },
+      "channel_handle": { "type": "string" },
+      "page": { "type": "integer" },
+      "next_url": { "type": "string" },
+      "count": { "type": "integer" },
+      "videos": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "permalink_id": { "type": "string" },
+            "title": { "type": "string" },
+            "url": { "type": "string" },
+            "thumbnail_url": { "type": "string" },
+            "author_name": { "type": "string" },
+            "author_url": { "type": "string" },
+            "upload_date": { "type": "string" },
+            "duration_seconds": { "type": "integer" },
+            "views": { "type": "integer" },
+            "comments": { "type": "integer" },
+            "tags": { "type": "string" },
+            "is_live": { "type": "boolean" },
+            "is_short": { "type": "boolean" }
+          },
+          "required": ["title", "url"],
+          "additionalProperties": false
+        }
+      },
+      "video": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "permalink_id": { "type": "string" },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "thumbnail_url": { "type": "string" },
+          "author_name": { "type": "string" },
+          "author_url": { "type": "string" },
+          "upload_date": { "type": "string" },
+          "duration_seconds": { "type": "integer" },
+          "views": { "type": "integer" },
+          "comments": { "type": "integer" },
+          "tags": { "type": "string" },
+          "is_live": { "type": "boolean" },
+          "is_short": { "type": "boolean" },
+          "embed_html": { "type": "string" },
+          "embed_width": { "type": "integer" },
+          "embed_height": { "type": "integer" },
+          "provider_name": { "type": "string" }
+        },
+        "required": ["title", "url"],
+        "additionalProperties": false
+      },
+      "language": { "type": "string" },
+      "transcript": { "type": "string" },
+      "numeric_id": { "type": "integer" },
+      "comments": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "text": { "type": "string" },
+            "author_name": { "type": "string" },
+            "author_url": { "type": "string" },
+            "author_avatar": { "type": "string" },
+            "created_at": { "type": "string" },
+            "created_at_text": { "type": "string" },
+            "like_count": { "type": "integer" },
+            "dislike_count": { "type": "integer" },
+            "reply_count": { "type": "integer" }
+          },
+          "required": ["id", "text"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["mode", "source_url"],
+    "additionalProperties": false
+  },
+  "examples": [
+    { "name": "rumble-search", "input": { "mode": "search", "query": "funny cats", "max_results": 5 }, "expect": { "outputMatches": { "mode": "search" } } },
+    { "name": "rumble-channel-videos", "input": { "mode": "channel_videos", "handle": "CuteCats223", "max_results": 5 }, "expect": { "outputMatches": { "mode": "channel_videos", "channel_handle": "CuteCats223" } } },
+    { "name": "rumble-video", "input": { "mode": "video", "url": "https://rumble.com/v79xhhm-discovery-why-glenn-wants-israel-to-sue-the-new-york-times.html" }, "expect": { "outputMatches": { "mode": "video" } } },
+    { "name": "rumble-transcript", "input": { "mode": "transcript", "url": "https://rumble.com/v79xhhm-discovery-why-glenn-wants-israel-to-sue-the-new-york-times.html" }, "expect": { "outputMatches": { "mode": "transcript" } } },
+    { "name": "rumble-comments", "input": { "mode": "comments", "url": "https://rumble.com/v792vns-the-splc-is-a-deceitful-and-poisonous-group.-but-was-their-behavior-crimina.html", "max_results": 10 }, "expect": { "outputMatches": { "mode": "comments", "comments": { "minLength": 1 } } } }
+  ],
+  "entry": "src/index.ts"
+}

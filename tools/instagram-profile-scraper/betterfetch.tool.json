@@ -1,6 +1,6 @@
 {
   "name": "instagram_profile_scraper",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "title": "Instagram Profile Scraper",
   "description": "Extract public Instagram profile metadata from a username or profile URL, including bio, links, avatar, verification, privacy, follower and following counts, media count, and recent visible posts.",
   "category": "social",

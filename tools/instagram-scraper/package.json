@@ -1,6 +1,6 @@
 {
   "name": "instagram-scraper",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "start": "bf-tool run --example openai-profile"
   },
   "dependencies": {
-    "@better-fetch/tools": "github:better-fetch/tools-sdk"
+    "@better-fetch/tools": "github:better-fetch/tools-sdk#v0.5.0"
   },
   "devDependencies": {
     "typescript": "^5.6.0"

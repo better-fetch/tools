@@ -166,8 +166,13 @@ export default defineTool<Input, Output>(async (input, bf) => {
   const maxRecent = Math.min(input.max_recent_posts ?? 6, 12);
   const page = await bf.fetch({
     url: apiUrl(username),
-    json_mode: true,
+    strategy: "browser",
     return_response_text: true,
+    include_html: true,
+    wait_until: "domcontentloaded",
+    wait_ms: 1500,
+    timeout_ms: 90_000,
+    proxy: "auto",
     extra_headers: {
       accept: "*/*",
       "accept-language": "en-US,en;q=0.9",
@@ -183,9 +188,10 @@ export default defineTool<Input, Output>(async (input, bf) => {
   });
 
   let json = page.json;
-  if (!json && page.body_text) {
+  const raw = page.body_text || page.html;
+  if (!json && raw) {
     try {
-      json = JSON.parse(page.body_text);
+      json = JSON.parse(raw);
     } catch {
       /* handled below */
     }

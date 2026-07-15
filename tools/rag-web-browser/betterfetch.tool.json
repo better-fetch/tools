@@ -1,6 +1,6 @@
 {
   "name": "rag_web_browser",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "title": "RAG Web Browser",
   "description": "Fetch one public web page through a browser and return clean RAG-ready text, Markdown, headings, links, images, JSON-LD type hints, and query snippets.",
   "category": "ai",
@@ -94,6 +94,10 @@
         "maximum": 5000,
         "default": 500,
         "description": "Additional browser wait time after DOMContentLoaded"
+      },
+      "country": {
+        "type": "string",
+        "description": "Optional two-letter country code for geo-localized public pages"
       }
     },
     "required": [
@@ -276,6 +280,21 @@
           "links": {
             "minLength": 1
           }
+        }
+      }
+    },
+    {
+      "name": "query-string-preserved",
+      "input": {
+        "url": "https://example.com/?campaign=better-fetch",
+        "max_text_chars": 1000,
+        "max_links": 1
+      },
+      "expect": {
+        "outputMatches": {
+          "url": "https://example.com/?campaign=better-fetch",
+          "final_url": "https://example.com/?campaign=better-fetch",
+          "title": "Example Domain"
         }
       }
     }
